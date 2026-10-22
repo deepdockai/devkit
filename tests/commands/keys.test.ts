@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import {
   existsSync,
+  promises as fs,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -9,7 +10,6 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { join } from 'node:path'
-import { promises as fs } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { type FakeApi, KEY_ID, startFakeApi } from '../fakeApi.ts'
 import {
@@ -254,11 +254,18 @@ describe('keys create', () => {
   })
 
   it('on other platforms the line is never printed', async () => {
-    const started = await run([...createArgs, '--no-wait'], { platform: 'linux' })
+    // Signed in under the simulated platform too: the settings file's place depends on it, so a
+    // sign-in made under the host's own platform would not be found on a Windows host.
+    const linux = { platform: 'linux' as const }
+    await signInWith(box, api.url, linux)
+    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...linux })
+    const started = await run([...createArgs, '--no-wait'], linux)
+    expect(started.code).toBe(0)
     const finished = await run(
       ['keys', 'create', '--wait', JSON.parse(started.stdout).data.pending.request],
-      { platform: 'linux' },
+      linux,
     )
+    expect(finished.code).toBe(0)
     expect(started.stderr + finished.stderr).not.toContain('On Windows')
   })
 
