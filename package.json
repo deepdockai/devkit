@@ -1,6 +1,6 @@
 {
   "name": "@deepdockai/cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Deepdock partner CLI: pair devices, see systems and actions, create the API key your code runs them with.",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,7 @@
   "bin": {
     "deepdock": "dist/deepdock.js"
   },
-  "files": ["dist/deepdock.js", "skill", "README.md", "LICENSE", "SECURITY.md"],
+  "files": ["dist/deepdock.js", "skill", "README.md", "CHANGELOG.md", "LICENSE", "SECURITY.md"],
   "engines": {
     "node": ">=22.13"
   },
