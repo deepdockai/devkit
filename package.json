@@ -1,0 +1,48 @@
+{
+  "name": "@deepdockai/cli",
+  "version": "0.1.0",
+  "description": "Deepdock partner CLI: pair devices, see systems and actions, create the API key your code runs them with.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Deepdock",
+  "homepage": "https://github.com/deepdockai/devkit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepdockai/devkit.git"
+  },
+  "bin": {
+    "deepdock": "dist/deepdock.js"
+  },
+  "files": ["dist/deepdock.js", "skill", "README.md", "LICENSE", "SECURITY.md"],
+  "engines": {
+    "node": ">=22.13"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "bun scripts/build.ts",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "typecheck": "tsc --noEmit",
+    "gen:codes": "bun scripts/genCodes.ts",
+    "check:public": "bun scripts/checkPublic.ts --pack",
+    "test": "bun run build && bun --bun vitest run",
+    "test:node": "vitest run",
+    "ci": "bun run format && bun run lint && bun run typecheck && bun run test && bun run test:node && bun run check:public"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.2",
+    "@commander-js/extra-typings": "15",
+    "@types/bun": "^1.4.3",
+    "@types/node": "^26.6.5",
+    "arktype": "^2.2.9",
+    "commander": "15",
+    "openapi-typescript": "7",
+    "typescript": "~5.9",
+    "vitest": "^5.0.5"
+  }
+}

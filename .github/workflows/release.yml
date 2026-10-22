@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tarball: ${{ steps.pack.outputs.tarball }}
+      sha256: ${{ steps.pack.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Tag matches package version
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run format
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run test:node
+      - run: bun run build
+      - name: Pack once, scan that tarball, record its hash
+        id: pack
+        run: |
+          mkdir "$RUNNER_TEMP/pack"
+          name="$(npm pack --pack-destination "$RUNNER_TEMP/pack" --ignore-scripts --silent)"
+          bun scripts/checkPublic.ts --tarball "$RUNNER_TEMP/pack/$name"
+          echo "tarball=$name" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$RUNNER_TEMP/pack/$name" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: package
+          path: ${{ runner.temp }}/pack/${{ steps.pack.outputs.tarball }}
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: package
+          path: package
+      - name: Verify the tarball is the one that was scanned
+        env:
+          TARBALL: ${{ needs.build.outputs.tarball }}
+          EXPECTED: ${{ needs.build.outputs.sha256 }}
+        run: echo "${EXPECTED}  package/${TARBALL}" | sha256sum --check --strict
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm 11.5.1 or newer; pinned so a release never runs a new npm
+      # unreviewed. There is no NODE_AUTH_TOKEN secret, and no source code is checked out here.
+      - run: npm install -g npm@11.6.2
+      - name: Publish that exact tarball
+        env:
+          TARBALL: ${{ needs.build.outputs.tarball }}
+        run: npm publish "./package/${TARBALL}" --provenance --access public
