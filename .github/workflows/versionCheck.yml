@@ -1,0 +1,48 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Does this PR change what npm installs?
+        id: publishable
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          # The `files` list in package.json plus what feeds the bundle: src/, build script,
+          # lockfile and the manifest. Keep in step with `files` when it changes.
+          PUBLISHED='^(src/|skill/|scripts/build\.ts|package\.json|bun\.lock|README\.md|CHANGELOG\.md|LICENSE|SECURITY\.md)'
+          changed="$(git diff --name-only "origin/${BASE_REF}...HEAD")"
+          echo "Changed files:"
+          echo "$changed" | sed 's/^/  /'
+          if echo "$changed" | grep -qE "$PUBLISHED"; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "A published path changed: a version bump is required"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing here reaches the tarball: no bump required"
+          fi
+      - name: Version is higher than the one on npm
+        if: steps.publishable.outputs.changed == 'true'
+        run: |
+          current="$(node -p "require('./package.json').version")"
+          published="$(npm view @deepdockai/cli version 2>/dev/null || echo 0.0.0)"
+          echo "package.json $current, npm $published"
+          if [ "$current" = "$published" ] || [ "$(printf '%s\n%s\n' "$current" "$published" | sort -V | head -n1)" = "$current" ]; then
+            echo "Package version $current must be higher than the npm version $published"
+            exit 1
+          fi
