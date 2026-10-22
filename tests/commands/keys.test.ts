@@ -253,21 +253,26 @@ describe('keys create', () => {
     expect(outcome.stderr.split('On Windows these files').length).toBe(2)
   })
 
-  it('on other platforms the line is never printed', async () => {
-    // Signed in under the simulated platform too: the settings file's place depends on it, so a
-    // sign-in made under the host's own platform would not be found on a Windows host.
-    const linux = { platform: 'linux' as const }
-    await signInWith(box, api.url, linux)
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...linux })
-    const started = await run([...createArgs, '--no-wait'], linux)
-    expect(started.code).toBe(0)
-    const finished = await run(
-      ['keys', 'create', '--wait', JSON.parse(started.stdout).data.pending.request],
-      linux,
-    )
-    expect(finished.code).toBe(0)
-    expect(started.stderr + finished.stderr).not.toContain('On Windows')
-  })
+  // A Windows host cannot play another platform: the file system, the paths and git stay the host's.
+  // The property is checked on the Linux and macOS runners.
+  it.skipIf(process.platform === 'win32')(
+    'on other platforms the line is never printed',
+    async () => {
+      // Signed in under the simulated platform too: the settings file's place depends on it, so a
+      // sign-in made under the host's own platform would not be found on a Windows host.
+      const linux = { platform: 'linux' as const }
+      await signInWith(box, api.url, linux)
+      await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...linux })
+      const started = await run([...createArgs, '--no-wait'], linux)
+      expect(started.code).toBe(0)
+      const finished = await run(
+        ['keys', 'create', '--wait', JSON.parse(started.stdout).data.pending.request],
+        linux,
+      )
+      expect(finished.code).toBe(0)
+      expect(started.stderr + finished.stderr).not.toContain('On Windows')
+    },
+  )
 
   it('needs a destination, an allowed expiry and a name', async () => {
     const noDestination = await run(['keys', 'create', 'x', '--expires', '30d'])

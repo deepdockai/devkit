@@ -110,9 +110,10 @@ describe('this repository', () => {
     expect(scanRepo(root)).toEqual([])
   })
 
+  // `npm pack` is slow on a Windows runner: the default 20 s was not enough there.
   it('packs into a tarball with no secret, env file, sourcemap or large file', () => {
     expect(scanPacked(root)).toEqual([])
-  })
+  }, 120_000)
 })
 
 describe('scanTarball', () => {
