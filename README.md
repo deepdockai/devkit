@@ -10,14 +10,14 @@ This repository holds the partner CLI, published as [`@deepdockai/cli`](https://
 with the command `deepdock`, and the skill it installs for coding agents.
 
 ```bash
-npx @deepdockai/cli auth login
+npx @deepdockai/cli@1 auth login
 ```
 
 The CLI manages: your organisations, the devices paired to them, and your API keys, and it lists
 the systems and actions a device offers. It never runs an action and never keeps or uses an API
 key. Actions run from your own code with a key the CLI wrote into your env file.
 
-Node 22.13 or newer. Installed globally (`npm install -g @deepdockai/cli`) the command is
+Node 22.13 or newer. Installed globally (`npm install -g @deepdockai/cli@1`) the command is
 `deepdock`; the examples below use that form.
 
 ## Before you start
