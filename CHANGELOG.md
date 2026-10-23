@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- The agent skill: page with `nextCursor` until it is `null` (a short page can carry a cursor), and cover the codes `access_outdated`, `access_missing`, `record_locked`, `record_not_editable`, `unknown_provider`, `payload_too_large` and the system status `unknown`, in the skill and the CLI's exit-code table.
+- The agent skill: one statement on how to fetch the OpenAPI document, and a MEDICAL OFFICE recipe with its action names.
+
 ## 1.0.0
 
 First release of `@deepdockai/cli`, the `deepdock` command.

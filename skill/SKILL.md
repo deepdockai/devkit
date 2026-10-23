@@ -1,6 +1,6 @@
 ---
 name: deepdock-integration
-description: Build, debug or test an integration with Deepdock's partner API, the REST actions under /v1 that read and write records in a customer's on-premise business system (for example Example ERP) through a paired Deepdock device. Use when code calls api.deepdock.ai, handles ddk_ API keys, pairs a device by code, calls a system action, handles error codes such as device_offline, action_paused, idempotency_conflict or outcome_unknown, or runs the deepdock CLI.
+description: Build, debug or test an integration with Deepdock's partner API, the REST actions under /v1 that read and write records in a customer's on-premise business system (for example MEDICAL OFFICE) through a paired Deepdock device. Use when code calls api.deepdock.ai, handles ddk_ API keys, pairs a device by code, calls a system action, handles error codes such as device_offline, action_paused, idempotency_conflict or outcome_unknown, or runs the deepdock CLI.
 metadata:
   cli: "@deepdockai/cli"
 ---
@@ -27,7 +27,7 @@ integration against a demo device. It is not for building or changing actions: D
 5. Every write needs an `Idempotency-Key`: a new key per intended write, the same key on every retry,
    and a repeat answers the stored result with `Idempotent-Replayed: true`, writing nothing twice.
 6. A write either fully applies or not: Deepdock checks its result before confirming, and a write
-   whose result does not match is undone and the action is paused.
+   whose result does not match is not saved and the action is paused.
 7. A device can be offline and an action can be paused; your code treats both as normal answers.
 8. Every answer is `{ "data": ... }` or `{ "error": { "code", "message" } }`; `code` is the contract,
    `message` is for people.

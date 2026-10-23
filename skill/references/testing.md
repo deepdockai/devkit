@@ -27,7 +27,7 @@ gets written to. These rules are not optional.
 
 ## Cleanup
 
-No action deletes anything. So:
+No action deletes anything, and nothing is undone through the API. So:
 
 1. Every test run prints what it created: record id, device, time, and how many change-log entries
    the updates added. The CLI runs no action, so your own test prints this.

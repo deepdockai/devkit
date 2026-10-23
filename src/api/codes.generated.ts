@@ -9,6 +9,7 @@ export const API_ERROR_CODES = [
   'forbidden',
   'not_found',
   'conflict',
+  'already_member',
   'device_not_found',
   'system_not_on_device',
   'pairing_code_invalid',
@@ -29,6 +30,12 @@ export const API_ERROR_CODES = [
   'outcome_unknown',
   'internal_error',
   'temporarily_unavailable',
+  'unknown_provider',
+  'record_locked',
+  'record_not_editable',
+  'payload_too_large',
+  'access_outdated',
+  'access_missing',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

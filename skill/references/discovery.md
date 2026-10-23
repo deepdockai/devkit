@@ -7,7 +7,7 @@ Never hard-code an action's fields. Three sources, each authoritative for one th
 | Which systems and actions does my organisation have? | `deepdock systems list --json` | CLI sign-in |
 | What does this device run, and is each action active or paused? | `GET /v1/devices/{deviceId}/systems` | organisation |
 | Which actions can I call on this device's system, with which schemas? | `GET /v1/devices/{deviceId}/systems/{system}/actions` | organisation |
-| The exact paths, methods, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` or `deepdock actions list <device> <system>` (or `GET /v1/systems/{system}/openapi.json`) | CLI sign-in or API key |
+| The exact paths, methods, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` (CLI sign-in) or `GET /v1/systems/{system}/openapi.json` (API key); per device `deepdock actions list <device> <system>` (CLI sign-in) | CLI sign-in or API key |
 
 ## The OpenAPI document
 
@@ -17,7 +17,9 @@ deepdock systems openapi example-erp --org <slug> > openapi/example-erp.json
 curl "$BASE/v1/systems/example-erp/openapi.json" -H "Authorization: Bearer $DEEPDOCK_API_KEY"
 ```
 
-OpenAPI 3.1, one document per system, cacheable for 60 seconds. Discover through the CLI; check the
+OpenAPI 3.1, one document per system, cacheable privately for 60 seconds. It is never public:
+`GET /v1/systems/{system}/openapi.json` needs your API key like the rest of `/v1`
+(`401 unauthenticated` without one), and the CLI fetches it with its sign-in instead. Discover through the CLI; check the
 document into the repository and refresh it with the same command when you touch the integration.
 
 What to read off it:
