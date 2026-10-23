@@ -118,6 +118,7 @@ const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
 const cellFor = (key: string, value: unknown): Cell => {
   const text = scalar(value)
   if (text === '') return text
+  if (key === 'reason' || key === 'pausedReason') return words(text)
   if (key === 'revokedAt') return { text, style: 'red' }
   if (key === 'name' || key === 'action') return { text, style: 'bold' }
   if (key.endsWith('At') || key === 'since') return { text, style: 'dim' }
@@ -266,4 +267,52 @@ export const countValue = (data: unknown, word: string): number => {
   if (isRecord(data))
     return Object.values(data).reduce<number>((sum, item) => sum + countValue(item, word), 0)
   return 0
+}
+
+/** "org:admin" is the identity provider's word; a person reads "Admin". */
+export const roleLabel = (role: string): string => {
+  const bare = role.replace(/^org:/, '').replace(/[_-]+/g, ' ')
+  return bare === '' ? role : bare.charAt(0).toUpperCase() + bare.slice(1)
+}
+
+type OrgLike = { slug: string | null; name: string; role: string }
+
+/** Organisations as a table: name first, slug dimmed, role in words, the default first and marked. */
+export const orgTable = (
+  orgs: OrgLike[],
+  defaultSlug: string | undefined,
+  style: Styler,
+): string => {
+  const isDefault = (org: OrgLike): boolean => org.slug !== null && org.slug === defaultSlug
+  const ordered = [...orgs].sort((a, b) => Number(isDefault(b)) - Number(isDefault(a)))
+  return renderTable(
+    ['NAME', 'SLUG', 'ROLE', ''],
+    ordered.map((org): Cell[] => [
+      { text: org.name, style: 'bold' },
+      { text: org.slug ?? '(no slug)', style: 'dim' },
+      roleLabel(org.role),
+      isDefault(org) ? { text: 'default', style: 'green' } : '',
+    ]),
+    style,
+  )
+}
+
+/** "structure_changed" is a code; the human view says "structure changed". */
+export const words = (code: string): string => code.replace(/_/g, ' ')
+
+export const systemsTable = (items: unknown[], style: Styler): string => {
+  const records = items.filter(isRecord)
+  if (!records.some((item) => 'system' in item)) return genericTable(records, style, SYSTEM_COLUMNS)
+  return renderTable(
+    ['SYSTEM', 'NAME', 'ACTIONS'],
+    records.map((item): Cell[] => {
+      const actions = Array.isArray(item.actions) ? item.actions.filter(isRecord) : undefined
+      const writes = actions?.filter((action) => action.kind === 'write').length ?? 0
+      const counted = actions
+        ? `${actions.length} (${actions.length - writes} read, ${writes} write)`
+        : ''
+      return [{ text: field(item, 'system'), style: 'bold' }, field(item, 'label'), counted]
+    }),
+    style,
+  )
 }

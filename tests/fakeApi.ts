@@ -200,7 +200,18 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         return send(200, { data: { id, revokedAt: new Date().toISOString() } })
       }
       if (method === 'GET' && path === '/partner/systems') {
-        return send(200, { data: [{ system: 'example-erp', actions: 5 }] })
+        return send(200, {
+          data: [
+            {
+              system: 'example-erp',
+              label: 'Example ERP',
+              actions: [
+                { name: 'searchCustomers', kind: 'read', method: 'GET' },
+                { name: 'createNote', kind: 'write', method: 'POST' },
+              ],
+            },
+          ],
+        })
       }
       const openapiMatch = /^\/partner\/systems\/([^/]+)\/openapi\.json$/.exec(path)
       if (method === 'GET' && openapiMatch) {

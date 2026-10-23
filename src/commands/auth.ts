@@ -7,7 +7,7 @@ import { selectableOrgs } from '../config/orgSelection.ts'
 import type { KeyEntry, PendingRequest } from '../config/store.ts'
 import { assertSameBaseUrl, type Ctx, type Result } from '../context.ts'
 import { AUTH_LOGIN_HELP } from '../help.ts'
-import { renderTable } from '../output/human.ts'
+import { orgTable, renderTable } from '../output/human.ts'
 import type { Run } from '../program.ts'
 import { DEFAULT_BASE_URL } from '../runtime.ts'
 import { displayPath } from '../writeEnv/ledger.ts'
@@ -49,15 +49,6 @@ export const upsertPending = async (ctx: Ctx, pending: PendingRequest): Promise<
   })
 }
 
-const orgRows = (orgs: { slug: string | null; name: string; role: string }[]): string[][] =>
-  orgs.map((org) => [org.slug ?? '(no slug)', org.name, org.role])
-
-const orgTable = (ctx: Ctx, orgs: { slug: string | null; name: string; role: string }[]): string =>
-  renderTable(['SLUG', 'NAME', 'ROLE'], orgRows(orgs), ctx.out)
-    .split('\n')
-    .map((line) => `  ${line}`)
-    .join('\n')
-
 const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> => {
   const { answer, requestId } = await pollUntilApproved(ctx.rt, ctx.api, 'loginPoll', {
     kind: 'login',
@@ -95,7 +86,11 @@ const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> =
   if (answer.organisations.length === 0) {
     lines.push('You are not a member of an organisation yet.')
   } else {
-    lines.push('Your organisations:', orgTable(ctx, answer.organisations), '')
+    lines.push(
+      'Your organisations:',
+      indented(orgTable(answer.organisations, config.defaultOrg, ctx.out)),
+      '',
+    )
     lines.push('Choose one with `deepdock org select <slug>` or pass --org to each command.')
   }
   return {
@@ -173,6 +168,12 @@ const keyJson = (ctx: Ctx, key: KeyEntry): Record<string, unknown> => ({
   written: { file: displayPath(ctx.rt, key.file), name: key.variable },
 })
 
+const indented = (table: string): string =>
+  table
+    .split('\n')
+    .map((line) => `  ${line}`)
+    .join('\n')
+
 const status = async (ctx: Ctx): Promise<Result> => {
   const config = await ctx.config()
   const baseUrl = ctx.baseUrl
@@ -206,11 +207,20 @@ const status = async (ctx: Ctx): Promise<Result> => {
   if (signedIn && config.signIn) {
     lines.push(
       `Signed in as ${config.signIn.email} (sign-in valid until ${config.signIn.expiresAt.slice(0, 10)}).`,
-      `  API:           ${baseUrl}`,
-      `  Default org:   ${config.defaultOrg ?? '(none, run `deepdock org select`)'}`,
     )
-    if (data.organisations.length > 0)
-      lines.push('', 'Organisations:', orgTable(ctx, data.organisations))
+    if (baseUrl !== DEFAULT_BASE_URL)
+      lines.push(ctx.out('yellow', `API: ${baseUrl} (not production)`))
+    if (data.organisations.length > 0) {
+      lines.push(
+        '',
+        'Organisations:',
+        indented(orgTable(data.organisations, config.defaultOrg, ctx.out)),
+        '',
+        config.defaultOrg
+          ? 'Switch the default with `deepdock org select <slug>`.'
+          : 'No default yet: choose one with `deepdock org select <slug>`.',
+      )
+    }
   } else {
     lines.push(
       config.signIn

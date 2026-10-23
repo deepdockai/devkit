@@ -4,7 +4,7 @@ import { parseAnswer } from '../api/schemas.ts'
 import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
 import type { Ctx, Result } from '../context.ts'
 import { pickIndex } from '../output/confirm.ts'
-import { renderTable } from '../output/human.ts'
+import { orgTable, roleLabel } from '../output/human.ts'
 import type { Run } from '../program.ts'
 
 const list = async (ctx: Ctx): Promise<Result> => {
@@ -17,16 +17,11 @@ const list = async (ctx: Ctx): Promise<Result> => {
   const text =
     orgs.length === 0
       ? 'You are not a member of an organisation yet.'
-      : renderTable(
-          ['SLUG', 'NAME', 'ROLE', 'DEFAULT'],
-          orgs.map((org) => [
-            org.slug ?? '(no slug)',
-            org.name,
-            org.role,
-            org.slug !== null && org.slug === defaultOrg ? 'yes' : '',
-          ]),
-          ctx.out,
-        )
+      : [
+          orgTable(orgs, defaultOrg, ctx.out),
+          '',
+          'Switch the default with `deepdock org select <slug>`.',
+        ].join('\n')
   return {
     data: response.data,
     meta: response.requestId ? { requestId: response.requestId } : {},
@@ -54,7 +49,9 @@ const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
     if (choices.length === 0) throw usageError('You are not a member of an organisation yet.')
     ctx.note('Which organisation should be the default?')
     choices.forEach((org, index) => {
-      ctx.note(`  ${index + 1}  ${org.slug.padEnd(18)} ${org.name.padEnd(24)} ${org.role}`)
+      ctx.note(
+        `  ${index + 1}  ${org.slug.padEnd(18)} ${org.name.padEnd(24)} ${roleLabel(org.role)}`,
+      )
     })
     const current = Math.max(1, choices.findIndex((org) => org.slug === config.defaultOrg) + 1)
     const index = await pickIndex(ctx.rt, choices.length, current)

@@ -1,7 +1,7 @@
 import type { Command } from '@commander-js/extra-typings'
 import { systemArg } from '../args.ts'
 import type { Result } from '../context.ts'
-import { genericTable, isRecord, SYSTEM_COLUMNS } from '../output/human.ts'
+import { isRecord, systemsTable } from '../output/human.ts'
 import type { Run } from '../program.ts'
 
 export const registerSystems = (program: Command, run: Run): void => {
@@ -19,7 +19,7 @@ export const registerSystems = (program: Command, run: Run): void => {
         const text =
           items.length === 0
             ? 'No systems are assigned to this organisation.'
-            : genericTable(items, ctx.out, SYSTEM_COLUMNS)
+            : systemsTable(items, ctx.out)
         return { data: response.data, meta: { requestId: response.requestId }, text }
       }),
     )

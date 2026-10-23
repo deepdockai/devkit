@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { DEVICE_ID, type FakeApi, startFakeApi } from '../fakeApi.ts'
 import { summary } from '../../src/commands/actions.ts'
+import { DEFAULT_BASE_URL } from '../../src/runtime.ts'
 import { makeStyler } from '../../src/output/styles.ts'
 import type { Runtime } from '../../src/runtime.ts'
 import { execute, makeSandbox, type Sandbox, signInWith } from '../harness.ts'
@@ -147,5 +148,36 @@ describe('colour', () => {
     expect(makeStyler(rt({ FORCE_COLOR: '1', NO_COLOR: '1' }), pipe)('green', 'active')).toBe(
       'active',
     )
+  })
+})
+
+describe('organisations, API line and systems list', () => {
+  it('lists the default organisation first with the role in words and a switch hint', async () => {
+    const outcome = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    expect(outcome.stdout).toMatch(/NAME\s+SLUG\s+ROLE/)
+    expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
+    expect(outcome.stdout).not.toContain('org:')
+    expect(outcome.stdout).toContain('Switch the default with `deepdock org select <slug>`.')
+    const rows = outcome.stdout.split('\n').filter((line) => /muster-it|beispiel-handel/.test(line))
+    expect(rows[0]).toContain('muster-it')
+  })
+
+  it('shows the API line only when it is not production, and --json always has the field', async () => {
+    const staging = await execute(box, ['auth', 'status'], { baseUrl: api.url, tty: true })
+    expect(staging.stdout).toContain(`API: ${api.url} (not production)`)
+    const production = await execute(box, ['auth', 'status'], {
+      baseUrl: api.url,
+      tty: true,
+      env: { DEEPDOCK_BASE_URL: DEFAULT_BASE_URL },
+    })
+    expect(production.stdout).not.toContain('API:')
+    const json = await execute(box, ['auth', 'status', '--json'], { baseUrl: api.url })
+    expect(JSON.parse(json.stdout).data.baseUrl).toBe(api.url)
+  })
+
+  it('systems list shows the label and the action count', async () => {
+    const outcome = await execute(box, ['systems', 'list'], { baseUrl: api.url, tty: true })
+    expect(outcome.stdout).toMatch(/SYSTEM\s+NAME\s+ACTIONS/)
+    expect(outcome.stdout).toMatch(/example-erp\s+\S.*\s\d+ \(\d+ read, \d+ write\)/)
   })
 })
