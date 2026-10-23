@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- The approval link is blue and underlined, and clickable in terminals that support links. Plain text when output is piped, under `--json`, or with `NO_COLOR`.
+
 ## 1.0.2
 
 - The install commands no longer pin a major version: `npx @deepdockai/cli auth login`, `npm install -g @deepdockai/cli`.

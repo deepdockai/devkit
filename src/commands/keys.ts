@@ -195,7 +195,7 @@ const create = async (
       pending,
       started.url,
       [
-        `Open this link to approve the key: ${started.url}`,
+        `Open this link to approve the key: ${ctx.out('link', started.url)}`,
         `Then run \`deepdock keys create --wait ${started.request}\`.`,
       ].join('\n'),
     )

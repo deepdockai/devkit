@@ -26,7 +26,7 @@ export const announceApproval = (
   ctx.note(
     `Open this link to approve ${what} (it expires in ${minutesLeft(ctx, expiresAt)} minutes):`,
   )
-  ctx.note(`  ${url}`)
+  ctx.note(`  ${ctx.err('link', url)}`)
   ctx.note(
     extra ??
       "The page shows this computer's name and the CLI version: check them before you approve.",
@@ -139,7 +139,7 @@ const login = async (ctx: Ctx, options: LoginOptions): Promise<Result> => {
       pending,
       started.url,
       [
-        `Open this link to approve the sign-in: ${started.url}`,
+        `Open this link to approve the sign-in: ${ctx.out('link', started.url)}`,
         `Then run \`deepdock auth login --wait ${started.request}\`.`,
       ].join('\n'),
     )

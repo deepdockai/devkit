@@ -140,6 +140,18 @@ describe('colour', () => {
     }
   })
 
+  it('styles a link blue, underlined and clickable, and leaves it bare without colour', () => {
+    const rt = (env: Record<string, string>): Runtime => ({ env }) as unknown as Runtime
+    const url = 'https://dash.example/cli?request=abc'
+    const tty = { isTTY: true, write: () => undefined }
+    const pipe = { isTTY: false, write: () => undefined }
+    const linked = makeStyler(rt({}), tty)('link', url)
+    expect(linked).toContain(`${ESCAPE}34m${ESCAPE}4m${url}`)
+    expect(linked).toContain(`\u001b]8;;${url}`)
+    expect(makeStyler(rt({}), pipe)('link', url)).toBe(url)
+    expect(makeStyler(rt({ NO_COLOR: '1' }), tty)('link', url)).toBe(url)
+  })
+
   it('FORCE_COLOR colours a stream that is not a terminal, and NO_COLOR still wins', () => {
     const rt = (env: Record<string, string>): Runtime => ({ env }) as unknown as Runtime
     const pipe = { isTTY: false, write: () => undefined }

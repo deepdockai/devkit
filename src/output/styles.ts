@@ -1,7 +1,10 @@
 import { styleText } from 'node:util'
 import type { OutStream, Runtime } from '../runtime.ts'
 
-export type StyleName = 'dim' | 'bold' | 'green' | 'yellow' | 'red'
+const OSC = '\u001b]'
+const ST = '\u001b\\'
+
+export type StyleName = 'dim' | 'bold' | 'green' | 'yellow' | 'red' | 'link'
 
 export type Styler = (name: StyleName, text: string) => string
 
@@ -12,6 +15,11 @@ export type Styler = (name: StyleName, text: string) => string
 export const makeStyler = (rt: Runtime, stream: OutStream): Styler => {
   const forced = rt.env.FORCE_COLOR !== undefined && !['', '0'].includes(rt.env.FORCE_COLOR)
   const enabled = (stream.isTTY || forced) && !rt.env.NO_COLOR && rt.env.TERM !== 'dumb'
-  return (name: StyleName, text: string): string =>
-    enabled ? styleText(name, text, { validateStream: false }) : text
+  return (name: StyleName, text: string): string => {
+    if (!enabled) return text
+    if (name !== 'link') return styleText(name, text, { validateStream: false })
+    // OSC 8 makes the text clickable; the visible text stays the bare URL so copy-paste is intact.
+    const styled = styleText(['blue', 'underline'], text, { validateStream: false })
+    return `${OSC}8;;${text}${ST}${styled}${OSC}8;;${ST}`
+  }
 }

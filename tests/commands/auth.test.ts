@@ -61,6 +61,43 @@ describe('auth login', () => {
     expect(outcome.stderr).toContain('Waiting for approval in the browser.')
   })
 
+  it('shows the approval link blue, underlined and clickable on a coloured terminal', async () => {
+    const outcome = await execute(box, ['auth', 'login'], {
+      baseUrl: api.url,
+      tty: true,
+      colour: true,
+    })
+    const url = outcome.opened[0]
+    expect(url).toContain(`${api.url}/cli?request=`)
+    const esc = String.fromCharCode(27)
+    expect(outcome.stderr).toContain(
+      `${esc}]8;;${url}${esc}\\${esc}[34m${esc}[4m${url}${esc}[24m${esc}[39m${esc}]8;;${esc}\\`,
+    )
+  })
+
+  it('prints the approval link as plain text with NO_COLOR, and nothing styled under --json', async () => {
+    for (const options of [{ tty: true }, { tty: true, colour: true, env: { NO_COLOR: '1' } }]) {
+      const outcome = await execute(box, ['auth', 'login'], { baseUrl: api.url, ...options })
+      expect(outcome.stderr).not.toContain('\u001b')
+      expect(outcome.stderr).toContain(`  ${api.url}/cli?request=`)
+    }
+    const piped = await execute(box, ['auth', 'login', '--no-wait'], {
+      baseUrl: api.url,
+      colour: true,
+    })
+    expect(piped.stdout + piped.stderr).not.toContain('\u001b')
+  })
+
+  it('styles the link in the --no-wait text on stdout of a coloured terminal', async () => {
+    const outcome = await execute(box, ['auth', 'login', '--no-wait'], {
+      baseUrl: api.url,
+      tty: true,
+      colour: true,
+    })
+    expect(outcome.stdout).toContain(`${String.fromCharCode(27)}[34m`)
+    expect(outcome.stdout).toContain(`${api.url}/cli?request=`)
+  })
+
   it('--no-wait on a terminal prints the request and does not poll', async () => {
     const outcome = await execute(box, ['auth', 'login', '--no-wait'], {
       baseUrl: api.url,
