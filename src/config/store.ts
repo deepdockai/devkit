@@ -61,17 +61,30 @@ const PENDING_KEPT_MS = 60 * 60 * 1000
 
 export const emptyConfig = (): Config => ({ keys: [], pending: [] })
 
+const absoluteDir = (
+  env: Readonly<Record<string, string | undefined>>,
+  name: string,
+): string | undefined => {
+  const value = env[name]
+  if (value && !isAbsolute(value)) {
+    throw usageError(`${name} must be an absolute path.`, 'Unset it or give a full path.')
+  }
+  return value || undefined
+}
+
+/** The directory the settings file would go in without DEEPDOCK_CONFIG_DIR: the platform's. */
+export const configBaseDir = (rt: Pick<Runtime, 'env' | 'platform' | 'homedir'>): string => {
+  if (rt.platform === 'win32') return rt.env.APPDATA ?? join(rt.homedir, 'AppData', 'Roaming')
+  return absoluteDir(rt.env, 'XDG_CONFIG_HOME') ?? join(rt.homedir, '.config')
+}
+
+/**
+ * DEEPDOCK_CONFIG_DIR moves only this CLI's settings (one directory per API, say), leaving every
+ * other tool's XDG lookup alone; it applies on Windows too.
+ */
 export const configPath = (rt: Runtime): string => {
-  if (rt.platform === 'win32') {
-    const base = rt.env.APPDATA ?? join(rt.homedir, 'AppData', 'Roaming')
-    return join(base, 'deepdock', 'config.json')
-  }
-  const xdg = rt.env.XDG_CONFIG_HOME
-  if (xdg && !isAbsolute(xdg)) {
-    throw usageError('XDG_CONFIG_HOME must be an absolute path.', 'Unset it or give a full path.')
-  }
-  const base = xdg || join(rt.homedir, '.config')
-  return join(base, 'deepdock', 'config.json')
+  const own = absoluteDir(rt.env, 'DEEPDOCK_CONFIG_DIR')
+  return own ? join(own, 'config.json') : join(configBaseDir(rt), 'deepdock', 'config.json')
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

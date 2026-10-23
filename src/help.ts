@@ -29,7 +29,7 @@ Examples
 
 More
   Exit codes: \`deepdock help exit-codes\`. API reference per system: \`deepdock systems openapi <system>\`.
-  Environment: DEEPDOCK_ORG, DEEPDOCK_BASE_URL, NO_COLOR, FORCE_COLOR.
+  Environment: DEEPDOCK_ORG, DEEPDOCK_BASE_URL, DEEPDOCK_CONFIG_DIR, NO_COLOR, FORCE_COLOR.
   Actions run with an API key from your own code, never from this CLI: \`deepdock keys create --help\`.
 `
 
