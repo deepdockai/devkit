@@ -1,6 +1,7 @@
 import { statSync, writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { browserCommand } from '../../src/runtime.ts'
+import { browserAllowed } from '../../src/approval/browser.ts'
+import { browserCommand, type Runtime } from '../../src/runtime.ts'
 import { type FakeApi, startFakeApi } from '../fakeApi.ts'
 import {
   errorDocOf,
@@ -344,6 +345,25 @@ describe('base URL binding', () => {
   })
 })
 
+describe('browserAllowed', () => {
+  const rt = (platform: NodeJS.Platform, env: Record<string, string>): Runtime =>
+    ({ platform, env }) as unknown as Runtime
+
+  it('needs a display on Linux', () => {
+    expect(browserAllowed(rt('linux', {}), false)).toBe(false)
+    expect(browserAllowed(rt('linux', { DISPLAY: ':0' }), false)).toBe(true)
+    expect(browserAllowed(rt('linux', { WAYLAND_DISPLAY: 'wayland-0' }), false)).toBe(true)
+  })
+
+  it('skips an SSH session on macOS and Windows, not on Linux with a display', () => {
+    const ssh = { SSH_CONNECTION: '1 2 3 4', DISPLAY: ':0' }
+    expect(browserAllowed(rt('darwin', ssh), false)).toBe(false)
+    expect(browserAllowed(rt('win32', ssh), false)).toBe(false)
+    expect(browserAllowed(rt('linux', ssh), false)).toBe(true)
+    expect(browserAllowed(rt('darwin', {}), false)).toBe(true)
+  })
+})
+
 describe('opening the browser', () => {
   const login = (options: Parameters<typeof execute>[2], flags: string[] = []) =>
     execute(box, ['auth', 'login', ...flags], { baseUrl: api.url, tty: true, ...options })
@@ -361,8 +381,6 @@ describe('opening the browser', () => {
       ['--no-browser', {}, ['--no-browser']],
       ['DEEPDOCK_NO_BROWSER', { env: { DEEPDOCK_NO_BROWSER: '1' } }, []],
       ['CI', { env: { CI: 'true' } }, []],
-      ['ssh into another OS', { platform: 'darwin', env: { SSH_CONNECTION: '1 2 3 4' } }, []],
-      ['no display', { platform: 'linux', env: { DISPLAY: '' } }, []],
     ]
     for (const [name, options, flags] of skips) {
       const outcome = await login(options, flags)
