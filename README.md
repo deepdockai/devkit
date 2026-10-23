@@ -236,12 +236,13 @@ macOS and Linux need nothing special. On Windows:
   revoked, and `data.alreadyRevoked` says so). `auth logout` reports the failure in
   `apiKeysRevoked[].removed` and in `meta.hint`, and clears its local records either way.
 - **Local state** lives in `$XDG_CONFIG_HOME/deepdock/config.json`, else
-  `~/.config/deepdock/config.json` (`%APPDATA%\deepdock\config.json` on Windows), mode 600 in a
-  mode 700 directory. It holds the sign-in, the default organisation, the ids of the keys this
+  `~/.config/deepdock/config.json` (`%APPDATA%\deepdock\config.json` on Windows), or in
+  `$DEEPDOCK_CONFIG_DIR/config.json` when that absolute path is set; mode 600, in a directory the
+  CLI creates mode 700 when it does not exist. It holds the sign-in, the default organisation, the ids of the keys this
   CLI created (never their values) and a pending approval request. A file other users can read
   is refused with the `chmod` to run.
 - **Environment:** `DEEPDOCK_ORG`, `DEEPDOCK_BASE_URL` (https, or http for localhost only),
-  `NO_COLOR`, `FORCE_COLOR` (colours messages on a stream that is not a terminal; `NO_COLOR` wins). A sign-in or pending request is never sent to a different base URL than the one it
+  `DEEPDOCK_CONFIG_DIR`, `NO_COLOR`, `FORCE_COLOR` (colours messages on a stream that is not a terminal; `NO_COLOR` wins). A sign-in or pending request is never sent to a different base URL than the one it
   was made against.
 
 Report a vulnerability by email to torben@deepdock.ai, not in a public issue: [SECURITY.md](SECURITY.md).
@@ -256,11 +257,33 @@ bun run test:node     # the same tests under Node (needs dist/ from the build)
 bun run format && bun run lint && bun run typecheck && bun run check:public
 ```
 
-`tests/fakeApi.ts` is a local HTTP server answering the routes the CLI uses:
+### Trying a change locally
+
+`bun run dev` runs the CLI from source. Each API gets a settings directory of its own under
+`<config dir>/deepdock-dev/<api host>/`, so a sign-in made against one API never sits next to
+another's; only the CLI's own settings move (`DEEPDOCK_CONFIG_DIR`), nothing else on the machine:
+
+```bash
+bun run dev -- auth status                                      # the production API
+DEEPDOCK_BASE_URL=http://localhost:8787 bun run dev -- auth login --no-wait
+```
+
+The script does not depend on the current directory: from elsewhere, call it by its path
+(`bun /path/to/devkit/scripts/dev.ts ...`), or put the `DEEPDOCK_BASE_URL=... bun .../dev.ts` line
+in a shell alias per API. To run the exact tarball npm would publish, from any directory:
+
+```bash
+bun run pack:try -- auth status      # builds, packs, prints the one-line command to run it
+```
+
+It prints `DEEPDOCK_BASE_URL=... DEEPDOCK_CONFIG_DIR=... npx -y --package=/path/to/deepdockai-cli-<version>.tgz deepdock auth status`,
+for the same API and settings directory `bun run dev` would use (`npx <tarball>` alone would try
+to execute the archive). `tests/fakeApi.ts` is a local stand-in that approves every request at
+once:
 
 ```bash
 bun scripts/fakeServer.ts &              # prints its URL
-DEEPDOCK_BASE_URL=http://127.0.0.1:<port> node dist/deepdock.js auth login
+DEEPDOCK_BASE_URL=http://127.0.0.1:<port> bun run dev -- auth login
 ```
 
 ## Licence

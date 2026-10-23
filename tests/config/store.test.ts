@@ -43,6 +43,42 @@ describe('config path', () => {
     )
   })
 
+  it('DEEPDOCK_CONFIG_DIR replaces the directory on every platform, and must be absolute', () => {
+    expect(
+      slashed(
+        configPath(
+          runtimeFor('/home/a', { DEEPDOCK_CONFIG_DIR: '/d', XDG_CONFIG_HOME: '/x' }, 'linux'),
+        ),
+      ),
+    ).toBe('/d/config.json')
+    expect(
+      slashed(
+        configPath(
+          runtimeFor(
+            'C:/Users/a',
+            { DEEPDOCK_CONFIG_DIR: '/d', APPDATA: 'C:/Users/a/AppData/Roaming' },
+            'win32',
+          ),
+        ),
+      ),
+    ).toBe('/d/config.json')
+    expect(() =>
+      configPath(runtimeFor('/home/a', { DEEPDOCK_CONFIG_DIR: 'rel' }, 'linux')),
+    ).toThrow(/DEEPDOCK_CONFIG_DIR must be an absolute path/)
+  })
+
+  it('writes and reads the settings file under DEEPDOCK_CONFIG_DIR', async () => {
+    const box = sandbox()
+    const dir = join(box.home, 'elsewhere')
+    const rt = runtimeFor(box.home, { DEEPDOCK_CONFIG_DIR: dir })
+    await updateConfig(rt, (config) => {
+      config.defaultOrg = 'muster-it'
+    })
+    expect(existsSync(join(dir, 'config.json'))).toBe(true)
+    expect((await loadConfig(rt)).defaultOrg).toBe('muster-it')
+    expect(existsSync(box.configFile)).toBe(false)
+  })
+
   it('on Windows uses APPDATA and ignores XDG_CONFIG_HOME', () => {
     const withAppData = runtimeFor(
       'C:/Users/a',

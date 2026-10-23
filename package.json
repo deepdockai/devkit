@@ -1,6 +1,6 @@
 {
   "name": "@deepdockai/cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Deepdock partner CLI: pair devices, see systems and actions, create the API key your code runs them with.",
   "type": "module",
   "license": "MIT",
@@ -23,6 +23,8 @@
   },
   "scripts": {
     "build": "bun scripts/build.ts",
+    "dev": "bun scripts/dev.ts",
+    "pack:try": "bun scripts/packTry.ts",
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "lint": "biome lint .",

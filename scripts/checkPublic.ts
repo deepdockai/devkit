@@ -135,17 +135,26 @@ export const scanTarball = (tarball: string): Finding[] => {
   }
 }
 
+/**
+ * `npm pack` into `destination`; returns the tarball's path. npm is npm.cmd on Windows, which Node
+ * only starts through a shell, so there every argument is quoted: a temp dir can carry a space.
+ */
+export const npmPack = (root: string, destination: string, extra: string[] = []): string => {
+  const shell = process.platform === 'win32'
+  const args = ['pack', '--json', '--pack-destination', destination, ...extra]
+  const packed = execFileSync('npm', shell ? args.map((arg) => `"${arg}"`) : args, {
+    cwd: root,
+    encoding: 'utf8',
+    shell,
+  })
+  return join(destination, packedFilename(packed))
+}
+
 /** Packs the package with npm once and scans that tarball. */
 export const scanPacked = (root: string): Finding[] => {
   const work = mkdtempSync(join(tmpdir(), 'deepdock-pack-'))
   try {
-    const packed = execFileSync(
-      'npm',
-      ['pack', '--json', '--pack-destination', work, '--ignore-scripts'],
-      // npm is npm.cmd on Windows, which Node only starts through a shell; the arguments are fixed.
-      { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' },
-    )
-    return scanTarball(join(work, packedFilename(packed)))
+    return scanTarball(npmPack(root, work, ['--ignore-scripts']))
   } finally {
     rmSync(work, { recursive: true, force: true })
   }
