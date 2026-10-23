@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { DEVICE_ID, type FakeApi, startFakeApi } from '../fakeApi.ts'
+import { summary } from '../../src/commands/actions.ts'
 import { makeStyler } from '../../src/output/styles.ts'
 import type { Runtime } from '../../src/runtime.ts'
 import { execute, makeSandbox, type Sandbox, signInWith } from '../harness.ts'
@@ -84,8 +85,19 @@ describe('auth login --wait', () => {
       ['auth', 'login', '--wait', '3c9d0e1a-5b6c-4d7e-8f90-a1b2c3d4e5f6'],
       { baseUrl: api.url },
     )
+    expect(outcome.code).toBe(0)
     expect(outcome.stderr).toContain('Waiting for approval in the browser.')
     expect(() => JSON.parse(outcome.stdout)).not.toThrow()
+  })
+})
+
+describe('summary', () => {
+  it('keeps abbreviations, skips leading blank lines and cuts by character', () => {
+    expect(summary('Lists orders, e.g. open ones. More.')).toBe('Lists orders, e.g. open ones.')
+    expect(summary('\n\nFirst line here.\nSecond.')).toBe('First line here.')
+    expect(summary(42)).toBeUndefined()
+    const long = Array.from({ length: 200 }, () => '😀').join('')
+    expect(Array.from(summary(long) ?? '')).toHaveLength(160)
   })
 })
 
@@ -122,7 +134,7 @@ describe('colour', () => {
         colour: true,
         env: { NO_COLOR: '1' },
       })
-      expect(noColor.stdout).not.toContain(ESCAPE)
+      expect(noColor.stdout + noColor.stderr).not.toContain(ESCAPE)
     }
   })
 

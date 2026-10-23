@@ -110,7 +110,7 @@ const scalar = (value: unknown): string => {
   return ''
 }
 
-const GOOD = new Set(['connected', 'active', 'running', 'ok', 'open'])
+const GOOD = new Set(['connected', 'active', 'running', 'ok'])
 const WARN = new Set(['offline', 'paused', 'outdated', 'unavailable', 'degraded'])
 const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
 
@@ -119,9 +119,9 @@ const cellFor = (key: string, value: unknown): Cell => {
   const text = scalar(value)
   if (text === '') return text
   if (key === 'revokedAt') return { text, style: 'red' }
-  if (key === 'name' || key === 'action' || key === 'label') return { text, style: 'bold' }
+  if (key === 'name' || key === 'action') return { text, style: 'bold' }
   if (key.endsWith('At') || key === 'since') return { text, style: 'dim' }
-  if (key === 'status' || key === 'state' || key === 'access') {
+  if (key === 'status' || key === 'state') {
     if (GOOD.has(text)) return { text, style: 'green' }
     if (WARN.has(text)) return { text, style: 'yellow' }
     if (BAD.has(text)) return { text, style: 'red' }

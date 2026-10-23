@@ -26,7 +26,7 @@ export const registerSystems = (program: Command, run: Run): void => {
 
   systems
     .command('openapi')
-    .description("Print a system's OpenAPI document (redirect to keep it)")
+    .description("Print a system's OpenAPI document (the document itself when redirected)")
     .argument('<system>', 'the system name')
     .action((system, _options, cmd) =>
       run(cmd, async (ctx): Promise<Result> => {

@@ -15,9 +15,15 @@ const fieldNames = (input: unknown): string => {
 /** The table shows the opening line or sentence; the whole text is in --json and the OpenAPI document. */
 export const summary = (description: unknown): string | undefined => {
   if (typeof description !== 'string') return undefined
-  const line = (description.split('\n')[0] ?? '').trim()
-  const sentence = /^.*?[.!?](?=\s|$)/.exec(line)?.[0] ?? line
-  return sentence.length > 160 ? `${sentence.slice(0, 159).trimEnd()}…` : sentence
+  const line =
+    description
+      .split('\n')
+      .find((text) => text.trim() !== '')
+      ?.trim() ?? ''
+  // A full stop ends the sentence only before a capital: "e.g. B AB 1234" and "z.B. Müller" go on.
+  const sentence = /^.*?[.!?](?=\s+\p{Lu}|$)/u.exec(line)?.[0] ?? line
+  const chars = Array.from(sentence)
+  return chars.length > 160 ? `${chars.slice(0, 159).join('').trimEnd()}…` : sentence
 }
 
 // Name first, then a read/write kind and the field names when the action carries them, then

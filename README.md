@@ -237,7 +237,7 @@ macOS and Linux need nothing special. On Windows:
   CLI created (never their values) and a pending approval request. A file other users can read
   is refused with the `chmod` to run.
 - **Environment:** `DEEPDOCK_ORG`, `DEEPDOCK_BASE_URL` (https, or http for localhost only),
-  `NO_COLOR`, `FORCE_COLOR` (colours stderr when it is not a terminal; `NO_COLOR` wins). A sign-in or pending request is never sent to a different base URL than the one it
+  `NO_COLOR`, `FORCE_COLOR` (colours messages on a stream that is not a terminal; `NO_COLOR` wins). A sign-in or pending request is never sent to a different base URL than the one it
   was made against.
 
 Report a vulnerability by email to torben@deepdock.ai, not in a public issue: [SECURITY.md](SECURITY.md).
