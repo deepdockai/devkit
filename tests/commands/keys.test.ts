@@ -101,14 +101,29 @@ describe('keys create', () => {
     const outcome = await run(createArgs, { tty: true })
     expect(outcome.code).toBe(0)
     expect(outcome.stderr).toContain(
-      'Open this link to approve the key (it expires in 10 minutes):',
+      'Opening the approval page in your browser (it expires in 10 minutes):',
     )
+    expect(outcome.stderr).toContain('Opened in your browser.')
+    expect(outcome.opened).toHaveLength(1)
+    expect(outcome.stderr.split('Organisation:')).toHaveLength(2)
     expect(outcome.stderr).toContain('A human approves "Create an API key in Muster IT?" there')
     expect(outcome.stdout).toContain('Created API key "myapp dev".')
     expect(outcome.stdout).toContain(`ID:        ${KEY_ID}`)
     expect(outcome.stdout).toContain('Written:   .env.local (DEEPDOCK_API_KEY)')
     expect(outcome.stdout).toContain('keeps no copy')
     expect(outcome.stdout + outcome.stderr).not.toContain(api.state.keyValue)
+  })
+
+  it('colours labels by role on a terminal and stays plain with NO_COLOR', async () => {
+    const esc = String.fromCharCode(27)
+    const coloured = await run(createArgs, { tty: true, colour: true })
+    expect(coloured.stderr).toContain(`${esc}[2mWaiting for approval in the browser.`)
+    expect(coloured.stderr).toContain(`${esc}[1mMuster IT`)
+    expect(coloured.stderr).toContain(`${esc}[1m"Create an API key in Muster IT?"`)
+    expect(coloured.stdout).toContain(`${esc}[32mCreated${esc}[39m API key`)
+    expect(coloured.stdout).toContain(`${esc}[1mdeepdock keys revoke ${KEY_ID}`)
+    const plain = await run(createArgs, { tty: true })
+    expect(plain.stdout + plain.stderr).not.toContain(esc)
   })
 
   it('sends the name, an expiry about 30 days out, the hostname and the CLI version', async () => {

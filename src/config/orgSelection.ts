@@ -1,7 +1,8 @@
 import { CliError } from '../api/errors.ts'
 import type { Config, OrgInfo } from './store.ts'
 
-export type ResolvedOrg = { slug: string; name: string; role: string }
+/** `onlyOne` is set when nothing was asked for and the person belongs to exactly one organisation. */
+export type ResolvedOrg = { slug: string; name: string; role: string; onlyOne?: true }
 
 export const selectableOrgs = (orgs: OrgInfo[]): ResolvedOrg[] =>
   orgs.flatMap((org) => (org.slug ? [{ slug: org.slug, name: org.name, role: org.role }] : []))
@@ -20,6 +21,8 @@ export const resolveOrg = (
 ): ResolvedOrg => {
   const choices = selectableOrgs(orgs)
   const slugs = choices.map((org) => org.slug)
+  const [only] = choices
+  if (!requested && only && choices.length === 1) return { ...only, onlyOne: true }
   if (!requested) {
     throw new CliError({
       code: 'org_required',

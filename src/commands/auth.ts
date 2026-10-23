@@ -1,6 +1,7 @@
 import type { Command } from '@commander-js/extra-typings'
 import { CliError, usageError } from '../api/errors.ts'
 import { parseAnswer } from '../api/schemas.ts'
+import { browserAllowed } from '../approval/browser.ts'
 import { assertNotExpired, pollUntilApproved } from '../approval/poll.ts'
 import { startLogin } from '../approval/request.ts'
 import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
@@ -9,6 +10,7 @@ import { assertSameBaseUrl, type Ctx, type Result } from '../context.ts'
 import { AUTH_LOGIN_HELP } from '../help.ts'
 import { confirm } from '../output/confirm.ts'
 import { orgTable, renderTable } from '../output/human.ts'
+import { paint } from '../output/styles.ts'
 import type { Run } from '../program.ts'
 import { DEFAULT_BASE_URL } from '../runtime.ts'
 import { displayPath } from '../writeEnv/ledger.ts'
@@ -17,22 +19,41 @@ import { type Removal, describeRemoval, settleWrittenLine } from '../writeEnv/re
 const minutesLeft = (ctx: Ctx, expiresAt: string): number =>
   Math.max(1, Math.ceil((Date.parse(expiresAt) - ctx.rt.now().getTime()) / 60000))
 
-export const announceApproval = (
+export const noteWaiting = (ctx: Ctx): void => {
+  ctx.note(paint(ctx.err, 'quiet', 'Waiting for approval in the browser.'))
+}
+
+/**
+ * Prints the approval link and, when allowed, opens it. The URL is the validated dashboard link
+ * from `approvalUrl`, passed to the opener as one argument.
+ */
+export const announceApproval = async (
   ctx: Ctx,
   what: string,
   url: string,
   expiresAt: string,
-  extra?: string,
-): void => {
+  options: { extra?: string; noBrowser: boolean },
+): Promise<void> => {
+  const open = browserAllowed(ctx.rt, options.noBrowser)
+  const minutes = minutesLeft(ctx, expiresAt)
   ctx.note(
-    `Open this link to approve ${what} (it expires in ${minutesLeft(ctx, expiresAt)} minutes):`,
+    open
+      ? `Opening the approval page in your browser (it expires in ${minutes} minutes):`
+      : `Open this link to approve ${what} (it expires in ${minutes} minutes):`,
   )
   ctx.note(`  ${ctx.err('link', url)}`)
   ctx.note(
-    extra ??
+    options.extra ??
       "The page shows this computer's name and the CLI version: check them before you approve.",
   )
-  ctx.note('Waiting for approval in the browser.')
+  if (open) {
+    ctx.note(
+      (await ctx.rt.openBrowser(url))
+        ? 'Opened in your browser.'
+        : 'Could not open a browser; use the link above.',
+    )
+  }
+  noteWaiting(ctx)
 }
 
 export const pendingResult = (pending: PendingRequest, url: string, text: string): Result => ({
@@ -80,10 +101,11 @@ const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> =
     }
     current.organisations = answer.organisations
     if (current.defaultOrg && !slugs.includes(current.defaultOrg)) current.defaultOrg = undefined
+    if (!current.defaultOrg && slugs.length === 1) current.defaultOrg = slugs[0]
     current.pending = current.pending.filter((entry) => entry.request !== pending.request)
   })
 
-  const lines = [`Signed in as ${answer.user.email}.`, '']
+  const lines = [`${paint(ctx.out, 'success', 'Signed in')} as ${answer.user.email}.`, '']
   if (answer.organisations.length === 0) {
     lines.push('You are not a member of an organisation yet.')
   } else {
@@ -92,7 +114,15 @@ const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> =
       indented(orgTable(answer.organisations, config.defaultOrg, ctx.out)),
       '',
     )
-    lines.push('Choose one with `deepdock org select <slug>` or pass --org to each command.')
+    const only = selectableOrgs(answer.organisations)
+    const [sole] = only
+    if (sole && only.length === 1 && config.defaultOrg === sole.slug) {
+      lines.push(
+        `${paint(ctx.out, 'success', 'Selected')} ${sole.name} (${sole.slug}) as your organisation.`,
+      )
+    } else {
+      lines.push('Choose one with `deepdock org select <slug>` or pass --org to each command.')
+    }
   }
   return {
     data: {
@@ -106,7 +136,7 @@ const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> =
   }
 }
 
-type LoginOptions = { wait?: string | false }
+type LoginOptions = { wait?: string | false; browser?: boolean }
 
 const login = async (ctx: Ctx, options: LoginOptions): Promise<Result> => {
   const config = await ctx.config()
@@ -122,7 +152,7 @@ const login = async (ctx: Ctx, options: LoginOptions): Promise<Result> => {
     }
     assertSameBaseUrl(pending.baseUrl, ctx.baseUrl, 'request')
     assertNotExpired(ctx.rt, 'login', pending.expiresAt)
-    ctx.note('Waiting for approval in the browser.')
+    noteWaiting(ctx)
     return finishLogin(ctx, pending)
   }
 
@@ -145,8 +175,9 @@ const login = async (ctx: Ctx, options: LoginOptions): Promise<Result> => {
       ].join('\n'),
     )
   }
-  announceApproval(ctx, 'the sign-in', started.url, started.expiresAt)
-  ctx.rt.openBrowser(started.url)
+  await announceApproval(ctx, 'the sign-in', started.url, started.expiresAt, {
+    noBrowser: options.browser === false,
+  })
   return finishLogin(ctx, pending)
 }
 
@@ -353,20 +384,21 @@ const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
     if (keepKeys) current.keys = []
   })
 
+  const signedOut = paint(ctx.out, 'success', 'Signed out')
   const lines: string[] = []
   if (!email) lines.push('Not signed in.')
-  else if (signInRevoked) lines.push(`Signed out ${email}. The sign-in is revoked.`)
+  else if (signInRevoked) lines.push(`${signedOut} ${email}. The sign-in is revoked.`)
   else if (usable) {
     lines.push(
-      `Signed out ${email}. The stored sign-in has no id (the settings file is damaged), so it was only removed from this computer; revoke it in the Deepdock dashboard.`,
+      `${signedOut} ${email}. The stored sign-in has no id (the settings file is damaged), so it was only removed from this computer; revoke it in the Deepdock dashboard.`,
     )
   } else {
     lines.push(
-      `Signed out ${email}. The sign-in was only removed from this computer; revoke it in the Deepdock dashboard.`,
+      `${signedOut} ${email}. The sign-in was only removed from this computer; revoke it in the Deepdock dashboard.`,
     )
   }
   if (revokedKeys.length > 0) {
-    lines.push('Revoked the API keys this CLI created:')
+    lines.push(`${paint(ctx.out, 'success', 'Revoked')} the API keys this CLI created:`)
     for (const key of revokedKeys) {
       const where = key.removed.removal === 'done' ? `   ${describeRemoval(key.removed)}` : ''
       lines.push(`  ${key.org}   "${key.name}"   ${key.prefix}…   ${key.id}${where}`)
@@ -375,13 +407,13 @@ const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
   }
   if (keptKeys.length > 0) {
     lines.push(
-      `Kept ${keptKeys.length} API ${keptKeys.length === 1 ? 'key' : 'keys'} active: ${keptKeys.map(keyLabel).join(', ')}`,
+      `${paint(ctx.out, 'success', 'Kept')} ${keptKeys.length} API ${keptKeys.length === 1 ? 'key' : 'keys'} active: ${keptKeys.map(keyLabel).join(', ')}`,
     )
     lines.push('Revoke one later with `deepdock keys revoke <id>` after `deepdock auth login`.')
   }
   for (const key of failedKeys) {
     lines.push(
-      `Could not revoke "${key.name}" (${key.id}): run \`deepdock keys revoke ${key.id}\` after \`deepdock auth login\`.`,
+      `${paint(ctx.out, 'error', 'Could not revoke')} "${key.name}" (${key.id}): run \`deepdock keys revoke ${key.id}\` after \`deepdock auth login\`.`,
     )
   }
   const hints = [
@@ -415,6 +447,7 @@ export const registerAuth = (program: Command, run: Run): void => {
     .description('Sign in to Deepdock as yourself')
     .option('--wait <request>', 'finish a request started with --no-wait')
     .option('--no-wait', 'print the request and exit')
+    .option('--no-browser', 'do not open the link in a browser')
     .action((options, cmd) => run(cmd, (ctx) => login(ctx, options)))
   loginCommand.helpInformation = (): string => AUTH_LOGIN_HELP
 

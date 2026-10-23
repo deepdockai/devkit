@@ -55,7 +55,7 @@ describe('auth login', () => {
     expect(outcome.stdout).toContain('muster-it')
     expect(outcome.stdout).not.toContain(`${api.url}/cli`)
     expect(outcome.stderr).toContain(
-      'Open this link to approve the sign-in (it expires in 10 minutes):',
+      'Opening the approval page in your browser (it expires in 10 minutes):',
     )
     expect(outcome.stderr).toContain(`${api.url}/cli?request=`)
     expect(outcome.stderr).toContain('Waiting for approval in the browser.')
@@ -341,6 +341,48 @@ describe('base URL binding', () => {
       expect(outcome.code, url).toBe(5)
       expect(JSON.parse(outcome.stdout).data.baseUrl).toBe(url)
     }
+  })
+})
+
+describe('opening the browser', () => {
+  const login = (options: Parameters<typeof execute>[2], flags: string[] = []) =>
+    execute(box, ['auth', 'login', ...flags], { baseUrl: api.url, tty: true, ...options })
+
+  it('opens the link once on a terminal, passing the URL as one argument', async () => {
+    const outcome = await login({})
+    expect(outcome.opened).toHaveLength(1)
+    expect(outcome.opened[0]).toContain(`${api.url}/cli?request=`)
+    expect(outcome.stderr).toContain('Opened in your browser.')
+    expect(browserCommand('linux', outcome.opened[0] ?? '').args).toEqual(outcome.opened)
+  })
+
+  it('keeps the old wording and opens nothing in each skip case', async () => {
+    const skips: Array<[string, Parameters<typeof execute>[2], string[]]> = [
+      ['--no-browser', {}, ['--no-browser']],
+      ['DEEPDOCK_NO_BROWSER', { env: { DEEPDOCK_NO_BROWSER: '1' } }, []],
+      ['CI', { env: { CI: 'true' } }, []],
+      ['no display', { platform: 'linux', env: { DISPLAY: '' } }, []],
+    ]
+    for (const [name, options, flags] of skips) {
+      const outcome = await login(options, flags)
+      expect(outcome.opened, name).toEqual([])
+      expect(outcome.stderr, name).toContain('Open this link to approve the sign-in')
+      expect(outcome.stderr, name).not.toContain('Opened in your browser.')
+    }
+  })
+
+  it('opens nothing without a terminal or under --json', async () => {
+    const piped = await login({ tty: false })
+    expect(piped.opened).toEqual([])
+    const json = await login({}, ['--json'])
+    expect(json.opened).toEqual([])
+  })
+
+  it('says so when the opener could not start, and the link stays printed', async () => {
+    const outcome = await login({ browserFails: true })
+    expect(outcome.stderr).toContain('Could not open a browser; use the link above.')
+    expect(outcome.stderr).not.toContain('Opened in your browser.')
+    expect(outcome.stderr).toContain(`${api.url}/cli?request=`)
   })
 })
 

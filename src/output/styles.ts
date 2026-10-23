@@ -6,6 +6,18 @@ const ST = '\u001b\\'
 
 export type StyleName = 'dim' | 'bold' | 'green' | 'yellow' | 'red' | 'link'
 
+export type Role = 'warn' | 'error' | 'success' | 'emphasis' | 'quiet' | 'link'
+
+/** The CLI's message roles; commands name a role, never a colour or an escape code. */
+const ROLES: Record<Role, StyleName> = {
+  warn: 'yellow',
+  error: 'red',
+  success: 'green',
+  emphasis: 'bold',
+  quiet: 'dim',
+  link: 'link',
+}
+
 export type Styler = (name: StyleName, text: string) => string
 
 /**
@@ -23,3 +35,5 @@ export const makeStyler = (rt: Runtime, stream: OutStream): Styler => {
     return `${OSC}8;;${text}${ST}${styled}${OSC}8;;${ST}`
   }
 }
+
+export const paint = (style: Styler, role: Role, text: string): string => style(ROLES[role], text)

@@ -60,6 +60,8 @@ export type RunOptions = {
   onSleep?: (ms: number) => void | Promise<void>
   /** Replaces fetch, e.g. to drop a connection. */
   fetch?: (input: string, init?: RequestInit) => Promise<Response>
+  /** The browser opener reports that it could not start. */
+  browserFails?: boolean
   /** Aborts the interrupt signal at the first sleep. */
   interruptAtSleep?: boolean
 }
@@ -81,6 +83,7 @@ export const execute = async (
     PATH: process.env.PATH,
     ...systemEnv(),
     APPDATA: join(sandbox.home, 'AppData', 'Roaming'),
+    DISPLAY: ':0',
     ...(options.colour ? {} : { NO_COLOR: '1' }),
     ...(options.baseUrl ? { DEEPDOCK_BASE_URL: options.baseUrl } : {}),
     ...options.env,
@@ -116,8 +119,10 @@ export const execute = async (
     },
     pollIntervalMs: options.pollIntervalMs ?? 0,
     requestTimeoutMs: 5000,
-    openBrowser: (url) => {
+    openBrowser: async (url) => {
+      if (options.browserFails) return false
       opened.push(url)
+      return true
     },
     signal: interrupt.signal,
   }

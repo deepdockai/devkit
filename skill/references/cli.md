@@ -32,11 +32,13 @@ the API key the CLI wrote to the app's env file.
 | `skill [--agent claude\|codex\|cursor\|all]` | writes this skill into the current repository | anyone |
 
 Every command that acts in an organisation uses `--org <slug>` after the command, else
-`DEEPDOCK_ORG`, else the default from `org select`; with none it stops with `org_required` and
-lists the organisations. Always pass `--org` from an agent: `org select` changes the human's
+`DEEPDOCK_ORG`, else the default from `org select`; if you belong to exactly one organisation it is used and named on
+stderr; with several and none chosen it stops with `org_required` and lists them. Always pass `--org` from an agent: `org select` changes the human's
 default in every terminal.
 
-Global flags: `--org <slug>`, `--json`, `--yes`, `-h`, `-v`. Environment: `DEEPDOCK_ORG`,
+`auth login` and `keys create` also open the approval link in the human's browser on a terminal, unless `--no-browser`, `DEEPDOCK_NO_BROWSER=1`, `CI` or a missing display says otherwise.
+
+Global flags: `--org <slug>`, `--json`, `--yes`, `-h`, `-v`. Environment: `DEEPDOCK_ORG`, `DEEPDOCK_NO_BROWSER`,
 `DEEPDOCK_BASE_URL`, `NO_COLOR`.
 
 ## Waiting for the browser

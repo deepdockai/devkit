@@ -4,7 +4,7 @@ import { parseAnswer } from './api/schemas.ts'
 import { type ResolvedOrg, requestedSlug, resolveOrg } from './config/orgSelection.ts'
 import { type Config, loadConfig, type OrgInfo, updateConfig } from './config/store.ts'
 import type { Meta, OrgRef } from './output/envelope.ts'
-import { makeStyler, type Styler } from './output/styles.ts'
+import { makeStyler, paint, type Styler } from './output/styles.ts'
 import { isInteractive, wantsJson } from './output/terminal.ts'
 import { DEFAULT_BASE_URL, type Runtime } from './runtime.ts'
 
@@ -71,6 +71,7 @@ export const createContext = (rt: Runtime, opts: GlobalOptions): Ctx => {
   const baseUrl = baseUrlFor(rt)
   const api = createApi(rt)
   let loaded: Config | undefined
+  let announcedOrg = false
 
   const config = async (): Promise<Config> => {
     loaded ??= await loadConfig(rt)
@@ -93,7 +94,11 @@ export const createContext = (rt: Runtime, opts: GlobalOptions): Ctx => {
       return loaded
     },
     note: (line: string): void => {
-      rt.stderr.write(`${line}\n`)
+      // Every warning is built as "Warning: ..."; the label alone carries the colour.
+      const warning = 'Warning:'
+      rt.stderr.write(
+        `${line.startsWith(warning) ? `${paint(ctx.err, 'warn', warning)}${line.slice(warning.length)}` : line}\n`,
+      )
     },
     signInSecret: async () => {
       const { signIn } = await config()
@@ -124,7 +129,15 @@ export const createContext = (rt: Runtime, opts: GlobalOptions): Ctx => {
       }
       const resolved = resolveOrg(requested, orgs, fromStoredDefault)
       ctx.org = { slug: resolved.slug, name: resolved.name }
-      ctx.note(ctx.err('dim', `Organisation: ${resolved.name} (${resolved.slug})`))
+      // Once per command: finishing a key request resolves the organisation again after the wait.
+      if (!announcedOrg) {
+        announcedOrg = true
+        ctx.note(
+          resolved.onlyOne
+            ? `${paint(ctx.err, 'quiet', 'Using organisation')} ${paint(ctx.err, 'emphasis', resolved.name)} ${paint(ctx.err, 'quiet', `(${resolved.slug}).`)}`
+            : `${paint(ctx.err, 'quiet', 'Organisation:')} ${paint(ctx.err, 'emphasis', resolved.name)} ${paint(ctx.err, 'quiet', `(${resolved.slug})`)}`,
+        )
+      }
       return resolved
     },
     callInOrg: async (req: Omit<ApiRequest, 'secret' | 'org'>): Promise<ApiResponse> => {

@@ -1,4 +1,5 @@
 import type { Command } from '@commander-js/extra-typings'
+import { paint } from '../output/styles.ts'
 import { usageError } from '../api/errors.ts'
 import { deviceIdArg } from '../args.ts'
 import type { Ctx, Result } from '../context.ts'
@@ -64,7 +65,9 @@ const pair = async (ctx: Ctx, code: string, label: string | undefined): Promise<
   const device = isRecord(response.data) ? response.data : {}
   const id = field(device, 'id')
   const name = field(device, 'label')
-  const lines = [`Paired device ${id}${name ? ` (${stripControl(name)})` : ''}.`]
+  const lines = [
+    `${paint(ctx.out, 'success', 'Paired')} device ${id}${name ? ` (${stripControl(name)})` : ''}.`,
+  ]
   const status = field(device, 'status')
   if (status) lines.push(`  Status:   ${status}`)
   lines.push(`  Systems:  ${systemsLabel(device)}`)
@@ -85,7 +88,7 @@ const rename = async (ctx: Ctx, id: string, label: string): Promise<Result> => {
   return {
     data: response.data,
     meta: meta(response.requestId),
-    text: `Renamed device ${deviceId} to ${stripControl(label)}.`,
+    text: `${paint(ctx.out, 'success', 'Renamed')} device ${deviceId} to ${stripControl(label)}.`,
   }
 }
 
@@ -122,7 +125,7 @@ const release = async (ctx: Ctx, id: string): Promise<Result> => {
   return {
     data: response.data,
     meta: meta(response.requestId),
-    text: `Released device ${deviceId}.`,
+    text: `${paint(ctx.out, 'success', 'Released')} device ${deviceId}.`,
   }
 }
 

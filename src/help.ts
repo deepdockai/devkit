@@ -45,12 +45,14 @@ an action; actions run from your code with an API key (\`deepdock keys create\`)
 Usage
   deepdock auth login [flags]
 
-The link is printed either way; opening the browser is a convenience that may fail silently.
+The link is printed either way. On a terminal the CLI also opens it in your browser, unless
+CI is set, there is no display, DEEPDOCK_NO_BROWSER=1 is set or you pass --no-browser.
 
 Flags
   --no-wait           Print the request and exit; finish it later with --wait (the default
                       when there is no terminal)
   --wait <request>    Finish a request started with --no-wait
+  --no-browser        Do not open the link in a browser
 
 Examples
   $ deepdock auth login
@@ -84,6 +86,7 @@ Flags
                         the CLI warns
   --no-wait             Print the request and exit; finish it with --wait
   --wait <request>      Finish a request started with --no-wait
+  --no-browser          Do not open the link in a browser (also DEEPDOCK_NO_BROWSER=1)
 
 Examples
   $ deepdock keys create "myapp dev" --expires 30d --write-env .env.local

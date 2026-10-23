@@ -30,14 +30,16 @@ holding only invented, marked data. While unpaired, the client shows a pairing c
 
 ## Quick start
 
-Sign in. The CLI prints a link; open it, check that the page names your computer and CLI version,
+Sign in. The CLI prints the link and opens it in your browser (not in CI, without a display, with
+`--no-browser` or `DEEPDOCK_NO_BROWSER=1`). Check that the page names your computer and CLI version,
 and click Approve. No password is typed into the terminal.
 
 ```
 $ deepdock auth login
-Open this link to approve the sign-in (it expires in 10 minutes):
+Opening the approval page in your browser (it expires in 10 minutes):
   https://dash.deepdock.ai/cli?request=rq_...
 The page shows this computer's name and the CLI version: check them before you approve.
+Opened in your browser.
 Waiting for approval in the browser.
 
 Signed in as anna.mueller@muster-it.example.
@@ -110,7 +112,8 @@ and `keys revoke` without a question, `-h, --help` everywhere and `-v, --version
 
 Two things are never guessed. A device is always named by its full id: no default device, no
 lookup by label. The organisation comes from `--org`, then `DEEPDOCK_ORG`, then the default
-chosen with `deepdock org select`; with none the command stops and lists your organisations.
+chosen with `deepdock org select`. With exactly one organisation it is used without asking (and
+named on stderr); with several and none chosen the command stops and lists them.
 
 ## The approval flow
 
