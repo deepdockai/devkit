@@ -339,7 +339,10 @@ const wantsKeysKept = async (
   ctx.note(`Logging out revokes the API keys this CLI created (${keys.length}):`)
   for (const key of keys) ctx.note(`  ${key.org}   ${keyLabel(key)}   ${key.prefix}…`)
   ctx.note('Programs using them stop working. Answer N to keep them active.')
-  return !(await confirm(ctx.rt, `Revoke these ${keys.length} keys too?`))
+  return !(await confirm(
+    ctx.rt,
+    `Revoke ${keys.length === 1 ? 'this key' : `these ${keys.length} keys`} too?`,
+  ))
 }
 
 const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
@@ -353,11 +356,15 @@ const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
   const revokedKeys: RevokedKey[] = []
   const failedKeys: UnrevokedKey[] = []
   let signInRevoked = false
-  const keepKeys = await wantsKeysKept(ctx, config.keys, options)
-  const keptKeys: KeyFacts[] = keepKeys ? config.keys.map(factsOf) : []
+  // Keys an earlier `--keep-keys` logout left active are never touched again.
+  const candidates = config.keys.filter((entry) => !entry.kept)
+  // Asking only makes sense when the revoke can happen.
+  const keepKeys = usable
+    ? await wantsKeysKept(ctx, candidates, options)
+    : Boolean(options.keepKeys)
 
   if (usable) {
-    for (const entry of keepKeys ? [] : [...config.keys]) {
+    for (const entry of keepKeys ? [] : candidates) {
       const outcome = await revokeRecordedKey(ctx, entry)
       if ('error' in outcome) failedKeys.push(outcome)
       else revokedKeys.push(outcome)
@@ -367,7 +374,7 @@ const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
       signInRevoked = true
     }
   } else {
-    for (const entry of keepKeys ? [] : config.keys) {
+    for (const entry of keepKeys ? [] : candidates) {
       failedKeys.push({
         ...factsOf(entry),
         error: { code: 'sign_in_needed', message: 'Your sign-in is missing or expired.' },
@@ -380,11 +387,19 @@ const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
     current.defaultOrg = undefined
     current.organisations = undefined
     current.pending = []
-    // A kept key is forgotten here: a later `auth logout` must not revoke it by surprise.
-    if (keepKeys) current.keys = []
+    // The entry stays: it is the ledger `keys revoke` needs to remove the line it wrote.
+    if (keepKeys) {
+      for (const entry of current.keys) entry.kept = true
+    }
   })
 
   const signedOut = paint(ctx.out, 'success', 'Signed out')
+  const keptKeys = (await ctx.config()).keys
+    .filter((entry) => entry.kept)
+    .map((entry) => ({
+      ...factsOf(entry),
+      written: { file: displayPath(ctx.rt, entry.file), name: entry.variable },
+    }))
   const lines: string[] = []
   if (!email) lines.push('Not signed in.')
   else if (signInRevoked) lines.push(`${signedOut} ${email}. The sign-in is revoked.`)

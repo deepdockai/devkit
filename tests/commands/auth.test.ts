@@ -361,6 +361,7 @@ describe('opening the browser', () => {
       ['--no-browser', {}, ['--no-browser']],
       ['DEEPDOCK_NO_BROWSER', { env: { DEEPDOCK_NO_BROWSER: '1' } }, []],
       ['CI', { env: { CI: 'true' } }, []],
+      ['ssh into another OS', { platform: 'darwin', env: { SSH_CONNECTION: '1 2 3 4' } }, []],
       ['no display', { platform: 'linux', env: { DISPLAY: '' } }, []],
     ]
     for (const [name, options, flags] of skips) {

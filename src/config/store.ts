@@ -30,6 +30,8 @@ export type KeyEntry = {
   expiresAt: string
   file: string
   variable: string
+  /** Set by `auth logout --keep-keys`: the key stays active and later logouts leave it alone. */
+  kept?: true
 }
 
 export type PendingRequest = {
@@ -111,7 +113,16 @@ const pickKey = (value: unknown): KeyEntry | undefined => {
   }
   const { org, id, name, prefix, expiresAt, file, variable } = entry
   if (!org || !id || !name || !prefix || !expiresAt || !file || !variable) return undefined
-  return { org, id, name, prefix, expiresAt, file, variable }
+  return {
+    org,
+    id,
+    name,
+    prefix,
+    expiresAt,
+    file,
+    variable,
+    ...(value.kept === true ? { kept: true } : {}),
+  }
 }
 
 const pickPending = (value: unknown): PendingRequest | undefined => {

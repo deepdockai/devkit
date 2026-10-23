@@ -657,6 +657,29 @@ describe('keys revoke', () => {
       expect(JSON.parse(readConfigText(box)).keys).toEqual([])
     })
 
+    it('a kept key survives a later logout, and keys revoke still removes its line', async () => {
+      await createKey()
+      await run(['auth', 'logout', '--keep-keys'])
+      await signInWith(box, api.url)
+      await run(['org', 'select', 'muster-it'])
+      await run(['auth', 'logout', '--json'])
+      expect(api.state.revokedKeys).toEqual([])
+      await signInWith(box, api.url)
+      await run(['org', 'select', 'muster-it'])
+      const outcome = await run(['keys', 'revoke', KEY_ID, '--yes', '--json'])
+      expect(JSON.parse(outcome.stdout).data.removed.removal).toBe('done')
+      expect(readFileSync(envFile(), 'utf8')).not.toContain('DEEPDOCK_API_KEY=')
+    })
+
+    it('does not ask when the sign-in cannot revoke anything', async () => {
+      await createKey()
+      const config = JSON.parse(readConfigText(box))
+      config.signIn.expiresAt = '2020-01-01T00:00:00Z'
+      writeFileSync(box.configFile, JSON.stringify(config), { mode: 0o600 })
+      const outcome = await run(['auth', 'logout'], { tty: true })
+      expect(outcome.stderr).not.toContain('[y/N]')
+    })
+
     it('auth logout revokes the key, reports the failed removal and clears its records', async () => {
       await createKey()
       hold('EPERM')
@@ -766,7 +789,7 @@ describe('keys revoke', () => {
       expect(api.state.revokedKeys).toEqual([])
       expect(api.state.revokedCliKeys).toEqual(['cli_signin_1'])
       expect(outcome.stdout).toContain(`Kept 1 API key active: "myapp dev" (${KEY_ID})`)
-      expect(JSON.parse(readConfigText(box)).keys).toEqual([])
+      expect(JSON.parse(readConfigText(box)).keys[0]).toMatchObject({ id: KEY_ID, kept: true })
     })
 
     it('--keep-keys with --json reports the kept keys as data', async () => {
@@ -781,7 +804,7 @@ describe('keys revoke', () => {
     it('on a terminal lists the keys and keeps them unless the answer is yes', async () => {
       await createKey()
       const declined = await run(['auth', 'logout'], { tty: true, stdin: '\n' })
-      expect(declined.stderr).toContain('Revoke these 1 keys too? [y/N]')
+      expect(declined.stderr).toContain('Revoke this key too? [y/N]')
       expect(declined.stderr).toContain(KEY_ID)
       expect(api.state.revokedKeys).toEqual([])
       expect(declined.stdout).toContain('Kept 1 API key active')

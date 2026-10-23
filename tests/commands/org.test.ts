@@ -198,6 +198,7 @@ describe('the only organisation', () => {
     const outcome = await execute(box, ['devices', 'list'], { baseUrl: api.url })
     expect(outcome.code).toBe(0)
     expect(orgHeaderOf()).toBe('muster-it')
+    expect(outcome.stderr.split('Muster IT')).toHaveLength(2)
   })
 
   it('is used when no default is stored, and says "Using organisation"', async () => {

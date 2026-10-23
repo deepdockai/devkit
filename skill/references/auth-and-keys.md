@@ -42,8 +42,8 @@ in the dashboard" and stop retrying.
 - Never ask for, read, print or paste a key value, and never try to extract it from the file.
   Code reads it at runtime from where the CLI put it.
 - A development key reaches every device of the organisation until it expires or is revoked; keep
-  the expiry short (`30d`), use it only against the demo device, and tell the human to revoke it
-  (`deepdock keys revoke <id>`) when the integration ships. The live key is created the same way,
+  the expiry short (`30d`), use it only against the demo device, and tell the human its expiry
+  date and that `deepdock keys revoke <id>` ends it. The live key is created the same way,
   by the human from their own CLI, into the live secret store.
 
 ## The CLI sign-in (CLI only)
