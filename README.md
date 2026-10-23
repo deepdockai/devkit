@@ -30,14 +30,16 @@ holding only invented, marked data. While unpaired, the client shows a pairing c
 
 ## Quick start
 
-Sign in. The CLI prints a link; open it, check that the page names your computer and CLI version,
+Sign in. The CLI prints the link and opens it in your browser (not in CI, without a display, with
+`--no-browser` or `DEEPDOCK_NO_BROWSER=1`). Check that the page names your computer and CLI version,
 and click Approve. No password is typed into the terminal.
 
 ```
 $ deepdock auth login
-Open this link to approve the sign-in (it expires in 10 minutes):
+Opening the approval page in your browser (it expires in 10 minutes):
   https://dash.deepdock.ai/cli?request=rq_...
 The page shows this computer's name and the CLI version: check them before you approve.
+Opened in your browser.
 Waiting for approval in the browser.
 
 Signed in as anna.mueller@muster-it.example.
@@ -91,7 +93,7 @@ deepdock skill
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auth login`                                          | sign in as yourself, approved in the browser; the sign-in lasts 90 days                                                                                                 |
 | `auth status`                                         | who is signed in, the organisations, and the keys this CLI created (id, name, prefix, expiry, file; never the value); exits 5 when not signed in, like `gh auth status` |
-| `auth logout`                                         | revoke the sign-in and every key this CLI created                                                                                                                       |
+| `auth logout [--keep-keys]`                           | revoke the sign-in and every key this CLI created (`--keep-keys`: only the sign-in)                                                                                     |
 | `org list`, `org select [slug]`                       | your organisations; set the default one                                                                                                                                 |
 | `systems list`                                        | the systems and actions assigned to your organisation                                                                                                                   |
 | `systems openapi <system>`                            | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                          |
@@ -110,7 +112,8 @@ and `keys revoke` without a question, `-h, --help` everywhere and `-v, --version
 
 Two things are never guessed. A device is always named by its full id: no default device, no
 lookup by label. The organisation comes from `--org`, then `DEEPDOCK_ORG`, then the default
-chosen with `deepdock org select`; with none the command stops and lists your organisations.
+chosen with `deepdock org select`. With exactly one organisation it is used without asking (and
+named on stderr); with several and none chosen the command stops and lists them.
 
 ## The approval flow
 
@@ -222,7 +225,8 @@ macOS and Linux need nothing special. On Windows:
 - **Keys expire and can be revoked.** A key reaches every device of the organisation until it
   expires (at most 90 days from the CLI) or is revoked. `deepdock keys revoke <id>` revokes it and
   removes the line the CLI wrote; `deepdock auth logout` revokes the sign-in and every key this
-  CLI created. In `--json`, `data.removed` says what happened to the line: `null` for a key this
+  CLI created, unless you pass `--keep-keys`. On a terminal it lists the keys and asks first
+  (default: keep); with `--json` or without a terminal it revokes them unless `--keep-keys` is passed. In `--json`, `data.removed` says what happened to the line: `null` for a key this
   CLI never wrote, otherwise `{ file, name, removal }` with `removal` `done`, `absent` (the line
   was already gone or holds another value) or `failed` (with a `reason`). If the file is held open
   by another program (a dev server watching it, on Windows), the key is still revoked and the

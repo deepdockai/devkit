@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { type FakeApi, startFakeApi } from '../fakeApi.ts'
 import {
@@ -178,5 +179,69 @@ describe('org commands', () => {
       'You are not a member of an organisation with the slug "nope" [invalid_usage].',
     )
     expect(outcome.stderr).toContain('Your organisations: muster-it, beispiel-handel.')
+  })
+})
+
+describe('the only organisation', () => {
+  const onlyOne = async (): Promise<void> => {
+    api.state.orgs.splice(1)
+    box.cleanup()
+    box = makeSandbox()
+    const login = await signInWith(box, api.url)
+    expect(JSON.parse(login.stdout).data.defaultOrg).toBe('muster-it')
+    api.requests.length = 0
+  }
+
+  it('is used without --org and named once on stderr', async () => {
+    await onlyOne()
+    expect(JSON.parse(readConfigText(box)).defaultOrg).toBe('muster-it')
+    const outcome = await execute(box, ['devices', 'list'], { baseUrl: api.url })
+    expect(outcome.code).toBe(0)
+    expect(orgHeaderOf()).toBe('muster-it')
+    expect(outcome.stderr.split('Muster IT')).toHaveLength(2)
+  })
+
+  it('is used when no default is stored, and says "Using organisation"', async () => {
+    await onlyOne()
+    const config = JSON.parse(readConfigText(box))
+    config.defaultOrg = undefined
+    writeFileSync(box.configFile, JSON.stringify(config), { mode: 0o600 })
+    const outcome = await execute(box, ['devices', 'list'], { baseUrl: api.url })
+    expect(outcome.code).toBe(0)
+    expect(outcome.stderr).toContain('Using organisation Muster IT (muster-it).')
+    expect(orgHeaderOf()).toBe('muster-it')
+  })
+
+  it('does not override --org: an organisation you are not in is still refused', async () => {
+    await onlyOne()
+    const outcome = await execute(box, ['devices', 'list', '--org', 'beispiel-handel'], {
+      baseUrl: api.url,
+    })
+    expect(outcome.code).toBe(1)
+    expect(errorDocOf(outcome.stderr).error.code).toBe('invalid_usage')
+    const named = await execute(box, ['devices', 'list', '--org', 'muster-it'], {
+      baseUrl: api.url,
+      tty: true,
+    })
+    expect(named.stderr).toContain('Organisation: Muster IT (muster-it)')
+  })
+
+  it('login with one organisation selects it and says so', async () => {
+    api.state.orgs.splice(1)
+    await execute(box, ['auth', 'login', '--no-wait'], { baseUrl: api.url })
+    const outcome = await execute(
+      box,
+      ['auth', 'login', '--wait', '3c9d0e1a-5b6c-4d7e-8f90-a1b2c3d4e5f6'],
+      {
+        baseUrl: api.url,
+        tty: true,
+      },
+    )
+    expect(outcome.stdout).toContain('Selected Muster IT (muster-it) as your organisation.')
+  })
+
+  it('with several organisations and none chosen keeps org_required', async () => {
+    const outcome = await execute(box, ['devices', 'list'], { baseUrl: api.url })
+    expect(errorDocOf(outcome.stderr).error.code).toBe('org_required')
   })
 })

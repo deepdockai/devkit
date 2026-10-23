@@ -1,4 +1,5 @@
 import type { Command } from '@commander-js/extra-typings'
+import { paint } from '../output/styles.ts'
 import { CliError, usageError } from '../api/errors.ts'
 import { parseAnswer } from '../api/schemas.ts'
 import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
@@ -76,7 +77,7 @@ const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
   return {
     data: { slug: found.slug, name: found.name, role: found.role },
     meta: response.requestId ? { requestId: response.requestId } : {},
-    text: `Default organisation: ${found.name} (${found.slug}).`,
+    text: `${paint(ctx.out, 'success', 'Default organisation:')} ${found.name} (${found.slug}).`,
   }
 }
 

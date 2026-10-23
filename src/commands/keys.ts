@@ -7,6 +7,7 @@ import { type PendingRequest, configPath } from '../config/store.ts'
 import { assertSameBaseUrl, type Ctx, type Result } from '../context.ts'
 import { KEYS_CREATE_HELP } from '../help.ts'
 import { confirm } from '../output/confirm.ts'
+import { paint } from '../output/styles.ts'
 import { genericTable, isRecord, KEY_COLUMNS, stripControl } from '../output/human.ts'
 import type { Run } from '../program.ts'
 import { addKey, displayPath, findKey, removeKey } from '../writeEnv/ledger.ts'
@@ -17,11 +18,16 @@ import {
   windowsFileWarning,
   writeEnvValue,
 } from '../writeEnv/writeEnv.ts'
-import { announceApproval, pendingResult, upsertPending } from './auth.ts'
+import { announceApproval, noteWaiting, pendingResult, upsertPending } from './auth.ts'
 
 const DAY_MS = 86400000
 
-type CreateOptions = { expires?: string; writeEnv?: string; wait?: string | false }
+type CreateOptions = {
+  expires?: string
+  writeEnv?: string
+  wait?: string | false
+  browser?: boolean
+}
 
 const list = async (ctx: Ctx): Promise<Result> => {
   const response = await ctx.callInOrg({ method: 'GET', path: '/partner/keys' })
@@ -105,13 +111,14 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
   const file = displayPath(ctx.rt, pending.file)
   const days = Math.round((Date.parse(created.expiresAt) - ctx.rt.now().getTime()) / DAY_MS)
   const text = [
-    `Created API key "${stripControl(created.name)}".`,
+    `${paint(ctx.out, 'success', 'Created')} API key "${stripControl(created.name)}".`,
     `  ID:        ${created.id}`,
     `  Prefix:    ${created.keyPrefix}`,
     `  Expires:   ${created.expiresAt.slice(0, 10)} (${days} days)`,
     `  Written:   ${file} (${pending.variable})`,
     `The key value was shown to nobody and this CLI keeps no copy; your code reads it from ${file}.`,
-    `Revoke it when you ship: \`deepdock keys revoke ${created.id}\`.`,
+    `To revoke it: ${paint(ctx.out, 'emphasis', `deepdock keys revoke ${created.id}`)}`,
+    `${paint(ctx.out, 'emphasis', '`deepdock auth logout`')} revokes this key; use ${paint(ctx.out, 'emphasis', '`auth logout --keep-keys`')} to keep it.`,
   ].join('\n')
   return {
     // Built from named fields: the API's answer carries the key value.
@@ -143,7 +150,7 @@ const create = async (
         'Start one with `deepdock keys create ... --no-wait`.',
       )
     }
-    ctx.note('Waiting for approval in the browser.')
+    noteWaiting(ctx)
     return finishKey(ctx, pending, false)
   }
 
@@ -195,19 +202,15 @@ const create = async (
       pending,
       started.url,
       [
-        `Open this link to approve the key: ${started.url}`,
+        `Open this link to approve the key: ${ctx.out('link', started.url)}`,
         `Then run \`deepdock keys create --wait ${started.request}\`.`,
       ].join('\n'),
     )
   }
-  announceApproval(
-    ctx,
-    'the key',
-    started.url,
-    started.expiresAt,
-    `A human approves "Create an API key in ${org.name}?" there; the page shows this computer's name.`,
-  )
-  ctx.rt.openBrowser(started.url)
+  await announceApproval(ctx, 'the key', started.url, started.expiresAt, {
+    extra: `A human approves ${paint(ctx.err, 'emphasis', `"Create an API key in ${org.name}?"`)} there; the page shows this computer's name.`,
+    noBrowser: options.browser === false,
+  })
   return finishKey(ctx, pending, true)
 }
 
@@ -257,8 +260,8 @@ const revoke = async (ctx: Ctx, id: string): Promise<Result> => {
   const label = entry ? `API key "${stripControl(entry.name)}"` : `API key ${keyId}`
   const text =
     removed?.removal === 'done'
-      ? `Revoked ${label} and ${describeRemoval(removed)}.`
-      : `Revoked ${label}.`
+      ? `${paint(ctx.out, 'success', 'Revoked')} ${label} and ${describeRemoval(removed)}.`
+      : `${paint(ctx.out, 'success', 'Revoked')} ${label}.`
   return {
     data: { ...apiData, ...(alreadyRevoked ? { alreadyRevoked: true } : {}), removed },
     meta: { requestId: response.requestId },
@@ -285,6 +288,7 @@ export const registerKeys = (program: Command, run: Run): void => {
     .option('--write-env <file>', 'write DEEPDOCK_API_KEY=<key> into this env file')
     .option('--wait <request>', 'finish a request started with --no-wait')
     .option('--no-wait', 'print the request and exit')
+    .option('--no-browser', 'do not open the link in a browser')
     .action((name, options, cmd) => run(cmd, (ctx) => create(ctx, name, options)))
   createCommand.helpInformation = (): string => KEYS_CREATE_HELP
 

@@ -1,6 +1,7 @@
 import { statSync, writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { browserCommand } from '../../src/runtime.ts'
+import { browserAllowed } from '../../src/approval/browser.ts'
+import { browserCommand, type Runtime } from '../../src/runtime.ts'
 import { type FakeApi, startFakeApi } from '../fakeApi.ts'
 import {
   errorDocOf,
@@ -55,10 +56,47 @@ describe('auth login', () => {
     expect(outcome.stdout).toContain('muster-it')
     expect(outcome.stdout).not.toContain(`${api.url}/cli`)
     expect(outcome.stderr).toContain(
-      'Open this link to approve the sign-in (it expires in 10 minutes):',
+      'Opening the approval page in your browser (it expires in 10 minutes):',
     )
     expect(outcome.stderr).toContain(`${api.url}/cli?request=`)
     expect(outcome.stderr).toContain('Waiting for approval in the browser.')
+  })
+
+  it('shows the approval link blue, underlined and clickable on a coloured terminal', async () => {
+    const outcome = await execute(box, ['auth', 'login'], {
+      baseUrl: api.url,
+      tty: true,
+      colour: true,
+    })
+    const url = outcome.opened[0]
+    expect(url).toContain(`${api.url}/cli?request=`)
+    const esc = String.fromCharCode(27)
+    expect(outcome.stderr).toContain(
+      `${esc}]8;;${url}${esc}\\${esc}[34m${esc}[4m${url}${esc}[24m${esc}[39m${esc}]8;;${esc}\\`,
+    )
+  })
+
+  it('prints the approval link as plain text with NO_COLOR, and nothing styled under --json', async () => {
+    for (const options of [{ tty: true }, { tty: true, colour: true, env: { NO_COLOR: '1' } }]) {
+      const outcome = await execute(box, ['auth', 'login'], { baseUrl: api.url, ...options })
+      expect(outcome.stderr).not.toContain('\u001b')
+      expect(outcome.stderr).toContain(`  ${api.url}/cli?request=`)
+    }
+    const piped = await execute(box, ['auth', 'login', '--no-wait'], {
+      baseUrl: api.url,
+      colour: true,
+    })
+    expect(piped.stdout + piped.stderr).not.toContain('\u001b')
+  })
+
+  it('styles the link in the --no-wait text on stdout of a coloured terminal', async () => {
+    const outcome = await execute(box, ['auth', 'login', '--no-wait'], {
+      baseUrl: api.url,
+      tty: true,
+      colour: true,
+    })
+    expect(outcome.stdout).toContain(`${String.fromCharCode(27)}[34m`)
+    expect(outcome.stdout).toContain(`${api.url}/cli?request=`)
   })
 
   it('--no-wait on a terminal prints the request and does not poll', async () => {
@@ -304,6 +342,66 @@ describe('base URL binding', () => {
       expect(outcome.code, url).toBe(5)
       expect(JSON.parse(outcome.stdout).data.baseUrl).toBe(url)
     }
+  })
+})
+
+describe('browserAllowed', () => {
+  const rt = (platform: NodeJS.Platform, env: Record<string, string>): Runtime =>
+    ({ platform, env }) as unknown as Runtime
+
+  it('needs a display on Linux', () => {
+    expect(browserAllowed(rt('linux', {}), false)).toBe(false)
+    expect(browserAllowed(rt('linux', { DISPLAY: ':0' }), false)).toBe(true)
+    expect(browserAllowed(rt('linux', { WAYLAND_DISPLAY: 'wayland-0' }), false)).toBe(true)
+  })
+
+  it('skips an SSH session on macOS and Windows, not on Linux with a display', () => {
+    const ssh = { SSH_CONNECTION: '1 2 3 4', DISPLAY: ':0' }
+    expect(browserAllowed(rt('darwin', ssh), false)).toBe(false)
+    expect(browserAllowed(rt('win32', ssh), false)).toBe(false)
+    expect(browserAllowed(rt('linux', ssh), false)).toBe(true)
+    expect(browserAllowed(rt('darwin', {}), false)).toBe(true)
+  })
+})
+
+describe('opening the browser', () => {
+  const login = (options: Parameters<typeof execute>[2], flags: string[] = []) =>
+    execute(box, ['auth', 'login', ...flags], { baseUrl: api.url, tty: true, ...options })
+
+  it('opens the link once on a terminal, passing the URL as one argument', async () => {
+    const outcome = await login({})
+    expect(outcome.opened).toHaveLength(1)
+    expect(outcome.opened[0]).toContain(`${api.url}/cli?request=`)
+    expect(outcome.stderr).toContain('Opened in your browser.')
+    expect(browserCommand('linux', outcome.opened[0] ?? '').args).toEqual(outcome.opened)
+  })
+
+  it('keeps the old wording and opens nothing in each skip case', async () => {
+    const skips: Array<[string, Parameters<typeof execute>[2], string[]]> = [
+      ['--no-browser', {}, ['--no-browser']],
+      ['DEEPDOCK_NO_BROWSER', { env: { DEEPDOCK_NO_BROWSER: '1' } }, []],
+      ['CI', { env: { CI: 'true' } }, []],
+    ]
+    for (const [name, options, flags] of skips) {
+      const outcome = await login(options, flags)
+      expect(outcome.opened, name).toEqual([])
+      expect(outcome.stderr, name).toContain('Open this link to approve the sign-in')
+      expect(outcome.stderr, name).not.toContain('Opened in your browser.')
+    }
+  })
+
+  it('opens nothing without a terminal or under --json', async () => {
+    const piped = await login({ tty: false })
+    expect(piped.opened).toEqual([])
+    const json = await login({}, ['--json'])
+    expect(json.opened).toEqual([])
+  })
+
+  it('says so when the opener could not start, and the link stays printed', async () => {
+    const outcome = await login({ browserFails: true })
+    expect(outcome.stderr).toContain('Could not open a browser; use the link above.')
+    expect(outcome.stderr).not.toContain('Opened in your browser.')
+    expect(outcome.stderr).toContain(`${api.url}/cli?request=`)
   })
 })
 

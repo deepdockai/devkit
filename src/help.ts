@@ -45,12 +45,14 @@ an action; actions run from your code with an API key (\`deepdock keys create\`)
 Usage
   deepdock auth login [flags]
 
-The link is printed either way; opening the browser is a convenience that may fail silently.
+The link is printed either way. On a terminal the CLI also opens it in your browser, unless
+CI is set, there is no display, DEEPDOCK_NO_BROWSER=1 is set or you pass --no-browser.
 
 Flags
   --no-wait           Print the request and exit; finish it later with --wait (the default
                       when there is no terminal)
   --wait <request>    Finish a request started with --no-wait
+  --no-browser        Do not open the link in a browser
 
 Examples
   $ deepdock auth login
@@ -58,7 +60,7 @@ Examples
   $ deepdock auth login --wait <request>
 
 More
-  \`deepdock auth status\` shows who is signed in (exit 5 when nobody is). \`deepdock auth logout\` revokes the sign-in.
+  \`deepdock auth status\` shows who is signed in (exit 5 when nobody is). \`deepdock auth logout\` revokes the sign-in and, unless you pass --keep-keys, the API keys this CLI created.
 `
 
 export const KEYS_CREATE_HELP = `Create an API key for your organisation (admin).
@@ -68,7 +70,8 @@ key once, writes it into the env file named by --write-env, and keeps no copy. T
 never printed and the CLI never uses it; your code reads it from that file.
 
 A key reaches every device of the organisation until it expires or is revoked. Keep the
-expiry short while you build, and revoke it when you ship: \`deepdock keys revoke <id>\`.
+expiry short, and revoke a key you no longer need: \`deepdock keys revoke <id>\`. \`deepdock auth logout\`
+revokes the keys this CLI created unless you pass --keep-keys.
 
 Usage
   deepdock keys create <name> --expires <duration> --write-env <file> [flags]
@@ -83,6 +86,7 @@ Flags
                         the CLI warns
   --no-wait             Print the request and exit; finish it with --wait
   --wait <request>      Finish a request started with --no-wait
+  --no-browser          Do not open the link in a browser (also DEEPDOCK_NO_BROWSER=1)
 
 Examples
   $ deepdock keys create "myapp dev" --expires 30d --write-env .env.local

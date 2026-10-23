@@ -24,7 +24,8 @@ export type Runtime = {
   sleep: (ms: number) => Promise<void>
   pollIntervalMs: number
   requestTimeoutMs: number
-  openBrowser: (url: string) => void
+  /** Resolves true once the opener process started, false when it could not. */
+  openBrowser: (url: string) => Promise<boolean>
   /** Aborted by the first Ctrl-C; waits and requests stop at their next check. */
   signal: AbortSignal
 }
@@ -42,17 +43,21 @@ export const browserCommand = (
   return { command: 'xdg-open', args: [url] }
 }
 
-const openInBrowser = (url: string): void => {
-  const { command, args } = browserCommand(process.platform, url)
-  try {
-    const child = spawn(command, args, { stdio: 'ignore', detached: true })
-    // The link is always printed; a missing browser opener must never fail the command.
-    child.on('error', () => undefined)
-    child.unref()
-  } catch {
-    // Same reason: opening the browser is a convenience only.
-  }
-}
+const openInBrowser = (url: string): Promise<boolean> =>
+  new Promise((resolve) => {
+    const { command, args } = browserCommand(process.platform, url)
+    try {
+      const child = spawn(command, args, { stdio: 'ignore', detached: true })
+      // The link is always printed; a missing browser opener must never fail the command.
+      child.once('error', () => resolve(false))
+      child.once('spawn', () => {
+        child.unref()
+        resolve(true)
+      })
+    } catch {
+      resolve(false)
+    }
+  })
 
 export const defaultRuntime = (): Runtime => {
   const interrupt = new AbortController()

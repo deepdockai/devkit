@@ -60,8 +60,8 @@ The proof is your client; the CLI only shows what the device offers.
   Neither you nor the human sees the value; you work with its id, prefix and file name only.
 - Never ask for, read, print, echo, log or commit a key value. Use the key only against the demo
   device.
-- It reaches every device of the organisation until it expires or is revoked. Tell the human to
-  revoke it when the integration ships and to create the live key with the same flow from their
+- It reaches every device of the organisation until it expires or is revoked. Tell the human its
+  expiry date and that `deepdock keys revoke <id>` ends it, and that they create the live key with the same flow from their
   own CLI.
 
 ## Logs and prompts

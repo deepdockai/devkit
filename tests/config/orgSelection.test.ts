@@ -7,6 +7,8 @@ const orgs = [
   { slug: null, name: 'No Slug GmbH', role: 'member' },
 ]
 
+const twoOrgs = [...orgs, { slug: 'other', name: 'Other GmbH', role: 'member' }]
+
 describe('requestedSlug', () => {
   const config = { ...emptyConfig(), defaultOrg: 'stored' }
 
@@ -30,12 +32,24 @@ describe('resolveOrg', () => {
 
   it('lists only organisations that have a slug', () => {
     expect(selectableOrgs(orgs).map((org) => org.slug)).toEqual(['muster-it'])
-    expect(() => resolveOrg(undefined, orgs)).toThrow('No organisation chosen.')
+    expect(() => resolveOrg(undefined, twoOrgs)).toThrow('No organisation chosen.')
+  })
+
+  it('takes the only organisation when none is asked for, but not when --org names another', () => {
+    expect(resolveOrg(undefined, orgs)).toEqual({
+      slug: 'muster-it',
+      name: 'Muster IT',
+      role: 'admin',
+      onlyOne: true,
+    })
+    expect(() => resolveOrg('nope', orgs)).toThrowError(
+      expect.objectContaining({ code: 'invalid_usage' }),
+    )
   })
 
   it('separates "none chosen" from "not a member"', () => {
-    expect(() => resolveOrg(undefined, orgs)).toThrowError(
-      expect.objectContaining({ code: 'org_required', organisations: ['muster-it'] }),
+    expect(() => resolveOrg(undefined, twoOrgs)).toThrowError(
+      expect.objectContaining({ code: 'org_required', organisations: ['muster-it', 'other'] }),
     )
     expect(() => resolveOrg('other', orgs)).toThrowError(
       expect.objectContaining({ code: 'invalid_usage' }),

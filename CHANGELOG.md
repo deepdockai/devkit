@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.3
+
+- `auth logout --keep-keys` revokes only the sign-in. On a terminal, plain `auth logout` lists the API keys and asks before revoking them (default: keep); with `--json`, `--yes` or no terminal it still revokes them. `keys create` says so.
+- `keys create` no longer advises revoking the key "when you ship"; it prints the expiry and how to revoke.
+- With exactly one organisation it is used automatically (and named), and `auth login` selects it. With several and none chosen, `org_required` stays.
+- The approval page opens in your browser on a terminal (not in CI, without a display, with `--no-browser` or `DEEPDOCK_NO_BROWSER=1`). The line says "Opening the approval page in your browser" when it does.
+- `Organisation:` is printed once per command, not again after the wait.
+- Output colours by role: warning and error labels, success verbs, bold organisation and approval prompt, dim waiting line.
+- The approval link is blue and underlined, and clickable in terminals that support links. Plain text when output is piped, under `--json`, or with `NO_COLOR`.
+
 ## 1.0.2
 
 - The install commands no longer pin a major version: `npx @deepdockai/cli auth login`, `npm install -g @deepdockai/cli`.
