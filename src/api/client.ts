@@ -37,7 +37,7 @@ const parseJson = (text: string): unknown => {
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
 
 /** The API origin: https, or plain http only for a loopback host (tests, local development). */
-export const baseUrlFor = (rt: Runtime): string => {
+export const baseUrlFor = (rt: Pick<Runtime, 'env'>): string => {
   const configured = rt.env.DEEPDOCK_BASE_URL || DEFAULT_BASE_URL
   let parsed: URL
   try {

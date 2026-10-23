@@ -1,23 +1,15 @@
 import { homedir } from 'node:os'
 import { runCli } from '../src/program.ts'
 import { defaultRuntime } from '../src/runtime.ts'
-import { splitTarget, targetEnv } from './devTargets.ts'
+import { devEnv, reportFailure } from './devEnv.ts'
 
-// Runs the CLI from source against one target: `bun scripts/dev.ts [--target <t>] <cli args>`.
-// Works from any directory, since nothing here depends on the current one.
-const split = splitTarget(process.argv.slice(2), process.env)
-if ('error' in split) {
-  process.stderr.write(`${split.error}\n`)
-  process.exitCode = 2
-} else {
-  const env = targetEnv(split.target, {
-    env: process.env,
-    platform: process.platform,
-    homedir: homedir(),
-  })
-  Object.assign(process.env, env)
-  process.stderr.write(
-    `[dev] ${split.target}: ${env.DEEPDOCK_BASE_URL}, settings in ${env.DEEPDOCK_CONFIG_DIR}\n`,
-  )
-  process.exitCode = await runCli(split.rest, defaultRuntime())
+// Runs the CLI from source: `bun scripts/dev.ts <cli args>`, against DEEPDOCK_BASE_URL or the
+// production API. Nothing here depends on the current directory.
+try {
+  const env = devEnv({ env: process.env, platform: process.platform, homedir: homedir() })
+  process.stderr.write(`[dev] ${env.DEEPDOCK_BASE_URL}, settings in ${env.DEEPDOCK_CONFIG_DIR}\n`)
+  const rt = defaultRuntime()
+  process.exitCode = await runCli(process.argv.slice(2), { ...rt, env: { ...rt.env, ...env } })
+} catch (error) {
+  reportFailure(error)
 }

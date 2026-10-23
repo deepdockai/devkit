@@ -237,8 +237,8 @@ macOS and Linux need nothing special. On Windows:
   `apiKeysRevoked[].removed` and in `meta.hint`, and clears its local records either way.
 - **Local state** lives in `$XDG_CONFIG_HOME/deepdock/config.json`, else
   `~/.config/deepdock/config.json` (`%APPDATA%\deepdock\config.json` on Windows), or in
-  `$DEEPDOCK_CONFIG_DIR/config.json` when that absolute path is set; mode 600 in a mode 700
-  directory. It holds the sign-in, the default organisation, the ids of the keys this
+  `$DEEPDOCK_CONFIG_DIR/config.json` when that absolute path is set; mode 600, in a directory the
+  CLI creates mode 700 when it does not exist. It holds the sign-in, the default organisation, the ids of the keys this
   CLI created (never their values) and a pending approval request. A file other users can read
   is refused with the `chmod` to run.
 - **Environment:** `DEEPDOCK_ORG`, `DEEPDOCK_BASE_URL` (https, or http for localhost only),
@@ -259,32 +259,31 @@ bun run format && bun run lint && bun run typecheck && bun run check:public
 
 ### Trying a change locally
 
-`bun run dev` runs the CLI from source against one API, with a settings file of its own per
-target, so a sign-in made against one API never sits next to another's and nothing but the CLI's
-own settings move (`DEEPDOCK_CONFIG_DIR`, not `XDG_CONFIG_HOME`):
+`bun run dev` runs the CLI from source. Each API gets a settings directory of its own under
+`<config dir>/deepdock-dev/<api host>/`, so a sign-in made against one API never sits next to
+another's; only the CLI's own settings move (`DEEPDOCK_CONFIG_DIR`), nothing else on the machine:
 
 ```bash
-bun run dev -- auth login --no-wait              # staging, the default
-bun run dev -- --target production auth status   # or local: http://localhost:8787
-DEEPDOCK_TARGET=production bun run dev -- org list
+bun run dev -- auth status                                      # the production API
+DEEPDOCK_BASE_URL=http://localhost:8787 bun run dev -- auth login --no-wait
 ```
 
-The target's settings live in `<config dir>/deepdock-dev/<target>/`. From outside the repository,
-call the script by its path (`bun /path/to/devkit/scripts/dev.ts ...`); it does not depend on the
-current directory. To run the exact tarball npm would publish, from any directory:
+The script does not depend on the current directory: from elsewhere, call it by its path
+(`bun /path/to/devkit/scripts/dev.ts ...`), or put the `DEEPDOCK_BASE_URL=... bun .../dev.ts` line
+in a shell alias per API. To run the exact tarball npm would publish, from any directory:
 
 ```bash
-bun run pack:try -- --target staging auth status   # packs, then prints the one-line command
+bun run pack:try -- auth status      # builds, packs, prints the one-line command to run it
 ```
 
-It prints `DEEPDOCK_BASE_URL=... DEEPDOCK_CONFIG_DIR=... npx -y --package=/path/to/deepdockai-cli-<version>.tgz deepdock auth status`
-(`npx <tarball>` alone would try to execute the archive). `--target local` talks to
-`http://localhost:8787` unless `DEEPDOCK_BASE_URL` says otherwise; `tests/fakeApi.ts` is a stand-in
-that approves every request at once:
+It prints `DEEPDOCK_BASE_URL=... DEEPDOCK_CONFIG_DIR=... npx -y --package=/path/to/deepdockai-cli-<version>.tgz deepdock auth status`,
+for the same API and settings directory `bun run dev` would use (`npx <tarball>` alone would try
+to execute the archive). `tests/fakeApi.ts` is a local stand-in that approves every request at
+once:
 
 ```bash
 bun scripts/fakeServer.ts &              # prints its URL
-DEEPDOCK_BASE_URL=http://127.0.0.1:<port> bun run dev -- --target local auth login
+DEEPDOCK_BASE_URL=http://127.0.0.1:<port> bun run dev -- auth login
 ```
 
 ## Licence

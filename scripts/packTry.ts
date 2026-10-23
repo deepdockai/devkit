@@ -1,41 +1,35 @@
-import { execFileSync } from 'node:child_process'
-import { mkdirSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { packedFilename } from './checkPublic.ts'
-import { splitTarget, targetEnv } from './devTargets.ts'
+import { npmPack } from './checkPublic.ts'
+import { devEnv, reportFailure } from './devEnv.ts'
 
 // Builds, packs the exact tarball npm would publish, and prints the one line that runs it from any
-// directory: `bun run pack:try [--target <t>] [cli args]`.
+// directory against the same API and settings directory `bun run dev` would use.
 const root = fileURLToPath(new URL('..', import.meta.url))
-const split = splitTarget(process.argv.slice(2), process.env)
-if ('error' in split) {
-  process.stderr.write(`${split.error}\n`)
-  process.exit(2)
-}
 
-const outDir = join(tmpdir(), 'deepdock-cli-pack')
-mkdirSync(outDir, { recursive: true })
-execFileSync('bun', ['run', 'build'], { cwd: root, stdio: 'inherit' })
-const packed = execFileSync('npm', ['pack', '--json', '--silent', '--pack-destination', outDir], {
-  cwd: root,
-  encoding: 'utf8',
-  shell: process.platform === 'win32',
-})
-const tarball = resolve(outDir, packedFilename(packed))
+const PLAIN = /^[\w./:=@+-]+$/
+const posixQuoted = (value: string): string =>
+  PLAIN.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`
+const powershellQuoted = (value: string): string =>
+  PLAIN.test(value) ? value : `'${value.replaceAll("'", "''")}'`
 
-const env = targetEnv(split.target, {
-  env: process.env,
-  platform: process.platform,
-  homedir: homedir(),
-})
-const assignments = Object.entries(env).map(([key, value]) => `${key}=${value}`)
-const args = split.rest.length > 0 ? split.rest.join(' ') : 'auth login'
-process.stderr.write(`\nPacked ${tarball}\n\nRun it (${split.target}) from any directory:\n\n`)
-process.stdout.write(`${assignments.join(' ')} npx -y --package=${tarball} deepdock ${args}\n`)
-if (process.platform === 'win32') {
-  process.stderr.write(
-    '\nOn Windows set the two variables first ($env:NAME = "value"), then run the npx part.\n',
+try {
+  const env = devEnv({ env: process.env, platform: process.platform, homedir: homedir() })
+  const { execFileSync } = await import('node:child_process')
+  execFileSync('bun', ['run', 'build'], { cwd: root, stdio: 'inherit' })
+  // A fresh private directory each time: a fixed name in the shared temp dir could be someone else's.
+  const tarball = npmPack(root, mkdtempSync(join(tmpdir(), 'deepdock-cli-pack-')))
+  const args = process.argv.length > 2 ? process.argv.slice(2) : ['auth', 'login']
+  const windows = process.platform === 'win32'
+  const quote = windows ? powershellQuoted : posixQuoted
+  const command = ['npx', '-y', `--package=${tarball}`, 'deepdock', ...args].map(quote).join(' ')
+  const assignments = Object.entries(env).map(([key, value]) =>
+    windows ? `$env:${key}=${quote(value)};` : `${key}=${quote(value)}`,
   )
+  process.stderr.write(`\nPacked ${tarball}\n\nRun it from any directory:\n\n`)
+  process.stdout.write(`${assignments.join(' ')} ${command}\n`)
+} catch (error) {
+  reportFailure(error)
 }

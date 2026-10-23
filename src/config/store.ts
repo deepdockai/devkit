@@ -74,7 +74,7 @@ const absoluteDir = (
 
 /** The directory the settings file would go in without DEEPDOCK_CONFIG_DIR: the platform's. */
 export const configBaseDir = (rt: Pick<Runtime, 'env' | 'platform' | 'homedir'>): string => {
-  if (rt.platform === 'win32') return rt.env.APPDATA ?? join(rt.homedir, 'AppData', 'Roaming')
+  if (rt.platform === 'win32') return rt.env.APPDATA || join(rt.homedir, 'AppData', 'Roaming')
   return absoluteDir(rt.env, 'XDG_CONFIG_HOME') ?? join(rt.homedir, '.config')
 }
 

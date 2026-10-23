@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- `DEEPDOCK_CONFIG_DIR` moves the settings file (and only it) to a directory of your choice, on every platform; it must be an absolute path. Useful for keeping separate sign-ins apart, for example one per project or account.
+
 ## 1.0.3
 
 - `auth logout --keep-keys` revokes only the sign-in. On a terminal, plain `auth logout` lists the API keys and asks before revoking them (default: keep); with `--json`, `--yes` or no terminal it still revokes them. `keys create` says so.
