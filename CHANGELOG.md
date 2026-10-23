@@ -4,6 +4,7 @@
 
 - The agent skill: page with `nextCursor` until it is `null` (a short page can carry a cursor), and cover the codes `access_outdated`, `access_missing`, `record_locked`, `record_not_editable`, `unknown_provider`, `payload_too_large` and the system status `unknown`, in the skill and the CLI's exit-code table.
 - The agent skill: one statement on how to fetch the OpenAPI document, and a MEDICAL OFFICE recipe with its action names.
+- The agent skill states the id rule in full: reads and creates answer ids as integers, a create's new id included; every id you send is a string of digits without a leading zero, at most 10 characters, in a query string and a write body alike.
 
 ## 1.0.0
 

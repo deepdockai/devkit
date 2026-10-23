@@ -3,6 +3,7 @@
 
 export const API_ERROR_CODES = [
   'invalid_request',
+  'payload_too_large',
   'client_outdated',
   'unauthenticated',
   'organization_required',
@@ -16,12 +17,17 @@ export const API_ERROR_CODES = [
   'other_partner_build',
   'rate_limited',
   'action_not_found',
-  'action_not_configured',
-  'unknown_author',
   'invalid_input',
+  'action_not_configured',
   'no_open_case',
+  'unknown_author',
+  'unknown_provider',
+  'record_locked',
+  'record_not_editable',
   'device_offline',
   'action_paused',
+  'access_outdated',
+  'access_missing',
   'system_unavailable',
   'target_busy',
   'target_rejected',
@@ -30,12 +36,6 @@ export const API_ERROR_CODES = [
   'outcome_unknown',
   'internal_error',
   'temporarily_unavailable',
-  'unknown_provider',
-  'record_locked',
-  'record_not_editable',
-  'payload_too_large',
-  'access_outdated',
-  'access_missing',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
