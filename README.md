@@ -91,7 +91,7 @@ deepdock skill
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auth login`                                          | sign in as yourself, approved in the browser; the sign-in lasts 90 days                                                                                                 |
 | `auth status`                                         | who is signed in, the organisations, and the keys this CLI created (id, name, prefix, expiry, file; never the value); exits 5 when not signed in, like `gh auth status` |
-| `auth logout`                                         | revoke the sign-in and every key this CLI created                                                                                                                       |
+| `auth logout [--keep-keys]`                           | revoke the sign-in and every key this CLI created (`--keep-keys`: only the sign-in)                                                                                     |
 | `org list`, `org select [slug]`                       | your organisations; set the default one                                                                                                                                 |
 | `systems list`                                        | the systems and actions assigned to your organisation                                                                                                                   |
 | `systems openapi <system>`                            | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                          |
@@ -222,7 +222,8 @@ macOS and Linux need nothing special. On Windows:
 - **Keys expire and can be revoked.** A key reaches every device of the organisation until it
   expires (at most 90 days from the CLI) or is revoked. `deepdock keys revoke <id>` revokes it and
   removes the line the CLI wrote; `deepdock auth logout` revokes the sign-in and every key this
-  CLI created. In `--json`, `data.removed` says what happened to the line: `null` for a key this
+  CLI created, unless you pass `--keep-keys`. On a terminal it lists the keys and asks first
+  (default: keep); with `--json` or without a terminal it revokes them unless `--keep-keys` is passed. In `--json`, `data.removed` says what happened to the line: `null` for a key this
   CLI never wrote, otherwise `{ file, name, removal }` with `removal` `done`, `absent` (the line
   was already gone or holds another value) or `failed` (with a `reason`). If the file is held open
   by another program (a dev server watching it, on Windows), the key is still revoked and the

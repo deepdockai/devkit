@@ -111,7 +111,8 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
     `  Expires:   ${created.expiresAt.slice(0, 10)} (${days} days)`,
     `  Written:   ${file} (${pending.variable})`,
     `The key value was shown to nobody and this CLI keeps no copy; your code reads it from ${file}.`,
-    `Revoke it when you ship: \`deepdock keys revoke ${created.id}\`.`,
+    `To revoke it: deepdock keys revoke ${created.id}`,
+    '`deepdock auth logout` revokes this key; use `auth logout --keep-keys` to keep it.',
   ].join('\n')
   return {
     // Built from named fields: the API's answer carries the key value.

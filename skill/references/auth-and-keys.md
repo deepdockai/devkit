@@ -54,7 +54,7 @@ permissions. The sign-in belongs to the person, not to an organisation: every co
 `--org <slug>`. It does what that person can do in the dashboard (members read, pair and rename;
 admins also release devices, create and revoke API keys) and never runs an action.
 `deepdock auth status` shows the signed-in person, organisations and expiry (exit 5 when not signed in); `deepdock auth
-logout` revokes the sign-in and every API key the CLI created.
+logout` revokes the sign-in and every API key the CLI created, unless `--keep-keys` is passed (it then revokes only the sign-in). On a terminal it lists the keys and asks first; with `--json` or without a terminal it revokes them unless `--keep-keys` is passed.
 
 Without a terminal `auth login` prints the request and exits; show the human the link, wait for
 them to approve, then run `deepdock auth login --wait <request>`. Do not try to answer for them.

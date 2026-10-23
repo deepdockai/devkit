@@ -665,7 +665,7 @@ describe('keys revoke', () => {
     it('the human logout summary does not claim the line was removed', async () => {
       await createKey()
       hold('EBUSY')
-      const outcome = await run(['auth', 'logout'], { tty: true })
+      const outcome = await run(['auth', 'logout'], { tty: true, stdin: 'y\n' })
       expect(outcome.stdout).toContain('Revoked the API keys this CLI created:')
       expect(outcome.stdout).not.toContain('removed the entries')
       expect(outcome.stdout).not.toContain('still in')
@@ -741,5 +741,48 @@ describe('keys revoke', () => {
     expect(doc.data.apiKeysNotRevoked[0].error.code).toBe('forbidden')
     expect(doc.meta.hint).toContain('keys revoke')
     expect(JSON.parse(readConfigText(box)).keys).toHaveLength(1)
+  })
+
+  describe('logout and the keys', () => {
+    it('--keep-keys revokes only the sign-in and says which keys stay active', async () => {
+      await createKey()
+      const outcome = await run(['auth', 'logout', '--keep-keys'], { tty: true })
+      expect(outcome.code).toBe(0)
+      expect(api.state.revokedKeys).toEqual([])
+      expect(api.state.revokedCliKeys).toEqual(['cli_signin_1'])
+      expect(outcome.stdout).toContain(`Kept 1 API key active: "myapp dev" (${KEY_ID})`)
+      expect(JSON.parse(readConfigText(box)).keys).toEqual([])
+    })
+
+    it('--keep-keys with --json reports the kept keys as data', async () => {
+      await createKey()
+      const outcome = await run(['auth', 'logout', '--keep-keys', '--json'])
+      const doc = JSON.parse(outcome.stdout)
+      expect(doc.data.apiKeysKept.map((key: { id: string }) => key.id)).toEqual([KEY_ID])
+      expect(doc.data.apiKeysRevoked).toEqual([])
+      expect(api.state.revokedKeys).toEqual([])
+    })
+
+    it('on a terminal lists the keys and keeps them unless the answer is yes', async () => {
+      await createKey()
+      const declined = await run(['auth', 'logout'], { tty: true, stdin: '\n' })
+      expect(declined.stderr).toContain('Revoke these 1 keys too? [y/N]')
+      expect(declined.stderr).toContain(KEY_ID)
+      expect(api.state.revokedKeys).toEqual([])
+      expect(declined.stdout).toContain('Kept 1 API key active')
+    })
+
+    it('on a terminal revokes the keys when the answer is yes', async () => {
+      await createKey()
+      const accepted = await run(['auth', 'logout'], { tty: true, stdin: 'y\n' })
+      expect(api.state.revokedKeys).toEqual([KEY_ID])
+      expect(accepted.stdout).toContain('Revoked the API keys this CLI created')
+    })
+
+    it("with --json or without a terminal keeps today's behaviour: the keys are revoked", async () => {
+      await createKey()
+      await run(['auth', 'logout', '--json'])
+      expect(api.state.revokedKeys).toEqual([KEY_ID])
+    })
   })
 })

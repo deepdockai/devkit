@@ -14,7 +14,7 @@ the API key the CLI wrote to the app's env file.
 |---|---|---|
 | `auth login` | opens a link to the dashboard where the human clicks Approve; prints `Signed in as <email>.` and the person's organisations; the sign-in lasts 90 days | anyone |
 | `auth status` | signed-in person, sign-in expiry, organisations, default organisation, the API keys this CLI created (id, prefix, expiry, where it was written); prints the same document and exits 5 when not signed in | anyone |
-| `auth logout` | revokes the sign-in and every API key this CLI created, removes the entries it wrote, says what it revoked | anyone |
+| `auth logout [--keep-keys]` | revokes the sign-in and, unless `--keep-keys`, every API key this CLI created (on a terminal it lists them and asks, default keep; with `--json` or no terminal it revokes them unless `--keep-keys`); removes the entries it wrote, says what it revoked or kept | anyone |
 | `org list` | the person's organisations: slug, name, role, which one is the default | member |
 | `org select [slug]` | sets the default organisation; without a slug, a pick-list on a terminal | member |
 | `systems list` | the systems and actions assigned to the organisation | member |

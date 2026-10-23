@@ -7,6 +7,7 @@ import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
 import type { KeyEntry, PendingRequest } from '../config/store.ts'
 import { assertSameBaseUrl, type Ctx, type Result } from '../context.ts'
 import { AUTH_LOGIN_HELP } from '../help.ts'
+import { confirm } from '../output/confirm.ts'
 import { orgTable, renderTable } from '../output/human.ts'
 import type { Run } from '../program.ts'
 import { DEFAULT_BASE_URL } from '../runtime.ts'
@@ -292,7 +293,25 @@ const revokeSignInById = async (ctx: Ctx, id: string): Promise<void> => {
   }
 }
 
-const logout = async (ctx: Ctx): Promise<Result> => {
+type LogoutOptions = { keepKeys?: boolean }
+
+const keyLabel = (key: KeyFacts): string => `"${key.name}" (${key.id})`
+
+const wantsKeysKept = async (
+  ctx: Ctx,
+  keys: KeyEntry[],
+  options: LogoutOptions,
+): Promise<boolean> => {
+  if (options.keepKeys) return true
+  // Without a terminal, or with --json or --yes, the documented default stands: the keys are revoked.
+  if (keys.length === 0 || ctx.opts.yes || !ctx.interactive) return false
+  ctx.note(`Logging out revokes the API keys this CLI created (${keys.length}):`)
+  for (const key of keys) ctx.note(`  ${key.org}   ${keyLabel(key)}   ${key.prefix}…`)
+  ctx.note('Programs using them stop working. Answer N to keep them active.')
+  return !(await confirm(ctx.rt, `Revoke these ${keys.length} keys too?`))
+}
+
+const logout = async (ctx: Ctx, options: LogoutOptions): Promise<Result> => {
   const config = await ctx.config()
   const signIn = config.signIn
   const email = signIn?.email ?? null
@@ -303,9 +322,11 @@ const logout = async (ctx: Ctx): Promise<Result> => {
   const revokedKeys: RevokedKey[] = []
   const failedKeys: UnrevokedKey[] = []
   let signInRevoked = false
+  const keepKeys = await wantsKeysKept(ctx, config.keys, options)
+  const keptKeys: KeyFacts[] = keepKeys ? config.keys.map(factsOf) : []
 
   if (usable) {
-    for (const entry of [...config.keys]) {
+    for (const entry of keepKeys ? [] : [...config.keys]) {
       const outcome = await revokeRecordedKey(ctx, entry)
       if ('error' in outcome) failedKeys.push(outcome)
       else revokedKeys.push(outcome)
@@ -315,7 +336,7 @@ const logout = async (ctx: Ctx): Promise<Result> => {
       signInRevoked = true
     }
   } else {
-    for (const entry of config.keys) {
+    for (const entry of keepKeys ? [] : config.keys) {
       failedKeys.push({
         ...factsOf(entry),
         error: { code: 'sign_in_needed', message: 'Your sign-in is missing or expired.' },
@@ -328,6 +349,8 @@ const logout = async (ctx: Ctx): Promise<Result> => {
     current.defaultOrg = undefined
     current.organisations = undefined
     current.pending = []
+    // A kept key is forgotten here: a later `auth logout` must not revoke it by surprise.
+    if (keepKeys) current.keys = []
   })
 
   const lines: string[] = []
@@ -350,6 +373,12 @@ const logout = async (ctx: Ctx): Promise<Result> => {
     }
     lines.push('Programs still using one of them stop working now.')
   }
+  if (keptKeys.length > 0) {
+    lines.push(
+      `Kept ${keptKeys.length} API ${keptKeys.length === 1 ? 'key' : 'keys'} active: ${keptKeys.map(keyLabel).join(', ')}`,
+    )
+    lines.push('Revoke one later with `deepdock keys revoke <id>` after `deepdock auth login`.')
+  }
   for (const key of failedKeys) {
     lines.push(
       `Could not revoke "${key.name}" (${key.id}): run \`deepdock keys revoke ${key.id}\` after \`deepdock auth login\`.`,
@@ -368,6 +397,7 @@ const logout = async (ctx: Ctx): Promise<Result> => {
       revoked: signInRevoked,
       email,
       apiKeysRevoked: revokedKeys,
+      apiKeysKept: keptKeys,
       ...(failedKeys.length > 0 ? { apiKeysNotRevoked: failedKeys } : {}),
     },
     meta: hints.length > 0 ? { hint: hints.join(' ') } : {},
@@ -396,5 +426,6 @@ export const registerAuth = (program: Command, run: Run): void => {
   auth
     .command('logout')
     .description('Revoke the sign-in and the API keys this CLI created')
-    .action((_options, cmd) => run(cmd, logout))
+    .option('--keep-keys', 'revoke only the sign-in and leave the API keys active')
+    .action((options, cmd) => run(cmd, (ctx) => logout(ctx, options)))
 }
