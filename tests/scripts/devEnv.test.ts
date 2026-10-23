@@ -5,16 +5,17 @@ const slashed = (path: string): string => path.replaceAll('\\', '/')
 
 describe('development environment', () => {
   it('defaults to the production API, in a settings directory named after its host', () => {
-    expect(devEnv({ env: {}, platform: 'linux', homedir: '/home/a' })).toEqual({
-      DEEPDOCK_BASE_URL: 'https://api.deepdock.ai',
-      DEEPDOCK_CONFIG_DIR: '/home/a/.config/deepdock-dev/api.deepdock.ai',
-    })
+    const env = devEnv({ env: {}, platform: 'linux', homedir: '/home/a' })
+    expect(env.DEEPDOCK_BASE_URL).toBe('https://api.deepdock.ai')
+    expect(slashed(env.DEEPDOCK_CONFIG_DIR)).toBe('/home/a/.config/deepdock-dev/api.deepdock.ai')
   })
 
   it('gives each DEEPDOCK_BASE_URL its own directory, ports included', () => {
     const at = (url: string): string =>
-      devEnv({ env: { DEEPDOCK_BASE_URL: url }, platform: 'darwin', homedir: '/Users/a' })
-        .DEEPDOCK_CONFIG_DIR
+      slashed(
+        devEnv({ env: { DEEPDOCK_BASE_URL: url }, platform: 'darwin', homedir: '/Users/a' })
+          .DEEPDOCK_CONFIG_DIR,
+      )
     expect(at('http://localhost:8787')).toBe('/Users/a/.config/deepdock-dev/localhost:8787')
     expect(at('http://localhost:9999')).not.toBe(at('http://localhost:8787'))
     expect(at('https://api.example.com/')).toBe('/Users/a/.config/deepdock-dev/api.example.com')
