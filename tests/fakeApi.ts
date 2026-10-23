@@ -252,9 +252,9 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 version: '25.3',
                 status: 'running',
                 actions: [
-                  { name: 'searchCustomers', state: 'active' },
+                  { action: 'searchCustomers', state: 'active' },
                   {
-                    name: 'createNote',
+                    action: 'createNote',
                     state: 'paused',
                     reason: 'structure_changed',
                     since: '2026-10-20T08:12:00Z',
@@ -271,6 +271,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 {
                   name: 'searchCustomers',
                   method: 'GET',
+                  description:
+                    'Finds customers whose last name starts with lastName. Matching ignores case.\n\nRefusals:\n- invalid_input: lastName is empty',
                   input: {
                     type: 'object',
                     properties: { lastName: { type: 'string' } },

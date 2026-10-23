@@ -12,16 +12,26 @@ const fieldNames = (input: unknown): string => {
     .join(', ')
 }
 
+/** The table shows the opening line or sentence; the whole text is in --json and the OpenAPI document. */
+export const summary = (description: unknown): string | undefined => {
+  if (typeof description !== 'string') return undefined
+  const line = (description.split('\n')[0] ?? '').trim()
+  const sentence = /^.*?[.!?](?=\s|$)/.exec(line)?.[0] ?? line
+  return sentence.length > 160 ? `${sentence.slice(0, 159).trimEnd()}…` : sentence
+}
+
 // Name first, then a read/write kind and the field names when the action carries them, then
 // whatever other scalar keys it has.
 const actionRow = (action: Record<string, unknown>): Record<string, unknown> => {
   const method = typeof action.method === 'string' ? action.method : undefined
   const fields = fieldNames(action.input)
-  const { name, method: _method, input: _input, output: _output, ...rest } = action
+  const { name, method: _method, input: _input, output: _output, description, ...rest } = action
+  const brief = summary(description)
   return {
     ...(name === undefined ? {} : { name }),
     ...(method ? { kind: method.toUpperCase() === 'GET' ? 'read' : 'write' } : {}),
     ...(fields ? { fields } : {}),
+    ...(brief ? { description: brief } : {}),
     ...rest,
   }
 }

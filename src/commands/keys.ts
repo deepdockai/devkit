@@ -143,6 +143,7 @@ const create = async (
         'Start one with `deepdock keys create ... --no-wait`.',
       )
     }
+    ctx.note('Waiting for approval in the browser.')
     return finishKey(ctx, pending, false)
   }
 

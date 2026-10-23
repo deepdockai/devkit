@@ -126,6 +126,7 @@ const login = async (ctx: Ctx, options: LoginOptions): Promise<Result> => {
     }
     assertSameBaseUrl(pending.baseUrl, ctx.baseUrl, 'request')
     assertNotExpired(ctx.rt, 'login', pending.expiresAt)
+    ctx.note('Waiting for approval in the browser.')
     return finishLogin(ctx, pending)
   }
 

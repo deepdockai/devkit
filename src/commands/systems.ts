@@ -40,6 +40,7 @@ export const registerSystems = (program: Command, run: Run): void => {
           data: response.data,
           meta: { requestId: response.requestId },
           text: JSON.stringify(document, null, 2),
+          bare: true,
         }
       }),
     )

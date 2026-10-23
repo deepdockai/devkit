@@ -23,7 +23,12 @@ const updateNotes = (ctx: Ctx, devices: unknown[]): void => {
     const update = field(device, 'updateAvailable')
     if (update) {
       const name = field(device, 'label') || field(device, 'id')
-      ctx.note(`${stripControl(name)}: update available (client ${stripControl(update)}).`)
+      ctx.note(
+        ctx.err(
+          'yellow',
+          `${stripControl(name)}: update available (client ${stripControl(update)}).`,
+        ),
+      )
     }
   }
 }

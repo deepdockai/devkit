@@ -94,7 +94,7 @@ deepdock skill
 | `auth logout`                                         | revoke the sign-in and every key this CLI created                                                                                                                       |
 | `org list`, `org select [slug]`                       | your organisations; set the default one                                                                                                                                 |
 | `systems list`                                        | the systems and actions assigned to your organisation                                                                                                                   |
-| `systems openapi <system>`                            | a system's OpenAPI document on stdout; redirect it to a file                                                                                                            |
+| `systems openapi <system>`                            | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                          |
 | `devices list`                                        | paired devices with id, label, status, systems and last seen                                                                                                            |
 | `devices pair <code> [--label <text>]`                | claim a device by the code on its screen                                                                                                                                |
 | `devices rename <id> <label>`, `devices release <id>` | rename a device; unpair it from the organisation (admin)                                                                                                                |
@@ -144,7 +144,9 @@ On a terminal you get tables and plain sentences. When stdout is not a terminal,
 }
 ```
 
-For list and show commands `data` is the API's answer unchanged, so what the CLI shows is what
+`systems openapi` is the one exception off a terminal: it prints the OpenAPI document itself, so
+`deepdock systems openapi <system> > openapi.json` saves a document a generator can read (`--json`
+gives the envelope). For list and show commands `data` is the API's answer unchanged, so what the CLI shows is what
 your code will receive; `auth`, `org select` and `keys create` build it from named fields. A
 failure is one document on stderr, `{ "error": { "code", "message" }, "meta": { "hint" } }`,
 with the API's error object unchanged. Switch on `code` or on the exit code, never on `message`.
@@ -235,7 +237,7 @@ macOS and Linux need nothing special. On Windows:
   CLI created (never their values) and a pending approval request. A file other users can read
   is refused with the `chmod` to run.
 - **Environment:** `DEEPDOCK_ORG`, `DEEPDOCK_BASE_URL` (https, or http for localhost only),
-  `NO_COLOR`. A sign-in or pending request is never sent to a different base URL than the one it
+  `NO_COLOR`, `FORCE_COLOR` (colours stderr when it is not a terminal; `NO_COLOR` wins). A sign-in or pending request is never sent to a different base URL than the one it
   was made against.
 
 Report a vulnerability by email to torben@deepdock.ai, not in a public issue: [SECURITY.md](SECURITY.md).

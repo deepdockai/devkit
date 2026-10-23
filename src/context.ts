@@ -15,6 +15,11 @@ export type Result = {
   /** The human rendering; unused under JSON. */
   text: string
   meta?: Meta
+  /**
+   * `data` is a document in its own right (OpenAPI): off a terminal without --json it is printed
+   * bare, so `> file.json` yields the document and not the envelope.
+   */
+  bare?: boolean
   /** A non-zero exit code for a command that succeeded in printing but reports a failed state. */
   exit?: 5
 }
