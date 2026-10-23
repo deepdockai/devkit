@@ -55,6 +55,13 @@ const createFully = async (
 }
 
 describe('keys create', () => {
+  it('--wait says on stderr that it is waiting, and prints no key value there', async () => {
+    const finished = await createFully()
+    expect(finished.code).toBe(0)
+    expect(finished.stderr).toContain('Waiting for approval in the browser.')
+    expect(finished.stderr).not.toContain(api.state.keyValue)
+  })
+
   it('writes the key to the file and prints no value, only named fields', async () => {
     const started = await run([...createArgs, '--no-wait'])
     expect(started.code).toBe(0)

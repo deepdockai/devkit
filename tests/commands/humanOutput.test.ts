@@ -152,6 +152,28 @@ describe('colour', () => {
   })
 })
 
+describe('update note', () => {
+  it('is yellow on a terminal and plain without colour', async () => {
+    api.state.devices.push({
+      id: DEVICE_ID,
+      label: 'Demo PC',
+      status: 'connected',
+      lastSeenAt: new Date().toISOString(),
+      updateAvailable: '1.8.2',
+      systems: [],
+    })
+    const coloured = await execute(box, ['devices', 'list'], {
+      baseUrl: api.url,
+      tty: true,
+      colour: true,
+    })
+    expect(coloured.stderr).toContain(`${ESCAPE}33mDemo PC: update available (client 1.8.2).`)
+    const plain = await execute(box, ['devices', 'list'], { baseUrl: api.url, tty: true })
+    expect(plain.stderr).toContain('Demo PC: update available (client 1.8.2).')
+    expect(plain.stderr).not.toContain(ESCAPE)
+  })
+})
+
 describe('organisations, API line and systems list', () => {
   it('lists the default organisation first with the role in words and a switch hint', async () => {
     await execute(box, ['org', 'select', 'beispiel-handel'], { baseUrl: api.url })
