@@ -19,8 +19,10 @@ curl "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchCustomers?lastN
 { "data": { "items": [ { "customerId": 1001, "lastName": "Müller", "city": "Beispielstadt" } ], "nextCursor": null } }
 ```
 
-- `nextCursor` is set only when a page came back full; pass it back as `cursor` unchanged. It is
-  opaque: never parse, build or store it beyond the next request.
+- Pass `nextCursor` back as `cursor` unchanged while it is not `null`, and stop only on `null`,
+  never on a short page: a page of long entries (notes) ends before `limit` rows to keep the
+  device's answer under 1 MiB and still carries a cursor. It is opaque: never parse, build or store
+  it beyond the next request.
 - Items are the customer's records. Values can be `null` where the schema says so. Dates and other
   non-numeric values arrive as text in the system's own format (the schema and description say
   which); numbers as JSON numbers.
@@ -68,6 +70,34 @@ of a customer, the note id of an update. The pattern is always the same:
    blindly.
 
 Never invent an id, copy one from another device, or hard-code one from a test run.
+
+## Recipe: MEDICAL OFFICE (`medical-office`)
+
+The examples above use the placeholder system `example-erp`. For a practice running MEDICAL OFFICE
+the same patterns use real actions (the live OpenAPI document is still the authority for fields):
+
+1. `readUsers` lists the users who can author an entry; pass one id as `authorUserId`.
+2. `searchPatients?lastName=...` finds a patient: a prefix match with umlauts spelled out
+   (`Müller` and `Mueller` match, `Muller` does not), answering `patientId`, `lastName`,
+   `firstName`, `birthDate` (`yyyy-mm-dd`, `null` when the system holds no readable date).
+3. `readCases` lists the patient's cases; a write that needs an open case (`createDiagnosis` and
+   the note actions) refuses with `422 no_open_case` when there is none, or takes a `caseId`.
+   `readProviders` lists the providers for `providerId` (`422 unknown_provider` otherwise).
+4. Write with `createDiagnosis` (and the other create actions) under a fresh `Idempotency-Key`,
+   then read back.
+
+Things the schemas show but are easy to get wrong:
+
+- **Ids are integers in reads and strings in writes.** `patientId: 1001` in a search result goes
+  back as `"patientId": "1001"` in a write body, as every write value is a string.
+- **Nothing is undone through the API.** No action deletes or reverts a record; a write you
+  regret stays until someone removes it in MEDICAL OFFICE itself. Write only what you mean to keep.
+- **Mark every test text `TEST-DEEPDOCK-<id>`** (a diagnosis text, a note), on the demo device
+  only, and list what you created ([testing.md](testing.md)).
+- Text fields accept MEDICAL OFFICE's Windows-1252 repertoire only; anything else (a tab or line
+  break outside a note) answers `422 invalid_input` before a write. Note actions take a `format` of `text` (default, stored as
+  typed) or `markdown`.
+- A read action's query string treats `+` as a space: send a literal `+` as `%2B`.
 
 ## Timeouts and latency
 
