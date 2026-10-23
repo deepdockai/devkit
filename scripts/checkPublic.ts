@@ -30,6 +30,14 @@ export type Finding = { file: string; line: number; rule: string }
 
 type PackInfo = { filename: string }
 
+/** The tarball name from `npm pack --json`: npm <= 11 prints an array, npm 12 an object keyed by package name. */
+export const packedFilename = (output: string): string => {
+  const parsed = JSON.parse(output) as PackInfo[] | Record<string, PackInfo>
+  const [info] = Array.isArray(parsed) ? parsed : Object.values(parsed)
+  if (!info) throw new Error('npm pack produced no tarball')
+  return info.filename
+}
+
 /** Scans one file's text. A finding names the file, the line and the rule, never the secret. */
 export const scanText = (file: string, text: string): Finding[] => {
   const findings: Finding[] = []
@@ -137,11 +145,7 @@ export const scanPacked = (root: string): Finding[] => {
       // npm is npm.cmd on Windows, which Node only starts through a shell; the arguments are fixed.
       { cwd: root, encoding: 'utf8', shell: process.platform === 'win32' },
     )
-    // npm <= 11 prints an array of pack results; npm 12 prints an object keyed by package name.
-    const parsed = JSON.parse(packed) as PackInfo[] | Record<string, PackInfo>
-    const [info] = Array.isArray(parsed) ? parsed : Object.values(parsed)
-    if (!info) throw new Error('npm pack produced no tarball')
-    return scanTarball(join(work, info.filename))
+    return scanTarball(join(work, packedFilename(packed)))
   } finally {
     rmSync(work, { recursive: true, force: true })
   }

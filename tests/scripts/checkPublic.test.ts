@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   MAX_FILE_BYTES,
+  packedFilename,
   scanFile,
   scanPacked,
   scanRepo,
@@ -132,5 +133,23 @@ describe('scanTarball', () => {
     } finally {
       rmSync(work, { recursive: true, force: true })
     }
+  })
+})
+
+describe('packedFilename', () => {
+  it('reads the array npm 11 and earlier print', () => {
+    expect(packedFilename(JSON.stringify([{ filename: 'deepdockai-cli-1.0.0.tgz' }]))).toBe(
+      'deepdockai-cli-1.0.0.tgz',
+    )
+  })
+
+  it('reads the object keyed by package name npm 12 prints', () => {
+    const output = JSON.stringify({ '@deepdockai/cli': { filename: 'deepdockai-cli-1.0.0.tgz' } })
+    expect(packedFilename(output)).toBe('deepdockai-cli-1.0.0.tgz')
+  })
+
+  it('refuses an empty result', () => {
+    expect(() => packedFilename('[]')).toThrow('npm pack produced no tarball')
+    expect(() => packedFilename('{}')).toThrow('npm pack produced no tarball')
   })
 })
