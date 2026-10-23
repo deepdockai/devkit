@@ -88,8 +88,10 @@ the same patterns use real actions (the live OpenAPI document is still the autho
 
 Things the schemas show but are easy to get wrong:
 
-- **Ids are integers in reads and strings in writes.** `patientId: 1001` in a search result goes
-  back as `"patientId": "1001"` in a write body, as every write value is a string.
+- **Every id in an answer is an integer; every id you send is a string.** Answers include a
+  write's own result (`entryId`, `diagnosisId`). `patientId: 1001` in a search result goes back as
+  `patientId=1001` in a read's query string and as `"patientId": "1001"` in a write body: digits
+  only, no leading zero, at most 10 characters.
 - **Nothing is undone through the API.** No action deletes or reverts a record; a write you
   regret stays until someone removes it in MEDICAL OFFICE itself. Write only what you mean to keep.
 - **Mark every test text `TEST-DEEPDOCK-<id>`** (a diagnosis text, a note), on the demo device
