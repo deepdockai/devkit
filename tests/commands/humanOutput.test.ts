@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { DEVICE_ID, type FakeApi, startFakeApi } from '../fakeApi.ts'
 import { summary } from '../../src/commands/actions.ts'
@@ -153,26 +154,38 @@ describe('colour', () => {
 
 describe('organisations, API line and systems list', () => {
   it('lists the default organisation first with the role in words and a switch hint', async () => {
+    await execute(box, ['org', 'select', 'beispiel-handel'], { baseUrl: api.url })
     const outcome = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
     expect(outcome.stdout).toMatch(/NAME\s+SLUG\s+ROLE/)
-    expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
+    expect(outcome.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
+    expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s*\n/)
     expect(outcome.stdout).not.toContain('org:')
     expect(outcome.stdout).toContain('Switch the default with `deepdock org select <slug>`.')
     const rows = outcome.stdout.split('\n').filter((line) => /muster-it|beispiel-handel/.test(line))
-    expect(rows[0]).toContain('muster-it')
+    expect(rows[0]).toContain('beispiel-handel')
   })
 
   it('shows the API line only when it is not production, and --json always has the field', async () => {
     const staging = await execute(box, ['auth', 'status'], { baseUrl: api.url, tty: true })
     expect(staging.stdout).toContain(`API: ${api.url} (not production)`)
+
+    // A sign-in made against production, answered by the fake: the check is on the base URL alone.
+    writeFileSync(
+      box.configFile,
+      readFileSync(box.configFile, 'utf8').replaceAll(api.url, DEFAULT_BASE_URL),
+    )
     const production = await execute(box, ['auth', 'status'], {
-      baseUrl: api.url,
-      tty: true,
       env: { DEEPDOCK_BASE_URL: DEFAULT_BASE_URL },
+      fetch: (input, init) => fetch(input.replace(DEFAULT_BASE_URL, api.url), init),
+      tty: true,
     })
+    expect(production.stdout).toContain('Signed in as')
     expect(production.stdout).not.toContain('API:')
-    const json = await execute(box, ['auth', 'status', '--json'], { baseUrl: api.url })
-    expect(JSON.parse(json.stdout).data.baseUrl).toBe(api.url)
+    const json = await execute(box, ['auth', 'status', '--json'], {
+      env: { DEEPDOCK_BASE_URL: DEFAULT_BASE_URL },
+      fetch: (input, init) => fetch(input.replace(DEFAULT_BASE_URL, api.url), init),
+    })
+    expect(JSON.parse(json.stdout).data.baseUrl).toBe(DEFAULT_BASE_URL)
   })
 
   it('systems list shows the label and the action count', async () => {

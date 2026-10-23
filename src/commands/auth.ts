@@ -3,7 +3,7 @@ import { CliError, usageError } from '../api/errors.ts'
 import { parseAnswer } from '../api/schemas.ts'
 import { assertNotExpired, pollUntilApproved } from '../approval/poll.ts'
 import { startLogin } from '../approval/request.ts'
-import { selectableOrgs } from '../config/orgSelection.ts'
+import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
 import type { KeyEntry, PendingRequest } from '../config/store.ts'
 import { assertSameBaseUrl, type Ctx, type Result } from '../context.ts'
 import { AUTH_LOGIN_HELP } from '../help.ts'
@@ -203,6 +203,7 @@ const status = async (ctx: Ctx): Promise<Result> => {
     organisations: signedIn ? (config.organisations ?? []) : [],
     apiKeysCreated,
   }
+  const defaultOrg = requestedSlug(ctx.opts.org, ctx.rt.env, config)
   const lines: string[] = []
   if (signedIn && config.signIn) {
     lines.push(
@@ -214,9 +215,9 @@ const status = async (ctx: Ctx): Promise<Result> => {
       lines.push(
         '',
         'Organisations:',
-        indented(orgTable(data.organisations, config.defaultOrg, ctx.out)),
+        indented(orgTable(data.organisations, defaultOrg, ctx.out)),
         '',
-        config.defaultOrg
+        defaultOrg
           ? 'Switch the default with `deepdock org select <slug>`.'
           : 'No default yet: choose one with `deepdock org select <slug>`.',
       )

@@ -52,8 +52,8 @@ export const KEY_ID = 'k_6a2b9c1d-3e4f-4a5b-8c6d-7e8f9a0b1c2d'
 
 export const defaultState = (): FakeState => ({
   orgs: [
-    { slug: 'muster-it', name: 'Muster IT', role: 'admin' },
-    { slug: 'beispiel-handel', name: 'Beispiel Handel GmbH', role: 'member' },
+    { slug: 'muster-it', name: 'Muster IT', role: 'org:admin' },
+    { slug: 'beispiel-handel', name: 'Beispiel Handel GmbH', role: 'org:member' },
   ],
   signInId: 'cli_signin_1',
   signInSecret: ['si', 'CANARYsignin0123456789abcdef'].join('_'),
@@ -150,7 +150,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         !path.startsWith('/partner/cli-keys')
       if (needsOrg && !org)
         return send(403, fail('organization_required', 'Choose an organisation.'))
-      const isAdmin = org?.role === 'admin'
+      const isAdmin = org?.role === 'org:admin'
       const record =
         typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
 

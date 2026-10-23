@@ -4,7 +4,7 @@ import { parseAnswer } from '../api/schemas.ts'
 import { requestedSlug, selectableOrgs } from '../config/orgSelection.ts'
 import type { Ctx, Result } from '../context.ts'
 import { pickIndex } from '../output/confirm.ts'
-import { orgTable, roleLabel } from '../output/human.ts'
+import { orgTable, roleLabel, stripControl } from '../output/human.ts'
 import type { Run } from '../program.ts'
 
 const list = async (ctx: Ctx): Promise<Result> => {
@@ -50,7 +50,9 @@ const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
     ctx.note('Which organisation should be the default?')
     choices.forEach((org, index) => {
       ctx.note(
-        `  ${index + 1}  ${org.slug.padEnd(18)} ${org.name.padEnd(24)} ${roleLabel(org.role)}`,
+        stripControl(
+          `  ${index + 1}  ${org.slug.padEnd(18)} ${org.name.padEnd(24)} ${roleLabel(org.role)}`,
+        ),
       )
     })
     const current = Math.max(1, choices.findIndex((org) => org.slug === config.defaultOrg) + 1)
