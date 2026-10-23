@@ -12,16 +12,32 @@ const fieldNames = (input: unknown): string => {
     .join(', ')
 }
 
+/** The table shows the opening line or sentence; the whole text is in --json and the OpenAPI document. */
+export const summary = (description: unknown): string | undefined => {
+  if (typeof description !== 'string') return undefined
+  const line =
+    description
+      .split('\n')
+      .find((text) => text.trim() !== '')
+      ?.trim() ?? ''
+  // A full stop ends the sentence only before a capital: "e.g. B AB 1234" and "z.B. Müller" go on.
+  const sentence = /^.*?[.!?](?=\s+\p{Lu}|$)/u.exec(line)?.[0] ?? line
+  const chars = Array.from(sentence)
+  return chars.length > 160 ? `${chars.slice(0, 159).join('').trimEnd()}…` : sentence
+}
+
 // Name first, then a read/write kind and the field names when the action carries them, then
 // whatever other scalar keys it has.
 const actionRow = (action: Record<string, unknown>): Record<string, unknown> => {
   const method = typeof action.method === 'string' ? action.method : undefined
   const fields = fieldNames(action.input)
-  const { name, method: _method, input: _input, output: _output, ...rest } = action
+  const { name, method: _method, input: _input, output: _output, description, ...rest } = action
+  const brief = summary(description)
   return {
     ...(name === undefined ? {} : { name }),
     ...(method ? { kind: method.toUpperCase() === 'GET' ? 'read' : 'write' } : {}),
     ...(fields ? { fields } : {}),
+    ...(brief ? { description: brief } : {}),
     ...rest,
   }
 }

@@ -52,8 +52,8 @@ export const KEY_ID = 'k_6a2b9c1d-3e4f-4a5b-8c6d-7e8f9a0b1c2d'
 
 export const defaultState = (): FakeState => ({
   orgs: [
-    { slug: 'muster-it', name: 'Muster IT', role: 'admin' },
-    { slug: 'beispiel-handel', name: 'Beispiel Handel GmbH', role: 'member' },
+    { slug: 'muster-it', name: 'Muster IT', role: 'org:admin' },
+    { slug: 'beispiel-handel', name: 'Beispiel Handel GmbH', role: 'org:member' },
   ],
   signInId: 'cli_signin_1',
   signInSecret: ['si', 'CANARYsignin0123456789abcdef'].join('_'),
@@ -150,7 +150,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         !path.startsWith('/partner/cli-keys')
       if (needsOrg && !org)
         return send(403, fail('organization_required', 'Choose an organisation.'))
-      const isAdmin = org?.role === 'admin'
+      const isAdmin = org?.role === 'org:admin'
       const record =
         typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
 
@@ -200,7 +200,18 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         return send(200, { data: { id, revokedAt: new Date().toISOString() } })
       }
       if (method === 'GET' && path === '/partner/systems') {
-        return send(200, { data: [{ system: 'example-erp', actions: 5 }] })
+        return send(200, {
+          data: [
+            {
+              system: 'example-erp',
+              label: 'Example ERP',
+              actions: [
+                { name: 'searchCustomers', kind: 'read', method: 'GET' },
+                { name: 'createNote', kind: 'write', method: 'POST' },
+              ],
+            },
+          ],
+        })
       }
       const openapiMatch = /^\/partner\/systems\/([^/]+)\/openapi\.json$/.exec(path)
       if (method === 'GET' && openapiMatch) {
@@ -252,9 +263,9 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 version: '25.3',
                 status: 'running',
                 actions: [
-                  { name: 'searchCustomers', state: 'active' },
+                  { action: 'searchCustomers', state: 'active' },
                   {
-                    name: 'createNote',
+                    action: 'createNote',
                     state: 'paused',
                     reason: 'structure_changed',
                     since: '2026-10-20T08:12:00Z',
@@ -271,6 +282,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 {
                   name: 'searchCustomers',
                   method: 'GET',
+                  description:
+                    'Finds customers whose last name starts with lastName. Matching ignores case.\n\nRefusals:\n- invalid_input: lastName is empty',
                   input: {
                     type: 'object',
                     properties: { lastName: { type: 'string' } },

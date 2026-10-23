@@ -94,7 +94,8 @@ const buildProgram = (rt: Runtime, state: State): Command => {
     state.exit = result.exit
     const meta: Meta = { ...(ctx.org ? { org: ctx.org } : {}), ...result.meta }
     if (meta.requestId === undefined) delete meta.requestId
-    if (ctx.json) rt.stdout.write(toLine(successDoc(result.data, meta)))
+    if (ctx.json && result.bare && !ctx.opts.json) rt.stdout.write(`${result.text}\n`)
+    else if (ctx.json) rt.stdout.write(toLine(successDoc(result.data, meta)))
     else rt.stdout.write(`${result.text}\n`)
     try {
       const config = await ctx.config()

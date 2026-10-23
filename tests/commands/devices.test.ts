@@ -145,7 +145,7 @@ describe('devices systems and actions', () => {
     expect(outcome.code).toBe(0)
     expect(outcome.stdout).toContain('system: example-erp')
     expect(outcome.stdout).toContain('version: 25.3')
-    expect(outcome.stdout).toMatch(/createNote\s+paused\s+structure_changed/)
+    expect(outcome.stdout).toMatch(/createNote\s+paused\s+structure changed/)
     expect(outcome.stdout).toContain('One action is paused.')
     expect(outcome.stdout).toContain('503 action_paused')
   })

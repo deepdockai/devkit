@@ -63,6 +63,7 @@ export const DEVICE_SYSTEM_COLUMNS: Columns = [
   'systems',
   'system',
   'name',
+  'action',
   'version',
   'status',
   'state',
@@ -109,6 +110,26 @@ const scalar = (value: unknown): string => {
   return ''
 }
 
+const GOOD = new Set(['connected', 'active', 'running', 'ok'])
+const WARN = new Set(['offline', 'paused', 'outdated', 'unavailable', 'degraded'])
+const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
+
+/** Colour for a value whose word carries the meaning; the word stays, so colour is never alone. */
+const cellFor = (key: string, value: unknown): Cell => {
+  const text = scalar(value)
+  if (text === '') return text
+  if (key === 'reason' || key === 'pausedReason') return words(text)
+  if (key === 'revokedAt') return { text, style: 'red' }
+  if (key === 'name' || key === 'action') return { text, style: 'bold' }
+  if (key.endsWith('At') || key === 'since') return { text, style: 'dim' }
+  if (key === 'status' || key === 'state') {
+    if (GOOD.has(text)) return { text, style: 'green' }
+    if (WARN.has(text)) return { text, style: 'yellow' }
+    if (BAD.has(text)) return { text, style: 'red' }
+  }
+  return text
+}
+
 /** A table of the allowed columns that the answer has; an unknown shape never fails. */
 export const genericTable = (items: unknown[], style: Styler, allow: Columns): string => {
   const records = items.filter(isRecord)
@@ -118,7 +139,7 @@ export const genericTable = (items: unknown[], style: Styler, allow: Columns): s
   if (shown.length === 0) return NOTHING_TO_SHOW
   return renderTable(
     shown.map(columnTitle),
-    records.map((record) => shown.map((key) => scalar(record[key]))),
+    records.map((record) => shown.map((key) => cellFor(key, record[key]))),
     style,
   )
 }
@@ -168,10 +189,10 @@ export const deviceTable = (devices: unknown[], now: Date, style: Styler): strin
     ['ID', 'LABEL', 'STATUS', 'SYSTEMS', 'LAST SEEN'],
     records.map((device) => [
       field(device, 'id'),
-      field(device, 'label'),
+      { text: field(device, 'label'), style: 'bold' },
       deviceStatusCell(field(device, 'status')),
       systemsLabel(device),
-      relativeTime(device.lastSeenAt, now),
+      { text: relativeTime(device.lastSeenAt, now), style: 'dim' },
     ]),
     style,
   )
@@ -246,4 +267,52 @@ export const countValue = (data: unknown, word: string): number => {
   if (isRecord(data))
     return Object.values(data).reduce<number>((sum, item) => sum + countValue(item, word), 0)
   return 0
+}
+
+/** "org:admin" is the identity provider's word; a person reads "Admin". */
+export const roleLabel = (role: string): string => {
+  const bare = role.replace(/^org:/, '').replace(/[_-]+/g, ' ')
+  return bare === '' ? role : bare.charAt(0).toUpperCase() + bare.slice(1)
+}
+
+type OrgLike = { slug: string | null; name: string; role: string }
+
+/** Organisations as a table: name first, slug dimmed, role in words, the default first and marked. */
+export const orgTable = (
+  orgs: OrgLike[],
+  defaultSlug: string | undefined,
+  style: Styler,
+): string => {
+  const isDefault = (org: OrgLike): boolean => org.slug !== null && org.slug === defaultSlug
+  const ordered = [...orgs].sort((a, b) => Number(isDefault(b)) - Number(isDefault(a)))
+  return renderTable(
+    ['NAME', 'SLUG', 'ROLE', ''],
+    ordered.map((org): Cell[] => [
+      { text: org.name, style: 'bold' },
+      { text: org.slug ?? '(no slug)', style: 'dim' },
+      roleLabel(org.role),
+      isDefault(org) ? { text: 'default', style: 'green' } : '',
+    ]),
+    style,
+  )
+}
+
+/** "structure_changed" is a code; the human view says "structure changed". */
+export const words = (code: string): string => code.replace(/_/g, ' ')
+
+export const systemsTable = (items: unknown[], style: Styler): string => {
+  const records = items.filter(isRecord)
+  if (!records.some((item) => 'system' in item)) return genericTable(records, style, SYSTEM_COLUMNS)
+  return renderTable(
+    ['SYSTEM', 'NAME', 'ACTIONS'],
+    records.map((item): Cell[] => {
+      const actions = Array.isArray(item.actions) ? item.actions.filter(isRecord) : undefined
+      const writes = actions?.filter((action) => action.kind === 'write').length ?? 0
+      const counted = actions
+        ? `${actions.length} (${actions.length - writes} read, ${writes} write)`
+        : ''
+      return [{ text: field(item, 'system'), style: 'bold' }, field(item, 'label'), counted]
+    }),
+    style,
+  )
 }

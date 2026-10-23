@@ -94,20 +94,20 @@ describe('default marking and a lost default', () => {
   it('marks the organisation that commands would use: --org, then DEEPDOCK_ORG, then stored', async () => {
     await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
     const stored = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
-    expect(stored.stdout).toMatch(/muster-it\s+Muster IT\s+admin\s+yes/)
+    expect(stored.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
     const env = await execute(box, ['org', 'list'], {
       baseUrl: api.url,
       tty: true,
       env: { DEEPDOCK_ORG: 'beispiel-handel' },
     })
-    expect(env.stdout).toMatch(/beispiel-handel\s+Beispiel Handel GmbH\s+member\s+yes/)
-    expect(env.stdout).not.toMatch(/muster-it\s+Muster IT\s+admin\s+yes/)
+    expect(env.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
+    expect(env.stdout).not.toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
     const flag = await execute(box, ['org', 'list', '--org', 'beispiel-handel'], {
       baseUrl: api.url,
       tty: true,
       env: { DEEPDOCK_ORG: 'muster-it' },
     })
-    expect(flag.stdout).toMatch(/beispiel-handel\s+Beispiel Handel GmbH\s+member\s+yes/)
+    expect(flag.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
   })
 
   it("hints at `org select` when the stored default is no longer one of the person's", async () => {
@@ -129,8 +129,8 @@ describe('org commands', () => {
   it('lists the organisations and marks the default', async () => {
     await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
     const outcome = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
-    expect(outcome.stdout).toMatch(/muster-it\s+Muster IT\s+admin\s+yes/)
-    expect(outcome.stdout).toMatch(/beispiel-handel\s+Beispiel Handel GmbH\s+member/)
+    expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
+    expect(outcome.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member/)
   })
 
   it('org list --json passes the API data through unchanged', async () => {
