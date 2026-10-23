@@ -10,14 +10,14 @@ This repository holds the partner CLI, published as [`@deepdockai/cli`](https://
 with the command `deepdock`, and the skill it installs for coding agents.
 
 ```bash
-npx @deepdockai/cli@1 auth login
+npx @deepdockai/cli auth login
 ```
 
 The CLI manages: your organisations, the devices paired to them, and your API keys, and it lists
 the systems and actions a device offers. It never runs an action and never keeps or uses an API
 key. Actions run from your own code with a key the CLI wrote into your env file.
 
-Node 22.13 or newer. Installed globally (`npm install -g @deepdockai/cli@1`) the command is
+Node 22.13 or newer. Installed globally (`npm install -g @deepdockai/cli`) the command is
 `deepdock`; the examples below use that form.
 
 ## Before you start
@@ -262,3 +262,11 @@ DEEPDOCK_BASE_URL=http://127.0.0.1:<port> node dist/deepdock.js auth login
 ## Licence
 
 [MIT](LICENSE).
+
+## Releases
+
+Publishing is automatic once a change is merged; nobody runs `npm publish`. To ship a change, bump `version` in `package.json` and add a matching
+`## <version>` entry to `CHANGELOG.md` in your pull request. A check on the pull request requires
+the bump whenever a published file changes. When the pull request merges to `main`, the release
+workflow tests the code, scans the exact tarball, publishes it to npm with provenance, then tags
+`v<version>` and creates a GitHub Release with the changelog entry as notes.

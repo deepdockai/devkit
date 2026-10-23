@@ -46,3 +46,8 @@ jobs:
             echo "Package version $current must be higher than the npm version $published"
             exit 1
           fi
+      - name: Changelog has an entry for this version
+        if: steps.publishable.outputs.changed == 'true'
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          grep -qE "^## ${version//./\\.}\$" CHANGELOG.md || { echo "CHANGELOG.md has no '## ${version}' entry"; exit 1; }
