@@ -20,7 +20,7 @@ Copy the file into the project; do not reach into the skill directory at runtime
 ```ts
 import { Deepdock, DeepdockError, DeepdockTransportError, attempt, type PendingWrite } from './deepdock'
 
-const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // 30 s timeout by default
+const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!, { base: process.env.DEEPDOCK_BASE_URL }) // unset: production; 30 s timeout
 const page = await dd.read<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' }, { limit: 50 })
 for await (const p of dd.readAll<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' })) { /* every page */ }
 const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', 'POST', key, input)
@@ -31,7 +31,7 @@ const device = await dd.pair('K7Q-4MX', 'Demo')                 // keep device.i
 ```python
 from deepdock import Deepdock, DeepdockError, DeepdockTransportError, PendingWrite, attempt
 
-dd = Deepdock(os.environ["DEEPDOCK_API_KEY"])
+dd = Deepdock(os.environ["DEEPDOCK_API_KEY"], base=os.environ.get("DEEPDOCK_BASE_URL", "https://api.deepdock.ai"))
 page = dd.read(device_id, "example-erp", "searchNotes", {"text": "TEST-DEEPDOCK-"}, limit=50)
 res = dd.write(device_id, "example-erp", "createNote", "POST", key, body)   # res.data, res.replayed
 ```
@@ -65,7 +65,7 @@ await store.save(next)                     // the job picks up 'sent' rows later
 import { randomUUID } from 'node:crypto'
 import { Deepdock, attempt, type PendingWrite } from './deepdock'
 
-const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)
+const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!, { base: process.env.DEEPDOCK_BASE_URL })
 const deviceId = process.env.DEEPDOCK_TEST_DEVICE!   // the demo device the human named
 const system = 'example-erp'
 type Note = { noteId: number; text: string }
@@ -109,7 +109,7 @@ export const run = async (store: { save: (row: PendingWrite) => Promise<void> })
 ## curl, for any other language
 
 ```bash
-BASE=https://api.deepdock.ai
+BASE=${DEEPDOCK_BASE_URL:-https://api.deepdock.ai}
 AUTH="Authorization: Bearer $DEEPDOCK_API_KEY"
 
 # Pair a device (keep data.id)

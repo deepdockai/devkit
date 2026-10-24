@@ -34,6 +34,10 @@ in the dashboard" and stop retrying.
 - Read it from the environment or a secret store (`DEEPDOCK_API_KEY` is the convention the
   dashboard's examples use). Never a literal in source, a test fixture, a log or a URL.
 - One key per deployment is enough; there is no per-device key.
+- A key works only against the API it was created on. The CLI creates it on the API it is signed
+  in to, reported as `baseUrl` by `deepdock auth status --json`. When that is not the production
+  URL, put `DEEPDOCK_BASE_URL=<baseUrl>` next to the key and pass it to the client; production
+  needs nothing.
 - Getting a key into the app is the CLI's job: `deepdock keys create <name> --expires <d>
   --write-env <file>` opens a link to the dashboard; a human clicks Approve (or Deny); the CLI
   receives the key once and writes `DEEPDOCK_API_KEY=<key>` into the file, which must be ignored

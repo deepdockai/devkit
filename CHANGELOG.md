@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+
+- The agent skill's TypeScript client matches the API's answers: `systems()` returns an array of systems, each with `system`, `access` and its actions as a list; a paired `Device` lists its systems as objects, and carries `outdated` and a `claimedAt` that can be `null`. The Python client's `systems()` returns a list.
+- The TypeScript client runs under Node's plain type stripping (no `--experimental-transform-types`).
+- The agent skill passes the API the CLI is signed in to (`baseUrl` from `deepdock auth status --json`) to the client, so a key is used against the API that created it.
+
 ## 1.0.4
 
 - `DEEPDOCK_CONFIG_DIR` moves the settings file (and only it) to a directory of your choice, on every platform; it must be an absolute path. Useful for keeping separate sign-ins apart, for example one per project or account.

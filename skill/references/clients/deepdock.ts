@@ -6,16 +6,21 @@
  * Everything action-specific (paths, fields, methods) comes from the live OpenAPI document.
  */
 
+// Plain fields, no constructor parameter properties: Node runs this file with its default type
+// stripping, which refuses syntax that needs a transform.
 export class DeepdockError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-    readonly requestId?: string,
-    readonly systems?: string[],
-  ) {
+  readonly status: number
+  readonly code: string
+  readonly requestId?: string
+  readonly systems?: string[]
+
+  constructor(status: number, code: string, message: string, requestId?: string, systems?: string[]) {
     super(message)
     this.name = 'DeepdockError'
+    this.status = status
+    this.code = code
+    this.requestId = requestId
+    this.systems = systems
   }
 }
 
@@ -34,6 +39,10 @@ export type Page<Item> = { items: Item[]; nextCursor: string | null }
 export type WriteResult<T> = { data: T; replayed: boolean }
 export type WriteMethod = 'POST' | 'PATCH'
 
+export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
+/** The database access the device last reported; `null` while none is known. */
+export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'not_set_up' | null
+
 export type Device = {
   id: string
   label: string | null
@@ -42,20 +51,24 @@ export type Device = {
   clientVersion: string
   status: 'connected' | 'offline' | 'inactive'
   lastSeenAt: string | null
-  claimedAt: string
-  systems: string[]
+  claimedAt: string | null
+  /** True when an action assigned to you needs a newer client: that action answers device_outdated. */
+  outdated: boolean
   updateAvailable?: string
+  systems: { system: string; version: string | null; status: SystemStatus; access: SystemAccess; reportedAt: string }[]
 }
 
 export type ActionState =
-  | { state: 'active' }
-  | { state: 'paused'; reason: string; pausedAt: string }
+  | { action: string; state: 'active' }
+  | { action: string; state: 'paused'; reason: 'structure_changed' | 'check_failed'; pausedAt: string }
 
 export type DeviceSystem = {
+  system: string
   label: string | null
-  version: string
-  status: 'running' | 'stopped' | 'missing'
-  actions: Record<string, ActionState>
+  version?: string
+  status: SystemStatus
+  access: SystemAccess
+  actions: ActionState[]
 }
 
 export type DeepdockOptions = {
@@ -66,14 +79,16 @@ export type DeepdockOptions = {
 }
 
 export class Deepdock {
+  private readonly apiKey: string
   private readonly base: string
   private readonly timeoutMs: number
   private readonly fetchImpl: typeof fetch
 
   constructor(
-    private readonly apiKey: string,
+    apiKey: string,
     { base = 'https://api.deepdock.ai', timeoutMs = 30_000, fetch: fetchImpl = fetch }: DeepdockOptions = {},
   ) {
+    this.apiKey = apiKey
     this.base = base.replace(/\/$/, '')
     this.timeoutMs = timeoutMs
     this.fetchImpl = fetchImpl
@@ -167,8 +182,8 @@ export class Deepdock {
   }
 
   /** The device's systems and each action's state. A live call to the device: can answer device_offline. */
-  async systems(deviceId: string): Promise<Record<string, DeviceSystem>> {
-    return (await this.send<Record<string, DeviceSystem>>(`/v1/devices/${encodeURIComponent(deviceId)}/systems`, { method: 'GET' })).data
+  async systems(deviceId: string): Promise<DeviceSystem[]> {
+    return (await this.send<DeviceSystem[]>(`/v1/devices/${encodeURIComponent(deviceId)}/systems`, { method: 'GET' })).data
   }
 
   /** Claims a device by the pairing code it shows. Keep the returned `id`. */

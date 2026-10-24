@@ -98,7 +98,7 @@ class Deepdock:
                                    headers={"Idempotency-Key": idempotency_key})
         return WriteResult(data=data, replayed=headers.get("Idempotent-Replayed") == "true")
 
-    def systems(self, device_id: str) -> Dict[str, Any]:
+    def systems(self, device_id: str) -> List[Dict[str, Any]]:
         """The device's systems and each action's state. A live call: can answer device_offline."""
         data, _ = self._send("GET", f"/v1/devices/{quote(device_id, safe='')}/systems")
         return data

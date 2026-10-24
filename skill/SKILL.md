@@ -58,7 +58,9 @@ and what your code does with the result.
    dashboard. The CLI receives the key once, writes `DEEPDOCK_API_KEY=<key>` into that file (it
    must be ignored by git) and keeps no copy. It is displayed to you or to the human by nobody.
    You work only with the key's id, prefix and the file name. Never ask for, read, print or paste
-   a key value.
+   a key value. The key works only against the API the CLI is signed in to, which
+   `deepdock auth status --json` reports as `baseUrl`. When that is not `https://api.deepdock.ai`,
+   add `DEEPDOCK_BASE_URL=<baseUrl>` to the same file and pass it to the client as its base URL.
 6. **Test it.** Run your own code against the demo device the human named, with the key from
    `.env.local`, and read back with the read action. The CLI runs no action. Read
    [references/testing.md](references/testing.md) before any write.

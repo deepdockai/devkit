@@ -17,5 +17,5 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["src", "tests", "scripts", "vitest.config.ts"]
+  "include": ["src", "tests", "scripts", "skill/references/clients", "vitest.config.ts"]
 }
