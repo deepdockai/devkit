@@ -20,7 +20,7 @@ Copy the file into the project; do not reach into the skill directory at runtime
 ```ts
 import { Deepdock, DeepdockError, DeepdockTransportError, attempt, type PendingWrite } from './deepdock'
 
-const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // 30 s timeout by default
+const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // base from DEEPDOCK_BASE_URL, else production; 30 s timeout
 const page = await dd.read<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' }, { limit: 50 })
 for await (const p of dd.readAll<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' })) { /* every page */ }
 const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', 'POST', key, input)
@@ -109,7 +109,7 @@ export const run = async (store: { save: (row: PendingWrite) => Promise<void> })
 ## curl, for any other language
 
 ```bash
-BASE=https://api.deepdock.ai
+BASE=${DEEPDOCK_BASE_URL:-https://api.deepdock.ai}
 AUTH="Authorization: Bearer $DEEPDOCK_API_KEY"
 
 # Pair a device (keep data.id)

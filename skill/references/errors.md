@@ -31,7 +31,7 @@ dashboard-only.
 | `system_not_on_device` | 404 | the device did not report this system and none of its actions are assigned to you; `error.systems` lists what it has | no | configuration problem; show which systems the device has |
 | `action_not_found` | 404 | the system has no such action, it is not assigned to you, or the device's client is too old to run it | no | hide the feature; ask Deepdock for the assignment or let the device update |
 | `action_not_configured` | 409 | the action exists but this device is not set up for it yet (for example a missing device-side setting); nothing was run | no, until set up on site | "this feature needs setting up at the customer site; contact Deepdock" |
-| `access_outdated` | 409 | the device's database access lacks a right this action needs (only the actions that need it). Nothing was run. **No `Retry-After`** | no, until the practice repeats "Erneut einrichten" in the Deepdock client; then yes, a write with the same key | "the practice must set up database access again in the Deepdock client, then we retry" |
+| `access_outdated` | 409 | the device's database access lacks a right this action needs (only the actions that need it). Nothing was run. **No `Retry-After`** | no, until the customer repeats "Erneut einrichten" in the Deepdock client; then yes, a write with the same key | "the customer must set up database access again in the Deepdock client, then we retry" |
 | `access_missing` | 409 | the device's database access is gone (a removed database account or a lost secret on the PC); every action of that system is refused. Nothing was run. **No `Retry-After`** | as `access_outdated` | as `access_outdated` |
 | `pairing_code_invalid` | 404 | pairing: the code is unknown, expired, replaced, used, or its device is offline | with a fresh code | "read the code off the device screen again" |
 | `other_partner_build` | 409 | pairing: the device runs another partner's client build | no | "this device is set up for another provider" |
@@ -42,10 +42,10 @@ dashboard-only.
 |---|---|---|---|---|
 | `invalid_input` | 422 | a field is unknown, missing, too short or long, breaks its pattern or allowed values; a date that is not a calendar day; a search term without a letter or digit. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
 | `target_rejected` | 422 | the customer's system refused the write | no; the input is valid for Deepdock but not for the system | "the customer's system refused this; check the values" and offer support |
-| `unknown_author` | 422 | the write names an `authorUserId` the system does not list (read the users with `readUsers`). Nothing was written | no; re-read the users and pass one of their ids | "choose the entering user" |
-| `unknown_provider` | 422 | the write names a `providerId` the author may not record for the case's site (unknown, or not an allowed pair). Nothing was written | no; read the providers with `readProviders` and pass one of their ids | "choose a provider" |
-| `no_open_case` | 422 | the patient has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
-| `record_locked` | 422 | the practice system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the practice system" |
+| `unknown_author` | 422 | the write names an `authorUserId` the system does not list (read them with the users read the description names). Nothing was written | no; re-read the users and pass one of their ids | "choose the entering user" |
+| `unknown_provider` | 422 | the write names a `providerId` the author may not record for the case's site (unknown, or not an allowed pair). Nothing was written | no; read the providers with the providers read the description names and pass one of their ids | "choose a provider" |
+| `no_open_case` | 422 | the customer has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
+| `record_locked` | 422 | the customer's system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
 | Other action-specific refusals | 422 | the action's OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |
 
@@ -107,7 +107,7 @@ const REACTION: Record<string, Reaction> = {
 const reactionFor = (code: string): Reaction => REACTION[code] ?? 'stop'
 ```
 
-Action-specific 422 codes beyond the ones above (any the OpenAPI description lists) map to `fix-input`. Add them from the document, not from memory. `wait-setup` means a person at the practice must repeat the database access setup ("Erneut einrichten") in the Deepdock client first; there is no `Retry-After`, so do not loop. Check `access` on the system in `GET .../systems` (`ok` again), then retry; a write keeps its key. `retry-same-key` means the
+Action-specific 422 codes beyond the ones above (any the OpenAPI description lists) map to `fix-input`. Add them from the document, not from memory. `wait-setup` means a person at the customer must repeat the database access setup ("Erneut einrichten") in the Deepdock client first; there is no `Retry-After`, so do not loop. Check `access` on the system in `GET .../systems` (`ok` again), then retry; a write keeps its key. `retry-same-key` means the
 pending write stays persisted and is retried from that state with backoff, also across process
 restarts; a device can be offline for hours, so the retry loop lives in a job or queue, not in the
 request that started the write.

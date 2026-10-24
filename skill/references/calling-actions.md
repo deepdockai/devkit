@@ -71,35 +71,14 @@ of a customer, the note id of an update. The pattern is always the same:
 
 Never invent an id, copy one from another device, or hard-code one from a test run.
 
-## Recipe: MEDICAL OFFICE (`medical-office`)
-
-The examples above use the placeholder system `example-erp`. For a practice running MEDICAL OFFICE
-the same patterns use real actions (the live OpenAPI document is still the authority for fields):
-
-1. `readUsers` lists the users who can author an entry; pass one id as `authorUserId`.
-2. `searchPatients?lastName=...` finds a patient: a prefix match with umlauts spelled out
-   (`Müller` and `Mueller` match, `Muller` does not), answering `patientId`, `lastName`,
-   `firstName`, `birthDate` (`yyyy-mm-dd`, `null` when the system holds no readable date).
-3. `readCases` lists the patient's cases; a write that needs an open case (`createDiagnosis` and
-   the note actions) refuses with `422 no_open_case` when there is none, or takes a `caseId`.
-   `readProviders` lists the providers for `providerId` (`422 unknown_provider` otherwise).
-4. Write with `createDiagnosis` (and the other create actions) under a fresh `Idempotency-Key`,
-   then read back.
-
-Things the schemas show but are easy to get wrong:
+## Easy to get wrong
 
 - **Ids come back as integers and go in as strings.** A read and a create answer ids as integers
-  (a create's new `entryId` or `diagnosisId` too); only an update echoes the key you sent, as the
-  string you sent. `patientId: 1001` in a search result goes back as `patientId=1001` in a read's
-  query string and as `"patientId": "1001"` in a write body: digits only, no leading zero, at most
-  10 characters.
-- **Nothing is undone through the API.** No action deletes or reverts a record; a write you
-  regret stays until someone removes it in MEDICAL OFFICE itself. Write only what you mean to keep.
-- **Mark every test text `TEST-DEEPDOCK-<id>`** (a diagnosis text, a note), on the demo device
-  only, and list what you created ([testing.md](testing.md)).
-- Text fields accept MEDICAL OFFICE's Windows-1252 repertoire only; anything else (a tab or line
-  break outside a note) answers `422 invalid_input` before a write. Note actions take a `format` of `text` (default, stored as
-  typed) or `markdown`.
+  (a create's new id too); only an update echoes the key you sent, as the string you sent.
+  `customerId: 1001` in a search result goes back as `customerId=1001` in a read's query string and
+  as `"customerId": "1001"` in a write body: digits only, no leading zero, at most 10 characters.
+- **Mark every test text `TEST-DEEPDOCK-<id>`** on the demo device only, and list what you created
+  ([testing.md](testing.md)).
 - A read action's query string treats `+` as a space: send a literal `+` as `%2B`.
 
 ## Timeouts and latency

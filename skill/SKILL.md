@@ -1,6 +1,6 @@
 ---
 name: deepdock-integration
-description: Build, debug or test an integration with Deepdock's partner API, the REST actions under /v1 that read and write records in a customer's on-premise business system (for example MEDICAL OFFICE) through a paired Deepdock device. Use when code calls api.deepdock.ai, handles ddk_ API keys, pairs a device by code, calls a system action, handles error codes such as device_offline, action_paused, idempotency_conflict or outcome_unknown, or runs the deepdock CLI.
+description: Build, debug or test an integration with Deepdock's partner API, the REST actions under /v1 that read and write records in a customer's on-premise business system through a paired Deepdock device. Use when code calls api.deepdock.ai, handles ddk_ API keys, pairs a device by code, calls a system action, handles error codes such as device_offline, action_paused, idempotency_conflict or outcome_unknown, or runs the deepdock CLI.
 metadata:
   cli: "@deepdockai/cli"
 ---
@@ -58,7 +58,8 @@ and what your code does with the result.
    dashboard. The CLI receives the key once, writes `DEEPDOCK_API_KEY=<key>` into that file (it
    must be ignored by git) and keeps no copy. It is displayed to you or to the human by nobody.
    You work only with the key's id, prefix and the file name. Never ask for, read, print or paste
-   a key value.
+   a key value. If the CLI runs with `DEEPDOCK_BASE_URL` set (a non-production API), add the same
+   `DEEPDOCK_BASE_URL=<url>` line to that file ([auth-and-keys.md](references/auth-and-keys.md)).
 6. **Test it.** Run your own code against the demo device the human named, with the key from
    `.env.local`, and read back with the read action. The CLI runs no action. Read
    [references/testing.md](references/testing.md) before any write.
@@ -67,6 +68,9 @@ and what your code does with the result.
 
 ## Rules that are not in the OpenAPI document
 
+- **Read the system's behaviour notes first.** Before the first write, read the system's behaviour
+  notes in its OpenAPI document (each action's `description`): what it needs (an author, an open
+  case), what it accepts and what cannot be undone. Nothing system-specific lives in this skill.
 - **Discover, never hard-code.** Field names, patterns, enums and lengths come from the live OpenAPI
   document (`deepdock systems openapi <system>`, or `GET /v1/systems/{system}/openapi.json` with
   your key), never from memory or from this skill. The document lists Deepdock's whole catalogue for the system; your organisation's assigned

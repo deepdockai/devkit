@@ -24,7 +24,8 @@ Details: [auth-and-keys.md](auth-and-keys.md).
 The Deepdock client installed on the customer's Windows PC next to their system. It connects
 outwards to Deepdock; nothing in the customer's network is opened to the internet. A device is
 identified by a UUID (`id`), carries a `label`, `hostname`, `os`, `clientVersion`, `status`
-(`connected`, `offline` or `inactive`), `lastSeenAt`, `claimedAt` and the `systems` it reported.
+(`connected`, `offline` or `inactive`), `lastSeenAt`, `claimedAt` (may be `null`), `outdated` (an
+assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported.
 
 - **Pair**: claim a device for your organisation with the 6-character code it shows while unpaired.
 - **Release**: `DELETE /v1/devices/{deviceId}` gives the device back; it shows a new code.
@@ -36,7 +37,7 @@ identified by a UUID (`id`), carries a `label`, `hostname`, `os`, `clientVersion
 ## System
 
 A program on the device that Deepdock has made reachable, named by a slug such as `example-erp`. Each
-has a display `label` (may be `null`), a `version` the device reported, a `status`, and actions.
+has a display `label` (may be `null`), a `version` the device reported (may be absent), a `status`, and actions.
 `GET /v1/devices/{deviceId}/systems` is a live call to the device, so it can answer
 `device_offline`.
 
@@ -51,7 +52,7 @@ has a display `label` (may be `null`), a `version` the device reported, a `statu
 | system `status` | `stopped` | the program is installed but not running | calls answer `system_unavailable`; the site starts the program |
 | system `status` | `missing` | the program was not found where the device expects it | calls answer `system_unavailable`; contact the site and Deepdock |
 | system `status` | `unknown` | the device could not tell whether the program runs (its probe failed or is unavailable on that PC) | do not read it as stopped; the device decides when a call arrives |
-| system `access` | `ok`, `outdated`, `missing`, `not_set_up`, or `null` | the database access the device last reported (`null`: none known yet) | `outdated` refuses the actions that need the missing right with `access_outdated`, `missing` refuses every action with `access_missing`; the practice repeats "Erneut einrichten" in the Deepdock client, the incident closes by itself once `access` is `ok`, nothing to resume |
+| system `access` | `ok`, `outdated`, `missing`, `not_set_up`, or `null` | the database access the device last reported (`null`: none known yet) | `outdated` refuses the actions that need the missing right with `access_outdated`, `missing` refuses every action with `access_missing`; the customer repeats "Erneut einrichten" in the Deepdock client, the incident closes by itself once `access` is `ok`, nothing to resume |
 | action state | `active` | the action can be called | normal |
 | action state | `paused` | the action is paused with a `reason` and `pausedAt` | calls answer `action_paused`; show the feature as paused, poll `GET .../systems` at a low rate |
 | pause `reason` | `structure_changed` | the system changed in a way the action depends on (for example a vendor update); Deepdock reviews and resumes | wait; nothing to do on your side |
