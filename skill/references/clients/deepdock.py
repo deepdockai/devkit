@@ -7,6 +7,7 @@ Everything action-specific (paths, fields, methods) comes from the live OpenAPI 
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 from urllib.parse import quote
@@ -43,9 +44,11 @@ class WriteResult:
 
 
 class Deepdock:
-    def __init__(self, api_key: str, base: str = "https://api.deepdock.ai", timeout: float = 30.0,
+    def __init__(self, api_key: str, base: Optional[str] = None, timeout: float = 30.0,
                  client: Optional[httpx.Client] = None):
         # 30 s is above Deepdock's 20 s device wait, so device_offline arrives before a client timeout.
+        # Default: DEEPDOCK_BASE_URL from the environment (the CLI's own variable), else production.
+        base = base or os.environ.get("DEEPDOCK_BASE_URL") or "https://api.deepdock.ai"
         self.c = client or httpx.Client(base_url=base.rstrip("/"), timeout=timeout)
         self.c.headers["Authorization"] = f"Bearer {api_key}"
 

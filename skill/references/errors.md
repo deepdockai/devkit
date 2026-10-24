@@ -42,9 +42,9 @@ dashboard-only.
 |---|---|---|---|---|
 | `invalid_input` | 422 | a field is unknown, missing, too short or long, breaks its pattern or allowed values; a date that is not a calendar day; a search term without a letter or digit. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
 | `target_rejected` | 422 | the customer's system refused the write | no; the input is valid for Deepdock but not for the system | "the customer's system refused this; check the values" and offer support |
-| `unknown_author` | 422 | the write names an `authorUserId` the system does not list (read the users with `readUsers`). Nothing was written | no; re-read the users and pass one of their ids | "choose the entering user" |
+| `unknown_author` | 422 | the write names an `authorUserId` the system does not list (read the users with the users read the description names). Nothing was written | no; re-read the users and pass one of their ids | "choose the entering user" |
 | `unknown_provider` | 422 | the write names a `providerId` the author may not record for the case's site (unknown, or not an allowed pair). Nothing was written | no; read the providers with `readProviders` and pass one of their ids | "choose a provider" |
-| `no_open_case` | 422 | the patient has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
+| `no_open_case` | 422 | the customer has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
 | `record_locked` | 422 | the practice system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the practice system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
 | Other action-specific refusals | 422 | the action's OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |

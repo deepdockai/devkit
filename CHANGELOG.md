@@ -2,9 +2,10 @@
 
 ## 1.0.5
 
-- The agent skill's TypeScript client matches the API's answers: `systems()` returns an array of systems, each with `system`, `access` and its actions as a list; a paired `Device` lists its systems as objects, and carries `outdated` and a `claimedAt` that can be `null`. The Python client's `systems()` returns a list.
-- The TypeScript client runs under Node's plain type stripping (no `--experimental-transform-types`).
-- The agent skill passes the API the CLI is signed in to (`baseUrl` from `deepdock auth status --json`) to the client, so a key is used against the API that created it.
+- The agent skill's clients match the API's answers: `systems()` returns a list of systems, and a paired `Device` lists its systems as objects, with `outdated` and a `claimedAt` that can be `null`.
+- The TypeScript client runs under Node's plain type stripping.
+- Both clients take their base URL from `DEEPDOCK_BASE_URL` when it is set, like the CLI.
+- The agent skill holds nothing specific to one system: the recipe for one system is gone, and the skill points to the system's behaviour notes in its OpenAPI document instead.
 
 ## 1.0.4
 
@@ -27,7 +28,7 @@
 ## 1.0.1
 
 - The agent skill: page with `nextCursor` until it is `null` (a short page can carry a cursor), and cover the codes `access_outdated`, `access_missing`, `record_locked`, `record_not_editable`, `unknown_provider`, `payload_too_large` and the system status `unknown`, in the skill and the CLI's exit-code table.
-- The agent skill: one statement on how to fetch the OpenAPI document, and a MEDICAL OFFICE recipe with its action names.
+- The agent skill: one statement on how to fetch the OpenAPI document, and a recipe for one system with its action names.
 - The agent skill states the id rule in full: reads and creates answer ids as integers, a create's new id included; every id you send is a string of digits without a leading zero, at most 10 characters, in a query string and a write body alike.
 
 ## 1.0.0

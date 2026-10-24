@@ -72,11 +72,16 @@ export type DeviceSystem = {
 }
 
 export type DeepdockOptions = {
+  /** Default: `DEEPDOCK_BASE_URL` from the environment (the CLI's own variable), else production. */
   base?: string
   /** Above Deepdock's 20 s device wait, so you receive device_offline instead of timing out first. */
   timeoutMs?: number
   fetch?: typeof fetch
 }
+
+// `process` is absent in a browser; there the base comes from the options or is production.
+const envBase = (): string | undefined =>
+  typeof process === 'undefined' ? undefined : process.env.DEEPDOCK_BASE_URL || undefined
 
 export class Deepdock {
   private readonly apiKey: string
@@ -86,7 +91,7 @@ export class Deepdock {
 
   constructor(
     apiKey: string,
-    { base = 'https://api.deepdock.ai', timeoutMs = 30_000, fetch: fetchImpl = fetch }: DeepdockOptions = {},
+    { base = envBase() ?? 'https://api.deepdock.ai', timeoutMs = 30_000, fetch: fetchImpl = fetch }: DeepdockOptions = {},
   ) {
     this.apiKey = apiKey
     this.base = base.replace(/\/$/, '')
