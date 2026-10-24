@@ -244,6 +244,8 @@ export const CONFLICT_RETRIES = 5
 
 const RETRY_SAME_KEY = new Set([
   'device_offline',
+  'device_syncing',
+  'device_outdated',
   'target_busy',
   'temporarily_unavailable',
   'internal_error',
