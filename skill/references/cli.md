@@ -84,7 +84,7 @@ A failure is one document on stderr: the API's error object unchanged plus what 
 | 0 | done | |
 | 1 | something on the command line to fix | `invalid_usage` (a bad flag, an unknown slug, a question with no terminal and no `--yes`, an env file git does not ignore), `org_required` |
 | 2 | the API refused the request; do not repeat it unchanged | `invalid_request`, `not_found`, `device_not_found`, `pairing_code_invalid`, `other_partner_build`, `rate_limited`, `forbidden`, `conflict` and the other refusals (not `access_outdated` and `access_missing`, see exit 3) |
-| 3 | retry later (`access_outdated` and `access_missing`: after the practice repeats "Erneut einrichten" in the Deepdock client) | `device_offline`, `action_paused`, `access_outdated`, `access_missing`, `system_unavailable`, `target_busy`, `temporarily_unavailable`, `internal_error`, `connection_lost` |
+| 3 | retry later (`access_outdated` and `access_missing`: after the customer repeats "Erneut einrichten" in the Deepdock client) | `device_offline`, `action_paused`, `access_outdated`, `access_missing`, `system_unavailable`, `target_busy`, `temporarily_unavailable`, `internal_error`, `connection_lost` |
 | 4 | the CLI is too old for the API: run `npx @deepdockai/cli@latest` | `client_outdated` |
 | 5 | sign-in needed: run `deepdock auth login` | `sign_in_needed`, `approval_denied`, `approval_expired` |
 

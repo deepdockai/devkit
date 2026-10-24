@@ -67,8 +67,9 @@ action exists before offering it in your UI, or to validate input client-side be
 curl "$BASE/v1/devices/$DEVICE/systems" -H "Authorization: Bearer $DEEPDOCK_API_KEY"
 ```
 
-A live call to the device. Each system: `label`, `version`, `status`, and per action `active` or
-`paused` with `reason` and `pausedAt`. Answers `503 device_offline` when the device is not
+A live call to the device. A list; each entry has `system`, `label`, `version` (may be absent),
+`status`, `access` and `actions`, each with `action` and `state` (`active`, or `paused` with
+`reason` and `pausedAt`). Answers `503 device_offline` when the device is not
 connected: that is a normal state, not an error in your code. Do not poll it tightly; it reaches the
 customer's PC.
 

@@ -2,8 +2,8 @@
 
 ## 1.0.5
 
-- The agent skill's clients match the API's answers: `systems()` returns a list of systems, and a paired `Device` lists its systems as objects, with `outdated` and a `claimedAt` that can be `null`.
-- The TypeScript client runs under Node's plain type stripping.
+- The agent skill's clients: `systems()` is typed as the list of systems the API answers, and a paired `Device` lists its systems as objects, with `outdated` and a `claimedAt` that can be `null`.
+- The TypeScript client runs with plain `node file.ts` (Node 22.18+, or 22.13+ with `--experimental-strip-types`).
 - Both clients take their base URL from `DEEPDOCK_BASE_URL` when it is set, like the CLI.
 - The agent skill holds nothing specific to one system: the recipe for one system is gone, and the skill points to the system's behaviour notes in its OpenAPI document instead.
 

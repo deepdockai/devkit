@@ -79,9 +79,15 @@ export type DeepdockOptions = {
   fetch?: typeof fetch
 }
 
-// `process` is absent in a browser; there the base comes from the options or is production.
-const envBase = (): string | undefined =>
-  typeof process === 'undefined' ? undefined : process.env.DEEPDOCK_BASE_URL || undefined
+// `process` is absent in a browser, and Deno throws on `process.env` without --allow-env; then the
+// base comes from the options or is production.
+const envBase = (): string | undefined => {
+  try {
+    return process.env.DEEPDOCK_BASE_URL || undefined
+  } catch {
+    return undefined
+  }
+}
 
 export class Deepdock {
   private readonly apiKey: string
