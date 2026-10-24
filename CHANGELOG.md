@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7
+
+- The CLI knows `device_syncing` and `device_outdated` (exit code 3, retry later) instead of falling back on the HTTP status.
+- The agent skill's error reference and both clients' pending-write helpers retry them with the same key.
+
 ## 1.0.6
 
 - The agent skill's TypeScript client types a device's `hostname`, `os` and `clientVersion` as `string | null`, as the API answers them before the device has reported them. The skill names `GET /v1/devices` and `GET /v1/devices/{deviceId}`.

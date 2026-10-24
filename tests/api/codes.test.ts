@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { extractCodes, renderCodes } from '../../scripts/genCodes.ts'
+import { extractCodes, renderCodes } from '../../scripts/errorCodes.ts'
 import { API_ERROR_CODES } from '../../src/api/codes.generated.ts'
 import { EXIT_CODES, exitCodeFor } from '../../src/api/errors.ts'
 
@@ -34,6 +34,8 @@ const DESIGN_TABLE: Record<number, string[]> = {
   ],
   3: [
     'device_offline',
+    'device_syncing',
+    'device_outdated',
     'action_paused',
     'access_outdated',
     'access_missing',
@@ -47,50 +49,15 @@ const DESIGN_TABLE: Record<number, string[]> = {
   5: ['sign_in_needed', 'approval_denied', 'approval_expired'],
 }
 
-const BRIEF_LIST = [
-  'invalid_request',
-  'client_outdated',
-  'unauthenticated',
-  'organization_required',
-  'forbidden',
-  'not_found',
-  'conflict',
-  'already_member',
-  'device_not_found',
-  'system_not_on_device',
-  'pairing_code_invalid',
-  'other_partner_build',
-  'rate_limited',
-  'action_not_found',
-  'invalid_input',
-  'no_open_case',
-  'device_offline',
-  'action_paused',
-  'system_unavailable',
-  'target_busy',
-  'target_rejected',
-  'check_failed',
-  'idempotency_conflict',
-  'outcome_unknown',
-  'internal_error',
-  'temporarily_unavailable',
-  'action_not_configured',
-  'unknown_author',
-  'unknown_provider',
-  'record_locked',
-  'record_not_editable',
-  'payload_too_large',
-  'access_outdated',
-  'access_missing',
-]
-
 describe('error codes', () => {
-  it('lists every code of the brief and of the design table', () => {
+  it('holds exactly the Error.code enum of the pinned device API', () => {
+    const pin = JSON.parse(
+      readFileSync(new URL('../skill/devices.openapi.json', import.meta.url), 'utf8'),
+    )
+    expect([...API_ERROR_CODES]).toEqual(extractCodes(pin))
     const designCodes = Object.values(DESIGN_TABLE).flat()
-    for (const code of [...BRIEF_LIST, ...designCodes.filter((c) => !isCliOwn(c))]) {
+    for (const code of designCodes.filter((c) => !isCliOwn(c)))
       expect(API_ERROR_CODES).toContain(code)
-    }
-    expect([...API_ERROR_CODES].sort()).toEqual([...new Set(BRIEF_LIST)].sort())
   })
 
   it('gives every code the exit code the design table gives it', () => {
