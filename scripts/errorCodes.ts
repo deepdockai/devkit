@@ -21,9 +21,7 @@ export const extractCodes = (document: unknown): string[] => {
   const errorSchema = isRecord(schemas) ? schemas.Error : undefined
   const properties = isRecord(errorSchema) ? errorSchema.properties : undefined
   const errorObject = isRecord(properties) ? properties.error : undefined
-  const inner =
-    isRecord(errorObject) && isRecord(errorObject.properties) ? errorObject : errorSchema
-  const innerProperties = isRecord(inner) ? inner.properties : undefined
+  const innerProperties = isRecord(errorObject) ? errorObject.properties : undefined
   const code = isRecord(innerProperties) ? innerProperties.code : undefined
   const values = isRecord(code) ? code.enum : undefined
   if (!Array.isArray(values) || !values.every((value) => typeof value === 'string')) {

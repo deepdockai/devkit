@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { extractCodes, renderCodes } from '../../scripts/errorCodes.ts'
 import { API_ERROR_CODES } from '../../src/api/codes.generated.ts'
 import { EXIT_CODES, exitCodeFor } from '../../src/api/errors.ts'
+import { EXIT_CODES_HELP } from '../../src/help.ts'
 
-// The exit-code table of the design (section 4), row by row. A code added to either side alone
-// fails here.
+// The exit-code table of the design (section 4), row by row: a row here that EXIT_CODES maps
+// differently fails.
 const DESIGN_TABLE: Record<number, string[]> = {
   1: ['invalid_usage', 'org_required'],
   2: [
@@ -64,6 +65,21 @@ describe('error codes', () => {
     for (const [exit, codes] of Object.entries(DESIGN_TABLE)) {
       for (const code of codes)
         expect(EXIT_CODES[code as keyof typeof EXIT_CODES]).toBe(Number(exit))
+    }
+  })
+
+  it('names every retry-later code wherever the exit codes are listed', () => {
+    const retryLater = Object.keys(EXIT_CODES).filter(
+      (code) => EXIT_CODES[code as keyof typeof EXIT_CODES] === 3,
+    )
+    const readme = readFileSync(new URL('../../README.md', import.meta.url), 'utf8')
+    const cliDoc = readFileSync(new URL('../../skill/references/cli.md', import.meta.url), 'utf8')
+    const rowOf = (text: string): string =>
+      text.split('\n').find((line) => /^\| 3 /.test(line)) ?? ''
+    for (const code of retryLater) {
+      expect(EXIT_CODES_HELP, code).toContain(code)
+      expect(rowOf(readme), code).toContain(`\`${code}\``)
+      expect(rowOf(cliDoc), code).toContain(`\`${code}\``)
     }
   })
 

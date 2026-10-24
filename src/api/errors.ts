@@ -39,7 +39,7 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   payload_too_large: 2,
   device_offline: 3,
   device_syncing: 3,
-  // The device updates itself to a newer client; the same call then succeeds.
+  // A 409, but not a refusal: it resolves once the device's client updates.
   device_outdated: 3,
   action_paused: 3,
   access_outdated: 3,
