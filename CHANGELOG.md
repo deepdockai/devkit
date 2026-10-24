@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6
+
+- The agent skill's TypeScript client types a device's `hostname`, `os` and `clientVersion` as `string | null`, as the API answers them before the device has reported them. The skill names `GET /v1/devices` and `GET /v1/devices/{deviceId}`.
+
 ## 1.0.5
 
 - The agent skill's clients: `systems()` is typed as the list of systems the API answers, and a paired `Device` lists its systems as objects, with `outdated` and a `claimedAt` that can be `null`.

@@ -53,3 +53,8 @@ bun run build && bun run check:public
   command tree.
 - `tests/fakeApi.ts` answers the routes the CLI uses; `tests/harness.ts` runs the real program
   in-process against a sandbox.
+- `tests/skill/devices.openapi.json` pins the device paths of the API's OpenAPI document (no
+  system, no action) and `devices.openapi.generated.ts` types them; `bun run gen:devices
+  <openapi.json>` refreshes both from a system's document or the device part alone.
+  `tests/skill/clientContract.test.ts` fails `tsc` when the bundled TypeScript client's types and
+  the pin differ. The API's own CI compares the pin on `main` with what it builds.

@@ -46,9 +46,9 @@ export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'not_set_up' | null
 export type Device = {
   id: string
   label: string | null
-  hostname: string
-  os: string
-  clientVersion: string
+  hostname: string | null
+  os: string | null
+  clientVersion: string | null
   status: 'connected' | 'offline' | 'inactive'
   lastSeenAt: string | null
   claimedAt: string | null
