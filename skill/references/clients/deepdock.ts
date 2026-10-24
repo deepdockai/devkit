@@ -58,6 +58,8 @@ export type Device = {
   systems: { system: string; version: string | null; status: SystemStatus; access: SystemAccess; reportedAt: string }[]
 }
 
+export type PairBody = { code: string; label?: string }
+
 export type ActionState =
   | { action: string; state: 'active' }
   | { action: string; state: 'paused'; reason: 'structure_changed' | 'check_failed'; pausedAt: string }
@@ -199,11 +201,12 @@ export class Deepdock {
 
   /** Claims a device by the pairing code it shows. Keep the returned `id`. */
   async pair(code: string, label?: string): Promise<Device> {
+    const body: PairBody = label === undefined ? { code } : { code, label }
     return (
       await this.send<Device>('/v1/devices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(label === undefined ? { code } : { code, label }),
+        body: JSON.stringify(body),
       })
     ).data
   }
