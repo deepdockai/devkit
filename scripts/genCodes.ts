@@ -18,7 +18,7 @@ ${codes.map((code) => `  '${code}',`).join('\n')}
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
 `
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
 /** Reads the Error.code enum out of an OpenAPI 3.x document held in memory. */
