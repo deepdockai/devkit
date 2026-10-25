@@ -880,8 +880,8 @@
             }
           },
           "409": {
-            "description": "The device cannot take the call (device_outdated)\n\n- device_outdated: the device runs a Deepdock client too old for this call; update it, then retry",
-            "x-error-codes": ["device_outdated"],
+            "description": "The device cannot take the call (device_outdated, device_learning_only)\n\n- device_outdated: the device runs a Deepdock client too old for this call; update it, then retry\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry",
+            "x-error-codes": ["device_outdated", "device_learning_only"],
             "content": {
               "application/json": {
                 "schema": {
@@ -896,7 +896,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["device_outdated"]
+                              "enum": ["device_outdated", "device_learning_only"]
                             }
                           }
                         }

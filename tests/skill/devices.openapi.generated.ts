@@ -753,9 +753,10 @@ export interface operations {
         }
       }
       /**
-       * @description The device cannot take the call (device_outdated)
+       * @description The device cannot take the call (device_outdated, device_learning_only)
        *
        *     - device_outdated: the device runs a Deepdock client too old for this call; update it, then retry
+       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry
        */
       409: {
         headers: {
@@ -765,7 +766,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'device_outdated'
+              code?: 'device_outdated' | 'device_learning_only'
             }
           }
         }
