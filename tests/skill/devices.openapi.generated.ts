@@ -236,6 +236,24 @@ export interface operations {
         }
       }
       /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
+            }
+          }
+        }
+      }
+      /**
        * @description Internal error (internal_error)
        *
        *     - internal_error: internal error; requestId names the request for support
@@ -392,7 +410,7 @@ export interface operations {
       /**
        * @description Too many failed claims (rate_limited)
        *
-       *     - rate_limited: too many failed claims; wait a minute
+       *     - rate_limited: too many failed claims, or too many calls with this key; wait a minute
        */
       429: {
         headers: {
@@ -523,6 +541,24 @@ export interface operations {
         }
       }
       /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
+            }
+          }
+        }
+      }
+      /**
        * @description Internal error (internal_error)
        *
        *     - internal_error: internal error; requestId names the request for support
@@ -633,6 +669,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'device_not_found'
+            }
+          }
+        }
+      }
+      /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
             }
           }
         }
@@ -767,6 +821,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'device_outdated' | 'device_learning_only'
+            }
+          }
+        }
+      }
+      /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
             }
           }
         }

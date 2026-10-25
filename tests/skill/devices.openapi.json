@@ -65,6 +65,34 @@
               }
             }
           },
+          "429": {
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "x-error-codes": ["rate_limited"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["rate_limited"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal error (internal_error)\n\n- internal_error: internal error; requestId names the request for support",
             "x-error-codes": ["internal_error"],
@@ -302,7 +330,7 @@
             }
           },
           "429": {
-            "description": "Too many failed claims (rate_limited)\n\n- rate_limited: too many failed claims; wait a minute",
+            "description": "Too many failed claims (rate_limited)\n\n- rate_limited: too many failed claims, or too many calls with this key; wait a minute",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -512,6 +540,34 @@
               }
             }
           },
+          "429": {
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "x-error-codes": ["rate_limited"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["rate_limited"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal error (internal_error)\n\n- internal_error: internal error; requestId names the request for support",
             "x-error-codes": ["internal_error"],
@@ -683,6 +739,34 @@
                           "properties": {
                             "code": {
                               "enum": ["device_not_found"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "x-error-codes": ["rate_limited"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["rate_limited"]
                             }
                           }
                         }
@@ -897,6 +981,34 @@
                           "properties": {
                             "code": {
                               "enum": ["device_outdated", "device_learning_only"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "x-error-codes": ["rate_limited"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["rate_limited"]
                             }
                           }
                         }
