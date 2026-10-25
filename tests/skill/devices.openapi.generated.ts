@@ -88,6 +88,7 @@ export interface components {
           | 'device_offline'
           | 'device_outdated'
           | 'device_syncing'
+          | 'system_version_unverified'
           | 'action_paused'
           | 'access_outdated'
           | 'access_missing'
@@ -104,6 +105,13 @@ export interface components {
         requestId?: string
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
+        /** @description With system_version_unverified: the version the system last reported */
+        version?: string
+        /**
+         * @description With system_version_unverified: unverified_version, or unparseable when the reported version is not dotted digits
+         * @enum {string}
+         */
+        reason?: 'unverified_version' | 'unparseable'
       }
     }
     PairRequest: {
@@ -132,6 +140,17 @@ export interface components {
         status: 'missing' | 'running' | 'stopped' | 'unknown'
         system: string
         version: string | null
+        writes:
+          | {
+              /** @enum {unknown} */
+              reason: 'unparseable' | 'unverified_version'
+              /** @constant */
+              state: 'unverified'
+            }
+          | {
+              /** @enum {unknown} */
+              state: 'partial' | 'unknown' | 'verified'
+            }
       }[]
       updateAvailable?: string
     }

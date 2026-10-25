@@ -1005,6 +1005,7 @@
                   "device_offline",
                   "device_outdated",
                   "device_syncing",
+                  "system_version_unverified",
                   "action_paused",
                   "access_outdated",
                   "access_missing",
@@ -1031,6 +1032,15 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "version": {
+                "description": "With system_version_unverified: the version the system last reported",
+                "type": "string"
+              },
+              "reason": {
+                "description": "With system_version_unverified: unverified_version, or unparseable when the reported version is not dotted digits",
+                "type": "string",
+                "enum": ["unverified_version", "unparseable"]
               }
             }
           }
@@ -1184,9 +1194,34 @@
                       "type": "null"
                     }
                   ]
+                },
+                "writes": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "enum": ["unparseable", "unverified_version"]
+                        },
+                        "state": {
+                          "const": "unverified"
+                        }
+                      },
+                      "required": ["reason", "state"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "state": {
+                          "enum": ["partial", "unknown", "verified"]
+                        }
+                      },
+                      "required": ["state"]
+                    }
+                  ]
                 }
               },
-              "required": ["access", "reportedAt", "status", "system", "version"]
+              "required": ["access", "reportedAt", "status", "system", "version", "writes"]
             }
           },
           "updateAvailable": {

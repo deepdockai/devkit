@@ -37,6 +37,7 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'device_offline',
     'device_syncing',
     'device_outdated',
+    'system_version_unverified',
     'action_paused',
     'access_outdated',
     'access_missing',
@@ -80,6 +81,34 @@ describe('error codes', () => {
       expect(EXIT_CODES_HELP, code).toContain(code)
       expect(rowOf(readme), code).toContain(`\`${code}\``)
       expect(rowOf(cliDoc), code).toContain(`\`${code}\``)
+    }
+  })
+
+  it('lists every retry-later code in the skill error table and, where retried, in both clients', () => {
+    const read = (path: string): string => readFileSync(new URL(path, import.meta.url), 'utf8')
+    const errorsDoc = read('../../skill/references/errors.md')
+    const tsClient = read('../../skill/references/clients/deepdock.ts')
+    const pyClient = read('../../skill/references/clients/deepdock.py')
+    const tsRetrySet = /const RETRY_SAME_KEY = new Set\(\[([^\]]*)\]/.exec(tsClient)?.[1] ?? ''
+    const pyRetrySet = /RETRY_SAME_KEY = \{([^}]*)\}/.exec(pyClient)?.[1] ?? ''
+    // The clients are standalone files, so the sets cannot be imported and are read as text.
+    const notInErrorTable = new Set(['connection_lost']) // raised by the CLI, never answered by the API
+    const notRetriedByJob = new Set([
+      'connection_lost', // CLI-only
+      'outcome_unknown', // read the record back before any retry
+      'access_outdated', // waits for the customer to set the access up again
+      'access_missing', // same
+    ])
+    const retryLater = Object.keys(EXIT_CODES).filter(
+      (code) => EXIT_CODES[code as keyof typeof EXIT_CODES] === 3,
+    )
+    expect(tsRetrySet).not.toBe('')
+    expect(pyRetrySet).not.toBe('')
+    for (const code of retryLater) {
+      if (!notInErrorTable.has(code)) expect(errorsDoc, code).toContain(`| \`${code}\` |`)
+      if (notRetriedByJob.has(code)) continue
+      expect(tsRetrySet, code).toContain(`'${code}'`)
+      expect(pyRetrySet, code).toContain(`"${code}"`)
     }
   })
 
