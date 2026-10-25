@@ -43,6 +43,11 @@ export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
 /** The database access the device last reported; `null` while none is known. */
 export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'not_set_up' | null
 
+/** Whether writes on the system are allowed; `unverified` means Deepdock has not verified its version, so writes answer system_version_unverified. */
+export type SystemWrites =
+  | { state: 'verified' | 'unknown' | 'partial' }
+  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' }
+
 export type Device = {
   id: string
   label: string | null
@@ -55,7 +60,10 @@ export type Device = {
   /** True when an action assigned to you needs a newer client: that action answers device_outdated. */
   outdated: boolean
   updateAvailable?: string
-  systems: { system: string; version: string | null; status: SystemStatus; access: SystemAccess; reportedAt: string }[]
+  systems: { system: string; version: string | null; status: SystemStatus; access: SystemAccess
+    reportedAt: string
+    writes: SystemWrites
+  }[]
 }
 
 export type PairBody = { code: string; label?: string }
@@ -246,6 +254,7 @@ const RETRY_SAME_KEY = new Set([
   'device_offline',
   'device_syncing',
   'device_outdated',
+  'system_version_unverified',
   'target_busy',
   'temporarily_unavailable',
   'internal_error',

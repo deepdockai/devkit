@@ -25,7 +25,7 @@ The Deepdock client installed on the customer's Windows PC next to their system.
 outwards to Deepdock; nothing in the customer's network is opened to the internet. A device is
 identified by a UUID (`id`), carries a `label`, `hostname`, `os`, `clientVersion`, `status`
 (`connected`, `offline` or `inactive`), `lastSeenAt`, `claimedAt` (may be `null`), `outdated` (an
-assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported.
+assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported (each with a `writes` state: `unverified` means Deepdock has not verified that vendor version, and a write answers `system_version_unverified`; reads still work).
 
 - **Pair**: claim a device for your organisation with the 6-character code it shows while unpaired.
 - **Release**: `DELETE /v1/devices/{deviceId}` gives the device back; it shows a new code.
