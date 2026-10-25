@@ -41,6 +41,8 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   device_syncing: 3,
   // A 409, but not a refusal: it resolves once the device's client updates.
   device_outdated: 3,
+  // A 409, but not a refusal: it resolves once Deepdock has verified the system's reported version.
+  system_version_unverified: 3,
   action_paused: 3,
   access_outdated: 3,
   access_missing: 3,

@@ -76,6 +76,8 @@ pending ──send──▶ sent ──2xx (fresh or replayed)──────
                    │  ──outcome_unknown ──────────────────────▶ unknown  (read back before anything else)
                    │  ──invalid_input, target_rejected, action-specific 422, not_found, check_failed ▶ refused  (key is free; new input gets a new key)
                    │  ──action_paused, system_unavailable ────▶ sent     (retry once the action is active again)
+
+pending ──system_version_unverified (nothing was sent) ──▶ pending  (retry later, same key, once Deepdock has verified the version)
 ```
 
 ## Example

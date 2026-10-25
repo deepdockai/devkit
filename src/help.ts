@@ -98,9 +98,10 @@ export const EXIT_CODES_HELP = `Exit codes
   0  done
   1  usage: something on the command line to fix (invalid_usage, org_required)
   2  the API refused the request; do not repeat it unchanged
-  3  retry later (device_offline, device_syncing, device_outdated, action_paused,
-     access_outdated, access_missing, system_unavailable, target_busy,
-     temporarily_unavailable, internal_error, outcome_unknown, connection_lost)
+  3  retry later (device_offline, device_syncing, device_outdated,
+     system_version_unverified, action_paused, access_outdated, access_missing,
+     system_unavailable, target_busy, temporarily_unavailable, internal_error,
+     outcome_unknown, connection_lost)
   4  the CLI is too old for the API (client_outdated)
   5  sign-in needed (sign_in_needed, approval_denied, approval_expired; auth status when nobody is signed in)
 
