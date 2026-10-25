@@ -9,7 +9,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** The organisation's paired devices */
+    /** The organisation's paired devices, newest claim first, one page at a time (REST list only; MCP has no list tool) */
     get: operations['listDevices']
     put?: never
     /** Pair a device by the code its screen shows */
@@ -198,21 +198,47 @@ export type $defs = Record<string, never>
 export interface operations {
   listDevices: {
     parameters: {
-      query?: never
+      query?: {
+        limit?: number
+        /** @description The previous page's nextCursor, passed back as is. Opaque: its format can change. */
+        cursor?: string
+      }
       header?: never
       path?: never
       cookie?: never
     }
     requestBody?: never
     responses: {
-      /** @description The devices */
+      /** @description One page of devices */
       200: {
         headers: {
           [name: string]: unknown
         }
         content: {
           'application/json': {
-            data: components['schemas']['PartnerDevice'][]
+            data: {
+              items: components['schemas']['PartnerDevice'][]
+              /** @description Pass as cursor for the next page; null on the last page */
+              nextCursor: string | null
+            }
+          }
+        }
+      }
+      /**
+       * @description Malformed request (invalid_request)
+       *
+       *     - invalid_request: limit is not a whole number from 1 to 500, or cursor is malformed
+       */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'invalid_request'
+            }
           }
         }
       }

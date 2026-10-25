@@ -87,7 +87,7 @@ curl -X POST "$BASE/v1/devices" \
 (`id`, `label`, `hostname`, `os`, `clientVersion`, `status`, `lastSeenAt`, `claimedAt`, `outdated`, `systems`,
 and `updateAvailable` when it runs an older build); `hostname`, `os` and `clientVersion` are `null`
 until the device has reported them. Keep `id`: it is the `deviceId` of every later call.
-`GET /v1/devices` lists your devices and `GET /v1/devices/{deviceId}` reads one, in the same shape.
+`GET /v1/devices` lists your devices a page at a time (`{ items, nextCursor }`; pass `nextCursor` back as `cursor` until it is `null`, `limit` 1 to 500, default 100), and `GET /v1/devices/{deviceId}` reads one; each device has the same shape. `GET /v1/incidents` pages the same way.
 
 4. Release with `DELETE /v1/devices/{deviceId}`; the device then shows a new code.
 

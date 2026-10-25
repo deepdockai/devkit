@@ -8,10 +8,32 @@
     "/v1/devices": {
       "get": {
         "operationId": "listDevices",
-        "summary": "The organisation's paired devices",
+        "summary": "The organisation's paired devices, newest claim first, one page at a time (REST list only; MCP has no list tool)",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "The previous page's nextCursor, passed back as is. Opaque: its format can change.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "The devices",
+            "description": "One page of devices",
             "content": {
               "application/json": {
                 "schema": {
@@ -19,12 +41,50 @@
                   "required": ["data"],
                   "properties": {
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/PartnerDevice"
+                      "type": "object",
+                      "required": ["items", "nextCursor"],
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PartnerDevice"
+                          }
+                        },
+                        "nextCursor": {
+                          "description": "Pass as cursor for the next page; null on the last page",
+                          "type": ["string", "null"]
+                        }
                       }
                     }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request (invalid_request)\n\n- invalid_request: limit is not a whole number from 1 to 500, or cursor is malformed",
+            "x-error-codes": ["invalid_request"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["invalid_request"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
