@@ -19,12 +19,15 @@ class DeepdockError(Exception):
     """Deepdock answered `{ "error": { "code", ... } }`. Switch on `code`, never on `message`."""
 
     def __init__(self, status: int, code: str, message: str, request_id: Optional[str] = None,
-                 systems: Optional[List[str]] = None):
+                 systems: Optional[List[str]] = None, version: Optional[str] = None,
+                 reason: Optional[str] = None):
         super().__init__(message)
         self.status = status
         self.code = code
         self.request_id = request_id
         self.systems = systems
+        self.version = version  # system_version_unverified: the version the system last reported
+        self.reason = reason  # system_version_unverified: unverified_version or unparseable
 
 
 class DeepdockTransportError(Exception):
@@ -63,7 +66,8 @@ class Deepdock:
             raise DeepdockTransportError(f"non-JSON answer with status {r.status_code}")
         if isinstance(body, dict) and "error" in body:
             e = body["error"]
-            raise DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"))
+            raise DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
+                                e.get("version"), e.get("reason"))
         if not isinstance(body, dict) or "data" not in body:
             raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
         return body["data"], r.headers
@@ -122,6 +126,8 @@ class Deepdock:
 # Pending writes: one attempt against persisted state. Persist the row BEFORE the first send, so a
 # crash between send and answer cannot produce a second record under a new key. A job retries rows
 # left in "sent" with backoff (seconds, then minutes, for hours if the device stays offline).
+# For system_version_unverified and device_outdated, poll the device's `writes` / `outdated` before
+# retrying: they take longer than minutes.
 # --------------------------------------------------------------------------------------------------
 
 CONFLICT_RETRIES = 5  # a running write finishes within seconds; beyond this, treat it as unknown

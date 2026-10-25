@@ -2,7 +2,7 @@
 
 ## 1.0.8
 
-- The CLI knows `system_version_unverified` (exit code 3, retry later): a write on a customer system whose vendor version Deepdock has not verified yet is refused before anything is sent, and works once Deepdock has verified that version. Reads are unaffected.
+- The CLI knows `system_version_unverified` (exit code 3, retry later): a write on a customer system whose vendor version Deepdock has not verified yet is refused before anything is sent, and works once Deepdock has verified that version (`reason: unverified_version`). A version the API cannot parse (`reason: unparseable`) does not clear by waiting: contact Deepdock. Reads are unaffected.
 - A device's systems carry `writes` (`verified`, `unknown`, `partial`, or `unverified` with a `reason`) in the agent skill's TypeScript client, and the skill's error, idempotency and concepts references describe the refusal.
 
 ## 1.0.7

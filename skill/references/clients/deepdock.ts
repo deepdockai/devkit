@@ -13,14 +13,24 @@ export class DeepdockError extends Error {
   readonly code: string
   readonly requestId?: string
   readonly systems?: string[]
+  /** system_version_unverified: the version the system last reported. */
+  readonly version?: string
+  /** system_version_unverified: `unverified_version` or `unparseable`. */
+  readonly reason?: string
 
-  constructor(status: number, code: string, message: string, requestId?: string, systems?: string[]) {
+  constructor(status: number, code: string, message: string, requestId?: string,
+    systems?: string[],
+    version?: string,
+    reason?: string,
+  ) {
     super(message)
     this.name = 'DeepdockError'
     this.status = status
     this.code = code
     this.requestId = requestId
     this.systems = systems
+    this.version = version
+    this.reason = reason
   }
 }
 
@@ -32,7 +42,7 @@ export class DeepdockTransportError extends Error {
   }
 }
 
-type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[] }
+type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string; reason?: string }
 type Envelope<T> = { data: T } | { error: ErrorBody }
 
 export type Page<Item> = { items: Item[]; nextCursor: string | null }
@@ -43,7 +53,11 @@ export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
 /** The database access the device last reported; `null` while none is known. */
 export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'not_set_up' | null
 
-/** Whether writes on the system are allowed; `unverified` means Deepdock has not verified its version, so writes answer system_version_unverified. */
+/**
+ * Whether writes on the system run. `unverified` makes writes answer system_version_unverified:
+ * `unverified_version` clears once Deepdock verifies the version; `unparseable` does not clear by
+ * waiting (contact Deepdock).
+ */
 export type SystemWrites =
   | { state: 'verified' | 'unknown' | 'partial' }
   | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' }
@@ -60,7 +74,11 @@ export type Device = {
   /** True when an action assigned to you needs a newer client: that action answers device_outdated. */
   outdated: boolean
   updateAvailable?: string
-  systems: { system: string; version: string | null; status: SystemStatus; access: SystemAccess
+  systems: {
+    system: string
+    version: string | null
+    status: SystemStatus
+    access: SystemAccess
     reportedAt: string
     writes: SystemWrites
   }[]
@@ -138,8 +156,8 @@ export class Deepdock {
       throw new DeepdockTransportError(`non-JSON answer with status ${res.status}`)
     }
     if (body !== null && typeof body === 'object' && 'error' in body) {
-      const { code, message, requestId, systems } = body.error
-      throw new DeepdockError(res.status, code, message, requestId, systems)
+      const { code, message, requestId, systems, version, reason } = body.error
+      throw new DeepdockError(res.status, code, message, requestId, systems, version, reason)
     }
     if (body === null || typeof body !== 'object' || !('data' in body)) {
       throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
@@ -228,6 +246,8 @@ export class Deepdock {
  * Pending writes: one attempt against persisted state. Persist the row BEFORE the first send, so a
  * crash between send and answer cannot produce a second record under a new key. A job retries rows
  * left in `sent` with backoff (seconds, then minutes, for hours if the device stays offline).
+ * For system_version_unverified and device_outdated, poll the device's `writes` / `outdated` before
+ * retrying: they take longer than minutes.
  * ---------------------------------------------------------------------------------------------- */
 
 export type PendingStatus = 'pending' | 'sent' | 'done' | 'unknown' | 'refused'

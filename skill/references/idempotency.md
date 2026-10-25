@@ -70,14 +70,12 @@ input, a status (`pending`, `sent`, `done`, `unknown`, `refused`) and the result
 
 ```
 pending ──send──▶ sent ──2xx (fresh or replayed)──────────────▶ done
-                   │  ──device_offline, device_syncing, device_outdated, timeout, network error, target_busy, temporarily_unavailable, internal_error ▶ sent  (retry later, same key)
+                   │  ──device_offline, device_syncing, device_outdated, system_version_unverified, timeout, network error, target_busy, temporarily_unavailable, internal_error ▶ sent  (retry later, same key)
                    │  ──idempotency_conflict, retries left ───▶ sent     (retry, same key, same input)
                    │  ──idempotency_conflict, retries spent ──▶ unknown  (read back before anything else)
                    │  ──outcome_unknown ──────────────────────▶ unknown  (read back before anything else)
                    │  ──invalid_input, target_rejected, action-specific 422, not_found, check_failed ▶ refused  (key is free; new input gets a new key)
                    │  ──action_paused, system_unavailable ────▶ sent     (retry once the action is active again)
-
-pending ──system_version_unverified (nothing was sent) ──▶ pending  (retry later, same key, once Deepdock has verified the version)
 ```
 
 ## Example
