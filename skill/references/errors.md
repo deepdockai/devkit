@@ -35,6 +35,7 @@ dashboard-only.
 | `access_missing` | 409 | the device's database access is gone (a removed database account or a lost secret on the PC); every action of that system is refused. Nothing was run. **No `Retry-After`** | as `access_outdated` | as `access_outdated` |
 | `pairing_code_invalid` | 404 | pairing: the code is unknown, expired, replaced, used, or its device is offline | with a fresh code | "read the code off the device screen again" |
 | `other_partner_build` | 409 | pairing: the device runs another partner's client build | no | "this device is set up for another provider" |
+| `device_learning_only` | 409 | the PC runs the Deepdock client for learning only, which runs no actions; nothing was sent to it. Reads, writes and the systems list on it all answer this | no; it changes only when the Deepdock service is installed on that PC | "this PC needs the Deepdock service to run actions" |
 
 ## Input
 
@@ -87,6 +88,7 @@ const REACTION: Record<string, Reaction> = {
   action_not_configured: 'stop',
   pairing_code_invalid: 'fix-input',
   other_partner_build: 'stop',
+  device_learning_only: 'stop',
   invalid_input: 'fix-input',
   target_rejected: 'fix-input',
   unknown_author: 'fix-input',

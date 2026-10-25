@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9
+
+- The CLI knows `device_learning_only` (exit code 2, refused): the PC runs the Deepdock client for learning only, which runs no actions, so action calls and the systems list on it are refused before anything is sent. It changes only when the Deepdock service is installed on that PC; retrying does not help. The skill's error reference lists it.
+
 ## 1.0.8
 
 - The CLI knows `system_version_unverified` (exit code 3, retry later): a write on a customer system whose vendor version Deepdock has not verified yet is refused before anything is sent, and works once Deepdock has verified that version (`reason: unverified_version`). A version the API cannot parse (`reason: unparseable`) does not clear by waiting: contact Deepdock. Reads are unaffected.
