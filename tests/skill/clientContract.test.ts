@@ -23,7 +23,12 @@ type Expect<_ extends true> = true
 type _ClientContract = [
   Expect<Same<Device, Data<paths['/v1/devices']['post']['responses'][201]>>>,
   Expect<Same<Device, Data<paths['/v1/devices/{deviceId}']['get']['responses'][200]>>>,
-  Expect<Same<Device[], Data<paths['/v1/devices']['get']['responses'][200]>>>,
+  Expect<
+    Same<
+      { items: Device[]; nextCursor: string | null },
+      Data<paths['/v1/devices']['get']['responses'][200]>
+    >
+  >,
   Expect<
     Same<DeviceSystem[], Data<paths['/v1/devices/{deviceId}/systems']['get']['responses'][200]>>
   >,

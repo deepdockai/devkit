@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.10
+
+- `GET /v1/devices` and `GET /v1/incidents` page with a cursor: the answer is `{ items, nextCursor }`, with `limit` (1 to 500, default 100) and `cursor` query parameters. The agent skill's key and pairing reference says how to loop over the pages, and the pinned device API carries the new shape. The CLI lists devices through `/partner`, which is unchanged.
+- The pinned device API documents the per-key `429 rate_limited` (600 calls and 120 writes per minute per API key, `Retry-After`).
+
 ## 1.0.9
 
 - The CLI knows `device_learning_only` (exit code 2, refused): the PC runs the Deepdock client for learning only, which runs no actions, so action calls and the systems list on it are refused before anything is sent. It changes only when the Deepdock service is installed on that PC; retrying does not help. The skill's error reference lists it.
