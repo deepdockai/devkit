@@ -28,6 +28,7 @@ export const API_ERROR_CODES = [
   'device_outdated',
   'device_syncing',
   'system_version_unverified',
+  'device_learning_only',
   'action_paused',
   'access_outdated',
   'access_missing',

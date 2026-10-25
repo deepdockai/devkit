@@ -25,6 +25,9 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   invalid_input: 2,
   pairing_code_invalid: 2,
   other_partner_build: 2,
+  // Not a wait: the PC runs the learning-only client, and only installing the Deepdock service on it
+  // changes that.
+  device_learning_only: 2,
   rate_limited: 2,
   target_rejected: 2,
   check_failed: 2,
