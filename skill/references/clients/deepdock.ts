@@ -79,6 +79,8 @@ export type Device = {
     version: string | null
     status: SystemStatus
     access: SystemAccess
+    /** Set when `access` is the last known value (the device could not read it): when it last did. */
+    accessLastCheckedAt: string | null
     reportedAt: string
     writes: SystemWrites
   }[]
@@ -96,6 +98,8 @@ export type DeviceSystem = {
   version?: string
   status: SystemStatus
   access: SystemAccess
+  /** Set when `access` is the last known value (the device could not read it): when it last did. */
+  accessLastCheckedAt: string | null
   actions: ActionState[]
 }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.11
+
+- Every system of a device carries `accessLastCheckedAt`, in the device list and in `GET /v1/devices/{deviceId}/systems`. It is set when `access` is the last known value because the device could not read it (its database stopped or unreachable), and then says when the device last read it. It is `null` whenever the latest report read the access. The agent skill's TypeScript client types it, and its concepts reference explains it.
+
 ## 1.0.10
 
 - `GET /v1/devices` and `GET /v1/incidents` page with a cursor: the answer is `{ items, nextCursor }`, with `limit` (1 to 500, default 100) and `cursor` query parameters. The agent skill's key and pairing reference says how to loop over the pages, and the pinned device API carries the new shape. The CLI lists devices through `/partner`, which is unchanged.
