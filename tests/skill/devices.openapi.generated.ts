@@ -136,6 +136,7 @@ export interface components {
       status: 'connected' | 'inactive' | 'offline'
       systems: {
         access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | null
+        accessLastCheckedAt: string | null
         reportedAt: string
         /** @enum {unknown} */
         status: 'missing' | 'running' | 'stopped' | 'unknown'
@@ -166,6 +167,7 @@ export interface components {
     }
     SystemState: {
       access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | null
+      accessLastCheckedAt: string | null
       actions: (
         | {
             action: string

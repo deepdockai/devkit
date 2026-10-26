@@ -1349,6 +1349,16 @@
                     }
                   ]
                 },
+                "accessLastCheckedAt": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "reportedAt": {
                   "type": "string"
                 },
@@ -1394,7 +1404,15 @@
                   ]
                 }
               },
-              "required": ["access", "reportedAt", "status", "system", "version", "writes"]
+              "required": [
+                "access",
+                "accessLastCheckedAt",
+                "reportedAt",
+                "status",
+                "system",
+                "version",
+                "writes"
+              ]
             }
           },
           "updateAvailable": {
@@ -1467,6 +1485,16 @@
               }
             ]
           },
+          "accessLastCheckedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "actions": {
             "type": "array",
             "items": {
@@ -1527,7 +1555,7 @@
             "type": "string"
           }
         },
-        "required": ["access", "actions", "label", "status", "system"]
+        "required": ["access", "accessLastCheckedAt", "actions", "label", "status", "system"]
       }
     }
   }
