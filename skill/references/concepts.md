@@ -24,7 +24,7 @@ Details: [auth-and-keys.md](auth-and-keys.md).
 The Deepdock client installed on the customer's Windows PC next to their system. It connects
 outwards to Deepdock; nothing in the customer's network is opened to the internet. A device is
 identified by a UUID (`id`), carries a `label`, `hostname`, `os`, `clientVersion`, `status`
-(`connected`, `offline` or `inactive`), `lastSeenAt`, `claimedAt` (may be `null`), `outdated` (an
+(`connected`, `offline` or `inactive`), `lastSeenAt`, `lastKnownAt`, `claimedAt` (may be `null`), `outdated` (an
 assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported (each with a `writes` state; reads always work). `verified`: writes run. `unknown`: no version was reported, and writes go through. `partial`: some writes run and some are refused. `unverified`: a write answers `system_version_unverified`; with `reason: unverified_version` it works once Deepdock has verified that version, with `reason: unparseable` retrying does not help and you contact Deepdock.
 
 - **Pair**: claim a device for your organisation with the 6-character code it shows while unpaired.
@@ -48,12 +48,14 @@ has a display `label` (may be `null`), a `version` the device reported (may be a
 | device `status` | `connected` | the device is online and can run actions | normal |
 | device `status` | `offline` | the device is not connected right now (PC off, no network) | calls answer `device_offline`; retry later, show "offline" |
 | device `status` | `inactive` | not connected for 7 days; still paired | as offline; check with the site whether the PC still exists |
+| device `lastKnownAt` | ISO time or `null` | the time of the device's last report while it is not connected. `null` while it is connected | show the last known state with this time; it may be out of date |
 | system `status` | `running` | the customer's program is running on the device | normal |
 | system `status` | `stopped` | the program is installed but not running | calls answer `system_unavailable`; the site starts the program |
 | system `status` | `missing` | the program was not found where the device expects it | calls answer `system_unavailable`; contact the site and Deepdock |
 | system `status` | `unknown` | the device could not tell whether the program runs (its probe failed or is unavailable on that PC) | do not read it as stopped; the device decides when a call arrives |
 | system `access` | `ok`, `outdated`, `missing`, `not_set_up`, or `null` | the database access the device last reported (`null`: none known yet) | `outdated` refuses the actions that need the missing right with `access_outdated`, `missing` refuses every action with `access_missing`; the customer repeats "Erneut einrichten" in the Deepdock client, the incident closes by itself once `access` is `ok`, nothing to resume |
 | system `accessLastCheckedAt` | ISO time or `null` | set when `access` is the last known value because the device could not read it (its database stopped or unreachable): when it last read it. `null` when the latest report read it | show the access as last known, with this time; nothing to do until the device reads it again |
+| system `lockedActions` | list of action names or `null` | the actions the device reports locked because its database account lacks a right they need, under the spec set it runs now. `null`: no verdict yet, or the verdict is for an older spec set | do not offer a locked action as available; it answers `access_outdated` until the customer repeats "Erneut einrichten" |
 | action state | `active` | the action can be called | normal |
 | action state | `paused` | the action is paused with a `reason` and `pausedAt` | calls answer `action_paused`; show the feature as paused, poll `GET .../systems` at a low rate |
 | pause `reason` | `structure_changed` | the system changed in a way the action depends on (for example a vendor update); Deepdock reviews and resumes | wait; nothing to do on your side |

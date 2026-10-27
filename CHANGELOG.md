@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.13
+
+- A device carries `lastKnownAt`: the time of its last report while it is not connected, `null` while it is connected. Every system of a device carries `lockedActions`: the actions the device reports locked because its database account lacks a right they need, under the spec set it runs now, or `null` when there is no verdict or the verdict is for an older spec set. Both are in the device list and, for `lockedActions`, in `GET /v1/devices/{deviceId}/systems`. The agent skill's TypeScript client types them, and its concepts reference explains them.
+
 ## 1.0.12
 
 - The agent skill describes `rate_limited` for action calls: 600 calls and 120 writes per minute per API key, answered with `Retry-After: 60` and `retryAfterSeconds: 60`. It named only the pairing limit before.

@@ -70,6 +70,8 @@ export type Device = {
   clientVersion: string | null
   status: 'connected' | 'offline' | 'inactive'
   lastSeenAt: string | null
+  /** While the device is not connected: when it last reported. `null` while connected. */
+  lastKnownAt: string | null
   claimedAt: string | null
   /** True when an action assigned to you needs a newer client: that action answers device_outdated. */
   outdated: boolean
@@ -81,6 +83,7 @@ export type Device = {
     access: SystemAccess
     /** Set when `access` is the last known value (the device could not read it): when it last did. */
     accessLastCheckedAt: string | null
+    lockedActions: string[] | null
     reportedAt: string
     writes: SystemWrites
   }[]
@@ -100,6 +103,8 @@ export type DeviceSystem = {
   access: SystemAccess
   /** Set when `access` is the last known value (the device could not read it): when it last did. */
   accessLastCheckedAt: string | null
+  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for the spec set it runs now. */
+  lockedActions: string[] | null
   actions: ActionState[]
 }
 
