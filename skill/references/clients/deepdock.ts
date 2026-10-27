@@ -51,7 +51,7 @@ export type WriteMethod = 'POST' | 'PATCH'
 
 export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
 /** The database access the device last reported; `null` while none is known. */
-export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'not_set_up' | null
+export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 'not_set_up' | null
 
 /**
  * Whether writes on the system run. `unverified` makes writes answer system_version_unverified:

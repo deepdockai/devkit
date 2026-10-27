@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.14
+
+- A system's `access` can be `password_missing`: the database account exists, but its stored password is not on the PC. Like `missing`, every action of the system is refused with `access_missing` (its message names the password) and the customer repeats "Erneut einrichten" in the Deepdock client. The agent skill's TypeScript client types it, and its concepts reference explains it.
+
 ## 1.0.13
 
 - A device carries `lastKnownAt`: the time of its last report while it is not connected, `null` while it is connected. Every system of a device carries `lockedActions`: the actions the device reports locked because its database account lacks a right they need, under the spec set it runs now, or `null` when there is no verdict or the verdict is for an older spec set. Both are in the device list and, for `lockedActions`, in `GET /v1/devices/{deviceId}/systems`. The agent skill's TypeScript client types them, and its concepts reference explains them.
