@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12
+
+- The agent skill describes `rate_limited` for action calls: 600 calls and 120 writes per minute per API key, answered with `Retry-After: 60` and `retryAfterSeconds: 60`. It named only the pairing limit before.
+
 ## 1.0.11
 
 - Every system of a device carries `accessLastCheckedAt`, in the device list and in `GET /v1/devices/{deviceId}/systems`. It is set when `access` is the last known value because the device could not read it (its database stopped or unreachable), and then says when the device last read it. It is `null` whenever the latest report read the access. The agent skill's TypeScript client types it, and its concepts reference explains it.

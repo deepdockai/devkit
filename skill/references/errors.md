@@ -17,7 +17,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | `payload_too_large` | 413 | the request body is over 1 MiB | no; send less | nothing; a developer bug, or shorten the text |
 | `unauthenticated` | 401 | the key is missing, malformed, for the other environment, unknown, revoked or expired | no | "Deepdock API key refused; check it in the dashboard" to an operator |
 | `not_found` | 404 | no such route; an update whose id matches no record; a write naming a record that does not exist or belongs to another one | no | "record not found" when it is a record; otherwise a bug |
-| `rate_limited` | 429 | too many failed pairing attempts with this key (5 per 60 s) | yes, after up to a minute (`Retry-After` when present) | "try again in a minute" |
+| `rate_limited` | 429 | more than 600 calls, or more than 120 writes (counted in both), with this key in a minute; or more than 5 failed pairing claims in 60 s | yes, after `Retry-After: 60` (`retryAfterSeconds: 60` in the body); a write keeps its key. The pairing claim answer has neither: wait up to a minute | "try again in a minute" |
 
 Codes your `/v1` code never receives, listed so the enum is complete: `organization_required`
 (403), `forbidden` (403), `conflict` (409), `already_member` (409) and `client_outdated` (400) are
