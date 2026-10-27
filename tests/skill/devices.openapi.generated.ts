@@ -129,6 +129,7 @@ export interface components {
        */
       id: string | '00000000-0000-0000-0000-000000000000' | 'ffffffff-ffff-ffff-ffff-ffffffffffff'
       label: string | null
+      lastKnownAt: string | null
       lastSeenAt: string | null
       os: string | null
       outdated: boolean
@@ -137,6 +138,7 @@ export interface components {
       systems: {
         access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | null
         accessLastCheckedAt: string | null
+        lockedActions: string[] | null
         reportedAt: string
         /** @enum {unknown} */
         status: 'missing' | 'running' | 'stopped' | 'unknown'
@@ -184,6 +186,7 @@ export interface components {
           }
       )[]
       label: string | null
+      lockedActions: string[] | null
       /** @enum {unknown} */
       status: 'missing' | 'running' | 'stopped' | 'unknown'
       system: string
