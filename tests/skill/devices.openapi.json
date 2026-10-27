@@ -182,7 +182,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key could not be checked because of an outage on our side; retry",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -446,7 +446,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key could not be checked because of an outage on our side; retry",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -657,7 +657,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key could not be checked because of an outage on our side; retry",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -866,7 +866,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key could not be checked because of an outage on our side; retry",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -1108,7 +1108,7 @@
             }
           },
           "503": {
-            "description": "Device cannot take the call now (device_offline, temporarily_unavailable)\n\n- device_offline: the device is not connected or did not answer in time; retry after the Retry-After seconds\n- temporarily_unavailable: the key could not be checked because of an outage on our side; retry",
+            "description": "Device cannot take the call now (device_offline, temporarily_unavailable)\n\n- device_offline: the device is not connected, did not answer in time, or the call was cut off inside Deepdock; retry after the Retry-After seconds\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["device_offline", "temporarily_unavailable"],
             "content": {
               "application/json": {

@@ -305,7 +305,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key could not be checked because of an outage on our side; retry
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -477,7 +477,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key could not be checked because of an outage on our side; retry
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -610,7 +610,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key could not be checked because of an outage on our side; retry
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -743,7 +743,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key could not be checked because of an outage on our side; retry
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -895,8 +895,8 @@ export interface operations {
       /**
        * @description Device cannot take the call now (device_offline, temporarily_unavailable)
        *
-       *     - device_offline: the device is not connected or did not answer in time; retry after the Retry-After seconds
-       *     - temporarily_unavailable: the key could not be checked because of an outage on our side; retry
+       *     - device_offline: the device is not connected, did not answer in time, or the call was cut off inside Deepdock; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {

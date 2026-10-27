@@ -46,7 +46,7 @@ has a display `label` (may be `null`), a `version` the device reported (may be a
 | Field | Value | Meaning | What to do |
 |---|---|---|---|
 | device `status` | `connected` | the device is online and can run actions | normal |
-| device `status` | `offline` | the device is not connected right now (PC off, no network) | calls answer `device_offline`; retry later, show "offline" |
+| device `status` | `offline` | the device is not connected right now (PC off, no network) | calls answer `device_offline` (also while `connected`, if a Deepdock restart cuts a call off); retry later, show "offline" |
 | device `status` | `inactive` | not connected for 7 days; still paired | as offline; check with the site whether the PC still exists |
 | device `lastKnownAt` | ISO time or `null` | the time of the device's last report while it is not connected. `null` while it is connected | show the last known state with this time; it may be out of date |
 | system `status` | `running` | the customer's program is running on the device | normal |

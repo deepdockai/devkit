@@ -38,7 +38,7 @@ example to avoid double-logging.
 
 ### `503 device_offline` on a write
 
-The device did not answer within 20 seconds, or was not connected. **The write may still have
+The device did not answer within 20 seconds, was not connected, or the call was cut off inside Deepdock by a restart or deploy. **The write may still have
 landed.** Retry with the **same key**: you get either the stored result (replayed) or a fresh run,
 never two writes. Back off between retries (seconds, then minutes); a device can be off for hours,
 so the retry runs from the persisted pending write in a job or queue, not inside the request that
