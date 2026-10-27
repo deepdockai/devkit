@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.15
+
+- `device_offline` also covers a call cut off by a Deepdock restart or deploy (retry a write with the same key). `temporarily_unavailable` is also sent, with `Retry-After: 5`, when Deepdock cannot reach its database. The skill's error reference, idempotency and concepts pages say so.
+
 ## 1.0.14
 
 - A system's `access` can be `password_missing`: the database account exists, but its stored password is not on the PC. Like `missing`, every action of the system is refused with `access_missing` (its message names the password) and the customer repeats "Erneut einrichten" in the Deepdock client. The agent skill's TypeScript client types it, and its concepts reference explains it.
