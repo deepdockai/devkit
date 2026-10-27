@@ -2,7 +2,7 @@
 
 ## 1.0.12
 
-- The agent skill describes `rate_limited` for action calls: 600 calls and 120 writes per minute per API key (a write counts against both), answered with `Retry-After: 60` and `retryAfterSeconds: 60`. Before, the errors reference and the calling-actions reference named only the pairing limit (5 failed claims per 60 seconds, whose answer carries neither).
+- The agent skill describes `rate_limited` for action calls: 600 calls and 120 writes per minute per API key, answered with `Retry-After: 60` and `retryAfterSeconds: 60`. It named only the pairing limit before.
 
 ## 1.0.11
 

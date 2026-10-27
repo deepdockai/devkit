@@ -101,10 +101,9 @@ Never invent an id, copy one from another device, or hard-code one from a test r
 Each API key has its own budget on every `/v1` call: 600 calls per minute, and 120 writes per
 minute. A write (an action run that needs an `Idempotency-Key`) counts against both. Over a budget
 the call answers `429 rate_limited` with `Retry-After: 60` and `retryAfterSeconds: 60` in the error
-body. Wait that long and retry; a retried write keeps its `Idempotency-Key`. The numbers can change,
-and counts are kept per location, so treat them as a floor, not an exact quota. Pairing has a
-tighter limit of its own: 5 failed claim attempts per key per rolling 60 seconds, whose `429`
-carries neither the header nor the field.
+body. Honour it, back off and do not loop; a retried write keeps its `Idempotency-Key`. The numbers
+can change, so treat them as approximate. Pairing has a tighter limit of its own: 5 failed claim
+attempts per key per rolling 60 seconds, whose `429` carries neither the header nor the field.
 
 ## Response headers worth reading
 
