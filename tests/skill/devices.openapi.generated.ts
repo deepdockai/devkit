@@ -136,7 +136,7 @@ export interface components {
       /** @enum {unknown} */
       status: 'connected' | 'inactive' | 'offline'
       systems: {
-        access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | null
+        access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | 'password_missing' | null
         accessLastCheckedAt: string | null
         lockedActions: string[] | null
         reportedAt: string
@@ -168,7 +168,7 @@ export interface components {
       released: true
     }
     SystemState: {
-      access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | null
+      access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | 'password_missing' | null
       accessLastCheckedAt: string | null
       actions: (
         | {

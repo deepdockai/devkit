@@ -1355,6 +1355,9 @@
                       "const": "outdated"
                     },
                     {
+                      "const": "password_missing"
+                    },
+                    {
                       "type": "null"
                     }
                   ]
@@ -1505,6 +1508,9 @@
               },
               {
                 "const": "outdated"
+              },
+              {
+                "const": "password_missing"
               },
               {
                 "type": "null"
