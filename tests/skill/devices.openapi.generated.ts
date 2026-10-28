@@ -91,6 +91,7 @@ export interface components {
           | 'device_syncing'
           | 'system_version_unverified'
           | 'device_learning_only'
+          | 'device_connected_twice'
           | 'action_paused'
           | 'access_outdated'
           | 'access_missing'
@@ -929,10 +930,11 @@ export interface operations {
         }
       }
       /**
-       * @description The device cannot take the call (device_outdated, device_learning_only)
+       * @description The device cannot take the call (device_outdated, device_learning_only, device_connected_twice)
        *
        *     - device_outdated: the device runs a Deepdock client too old for this call; update it, then retry
        *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry
+       *     - device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); shut the copy down, calls work again about five minutes after only one is connected
        */
       409: {
         headers: {
@@ -942,7 +944,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'device_outdated' | 'device_learning_only'
+              code?: 'device_outdated' | 'device_learning_only' | 'device_connected_twice'
             }
           }
         }

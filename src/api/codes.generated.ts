@@ -30,6 +30,7 @@ export const API_ERROR_CODES = [
   'device_syncing',
   'system_version_unverified',
   'device_learning_only',
+  'device_connected_twice',
   'action_paused',
   'access_outdated',
   'access_missing',
