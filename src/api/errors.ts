@@ -17,6 +17,8 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   organization_required: 1,
   invalid_request: 2,
   forbidden: 2,
+  // Not a retry: Deepdock has to approve the organisation first.
+  partner_not_approved: 2,
   not_found: 2,
   device_not_found: 2,
   system_not_on_device: 2,

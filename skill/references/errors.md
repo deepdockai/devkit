@@ -16,6 +16,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | `invalid_request` | 400 (405 for a wrong method) | malformed request: bad query, `limit` or `cursor`; missing or malformed `Idempotency-Key`; a body that is not an object of strings; a malformed pairing code or device id; a write called with the other method (`Allow` names the right one) | no; fix the code | nothing; a developer bug |
 | `payload_too_large` | 413 | the request body is over 1 MiB | no; send less | nothing; a developer bug, or shorten the text |
 | `unauthenticated` | 401 | the key is missing, malformed, for the other environment, unknown, revoked or expired | no | "Deepdock API key refused; check it in the dashboard" to an operator |
+| `partner_not_approved` | 403 | your organisation is waiting for approval by Deepdock; no key of it works yet. Keys made before the approval start working once it is given | no, until Deepdock approves; then yes | "our Deepdock account is waiting for approval; contact Deepdock" |
 | `not_found` | 404 | no such route; an update whose id matches no record; a write naming a record that does not exist or belongs to another one | no | "record not found" when it is a record; otherwise a bug |
 | `rate_limited` | 429 | more than 600 calls, or more than 120 writes (counted in both), with this key in a minute; or more than 5 failed pairing claims in 60 s | yes, after `Retry-After: 60` (`retryAfterSeconds: 60` in the body); a write keeps its key. The pairing claim answer has neither: wait up to a minute | "try again in a minute" |
 
