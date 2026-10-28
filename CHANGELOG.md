@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.16
+
+- A new organisation waits for Deepdock's approval before it can act as a partner: until then every call with its keys answers `403 partner_not_approved`. The skill's error reference lists it, and the CLI exits with 2 for it.
+
 ## 1.0.15
 
 - `device_offline` also covers a call cut off by a Deepdock restart or deploy (retry a write with the same key). `temporarily_unavailable` is also sent, with `Retry-After: 5`, when Deepdock cannot reach its database. The skill's error reference, idempotency and concepts pages say so.

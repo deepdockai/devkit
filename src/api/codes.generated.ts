@@ -8,6 +8,7 @@ export const API_ERROR_CODES = [
   'unauthenticated',
   'organization_required',
   'forbidden',
+  'partner_not_approved',
   'not_found',
   'conflict',
   'already_member',

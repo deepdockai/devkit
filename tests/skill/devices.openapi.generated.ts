@@ -69,6 +69,7 @@ export interface components {
           | 'unauthenticated'
           | 'organization_required'
           | 'forbidden'
+          | 'partner_not_approved'
           | 'not_found'
           | 'conflict'
           | 'already_member'
@@ -267,6 +268,24 @@ export interface operations {
         }
       }
       /**
+       * @description Organisation not approved yet (partner_not_approved)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved'
+            }
+          }
+        }
+      }
+      /**
        * @description Too many requests (rate_limited)
        *
        *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
@@ -379,6 +398,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'unauthenticated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Organisation not approved yet (partner_not_approved)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved'
             }
           }
         }
@@ -554,6 +591,24 @@ export interface operations {
         }
       }
       /**
+       * @description Organisation not approved yet (partner_not_approved)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved'
+            }
+          }
+        }
+      }
+      /**
        * @description Device not found (device_not_found)
        *
        *     - device_not_found: no device of this key has that id
@@ -687,6 +742,24 @@ export interface operations {
         }
       }
       /**
+       * @description Organisation not approved yet (partner_not_approved)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved'
+            }
+          }
+        }
+      }
+      /**
        * @description Device not found (device_not_found)
        *
        *     - device_not_found: no device of this key has that id
@@ -815,6 +888,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'unauthenticated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Organisation not approved yet (partner_not_approved)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved'
             }
           }
         }

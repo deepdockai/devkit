@@ -125,6 +125,34 @@
               }
             }
           },
+          "403": {
+            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
+            "x-error-codes": ["partner_not_approved"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "429": {
             "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
             "x-error-codes": ["rate_limited"],
@@ -301,6 +329,34 @@
                 "schema": {
                   "type": "string",
                   "enum": ["Bearer"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
+            "x-error-codes": ["partner_not_approved"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -572,6 +628,34 @@
               }
             }
           },
+          "403": {
+            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
+            "x-error-codes": ["partner_not_approved"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "404": {
             "description": "Device not found (device_not_found)\n\n- device_not_found: no device of this key has that id",
             "x-error-codes": ["device_not_found"],
@@ -777,6 +861,34 @@
                 "schema": {
                   "type": "string",
                   "enum": ["Bearer"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
+            "x-error-codes": ["partner_not_approved"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
@@ -995,6 +1107,34 @@
               }
             }
           },
+          "403": {
+            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
+            "x-error-codes": ["partner_not_approved"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "404": {
             "description": "Device not found (device_not_found)\n\n- device_not_found: no device of this key has that id",
             "x-error-codes": ["device_not_found"],
@@ -1158,6 +1298,7 @@
                   "unauthenticated",
                   "organization_required",
                   "forbidden",
+                  "partner_not_approved",
                   "not_found",
                   "conflict",
                   "already_member",
