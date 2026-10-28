@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.17
+
+- A device whose identity is held by two PCs (a copied PC or VM snapshot) answers every call with `409 device_connected_twice`; nothing runs and the `Idempotency-Key` is free. The skill's error reference lists it, and the CLI exits with 2 for it.
+
 ## 1.0.16
 
 - A new organisation waits for Deepdock's approval before it can act as a partner: until then every call with its keys answers `403 partner_not_approved`. The skill's error reference lists it, and the CLI exits with 2 for it.
