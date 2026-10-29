@@ -44,6 +44,8 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   unknown_provider: 2,
   record_locked: 2,
   record_not_editable: 2,
+  // Not a wait: the practice lifts the restriction (a locked chart) in its own system.
+  record_restricted: 2,
   payload_too_large: 2,
   device_offline: 3,
   device_syncing: 3,

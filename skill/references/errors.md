@@ -50,6 +50,7 @@ dashboard-only.
 | `no_open_case` | 422 | the customer has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
 | `record_locked` | 422 | the customer's system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
+| `record_restricted` | 422 | the customer's system restricts access to the record (for example a locked chart): a read returned no data, so an empty answer would be wrong, and a write wrote nothing | no; the practice lifts the restriction in its system | "access to this record is restricted in the customer's system" |
 | Other action-specific refusals | 422 | the action's OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |
 
 ## Device and system availability
@@ -99,6 +100,7 @@ const REACTION: Record<string, Reaction> = {
   unknown_provider: 'fix-input',
   record_locked: 'stop',
   record_not_editable: 'stop',
+  record_restricted: 'stop',
   payload_too_large: 'fix-code',
   access_outdated: 'wait-setup',
   access_missing: 'wait-setup',
