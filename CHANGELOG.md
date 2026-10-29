@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.18
+
+- A read or write on a record the customer's system restricts (for example a locked chart) answers `422 record_restricted`: a read returns no data instead of an empty answer, and a write writes nothing. The skill's error reference lists it, and the CLI exits with 2 for it.
+
 ## 1.0.17
 
 - A device whose identity is held by two PCs (a copied PC or VM snapshot) answers every call with `409 device_connected_twice`; nothing runs and the `Idempotency-Key` is free. The skill's error reference lists it, and the CLI exits with 2 for it.

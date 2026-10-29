@@ -24,6 +24,7 @@ export const API_ERROR_CODES = [
   'unknown_author',
   'unknown_provider',
   'record_locked',
+  'record_restricted',
   'record_not_editable',
   'device_offline',
   'device_outdated',
