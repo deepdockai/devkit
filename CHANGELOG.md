@@ -2,7 +2,7 @@
 
 ## 1.0.19
 
-- A device answer Deepdock cannot read answers `502 device_answer_unreadable` instead of `500 internal_error`, on action calls and the systems list; the body carries `requestId` for support. Retrying does not help until the Deepdock client on that PC is updated. The skill's error reference lists it, and the CLI exits with 2 for it.
+- A device answer Deepdock cannot read answers `502 device_answer_unreadable` instead of `500 internal_error`, on action calls and the systems list; the body carries `requestId` for support. Retrying does not help until the Deepdock client on that PC is updated; after a write, read the record back before writing again, since the device may have applied it. The skill's error reference lists it, and the CLI exits with 2 for it.
 
 ## 1.0.18
 

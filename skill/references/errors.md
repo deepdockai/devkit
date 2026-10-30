@@ -38,7 +38,7 @@ dashboard-only.
 | `other_partner_build` | 409 | pairing: the device runs another partner's client build | no | "this device is set up for another provider" |
 | `device_learning_only` | 409 | the PC runs the Deepdock client for learning only, which runs no actions; nothing was sent to it. Reads, writes and the systems list on it all answer this | no; it changes only when the Deepdock service is installed on that PC | "this PC needs the Deepdock service to run actions" |
 | `device_connected_twice` | 409 | two PCs are connected with this device's identity (a copied PC or VM snapshot); nothing ran, so the `Idempotency-Key` is free | no; a person shuts the copy down, and calls work again about five minutes after only one PC is connected | "two PCs use this device; shut the copy down" |
-| `device_answer_unreadable` | 502 | the device sent an answer Deepdock cannot read (for example from a client build with a fault); nothing more is known about the call. The body carries `requestId` for support | no; it changes only when the Deepdock client on that PC is updated | "the connected PC sent an answer that could not be read; contact Deepdock with the request id" |
+| `device_answer_unreadable` | 502 | the device sent an answer Deepdock cannot read (for example from a client build with a fault); on a write the device may have applied it. The body carries `requestId` for support | no, and not with the same `Idempotency-Key` either; it changes only when the Deepdock client on that PC is updated. After a write, read the record back before writing again | "the connected PC sent an answer that could not be read; contact Deepdock with the request id" |
 
 ## Input
 
