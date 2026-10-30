@@ -41,6 +41,7 @@ export const API_ERROR_CODES = [
   'check_failed',
   'idempotency_conflict',
   'outcome_unknown',
+  'device_answer_unreadable',
   'internal_error',
   'temporarily_unavailable',
 ] as const
