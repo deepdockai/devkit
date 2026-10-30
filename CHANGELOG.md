@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.19
+
+- A device answer Deepdock cannot read answers `502 device_answer_unreadable` instead of `500 internal_error`, on action calls and the systems list; the body carries `requestId` for support. Retrying does not help until the Deepdock client on that PC is updated. The skill's error reference lists it, and the CLI exits with 2 for it.
+
 ## 1.0.18
 
 - A read or write on a record the customer's system restricts (for example a locked chart) answers `422 record_restricted`: a read returns no data instead of an empty answer, and a write writes nothing. The skill's error reference lists it, and the CLI exits with 2 for it.

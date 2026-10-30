@@ -30,6 +30,9 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   // Not a wait: the PC runs the learning-only client, and only installing the Deepdock service on it
   // changes that.
   device_learning_only: 2,
+  // Not a wait: the device sent an answer the API cannot read, which only an update of the
+  // Deepdock client on that PC changes.
+  device_answer_unreadable: 2,
   // Not a wait: a person at the practice must shut down the copied PC; calls work again about five
   // minutes after only one is connected.
   device_connected_twice: 2,

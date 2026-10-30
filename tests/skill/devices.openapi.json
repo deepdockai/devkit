@@ -1251,6 +1251,34 @@
               }
             }
           },
+          "502": {
+            "description": "The device sent an answer this API cannot read (device_answer_unreadable)\n\n- device_answer_unreadable: a retry does not help until the device's Deepdock client is updated; requestId names the request for support",
+            "x-error-codes": ["device_answer_unreadable"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["device_answer_unreadable"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "503": {
             "description": "Device cannot take the call now (device_offline, temporarily_unavailable)\n\n- device_offline: the device is not connected, did not answer in time, or the call was cut off inside Deepdock; retry after the Retry-After seconds\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["device_offline", "temporarily_unavailable"],
@@ -1335,6 +1363,7 @@
                   "check_failed",
                   "idempotency_conflict",
                   "outcome_unknown",
+                  "device_answer_unreadable",
                   "internal_error",
                   "temporarily_unavailable"
                 ]

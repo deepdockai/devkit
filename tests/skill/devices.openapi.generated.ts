@@ -102,6 +102,7 @@ export interface components {
           | 'check_failed'
           | 'idempotency_conflict'
           | 'outcome_unknown'
+          | 'device_answer_unreadable'
           | 'internal_error'
           | 'temporarily_unavailable'
         message: string
@@ -982,6 +983,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'internal_error'
+            }
+          }
+        }
+      }
+      /**
+       * @description The device sent an answer this API cannot read (device_answer_unreadable)
+       *
+       *     - device_answer_unreadable: a retry does not help until the device's Deepdock client is updated; requestId names the request for support
+       */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'device_answer_unreadable'
             }
           }
         }
