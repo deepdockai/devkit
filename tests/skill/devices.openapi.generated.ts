@@ -81,9 +81,6 @@ export interface components {
           | 'action_not_found'
           | 'invalid_input'
           | 'action_not_configured'
-          | 'no_open_case'
-          | 'unknown_author'
-          | 'unknown_provider'
           | 'record_locked'
           | 'record_restricted'
           | 'record_not_editable'
@@ -99,7 +96,7 @@ export interface components {
           | 'system_unavailable'
           | 'target_busy'
           | 'target_rejected'
-          | 'check_failed'
+          | 'readback_failed'
           | 'idempotency_conflict'
           | 'outcome_unknown'
           | 'device_answer_unreadable'
@@ -179,7 +176,7 @@ export interface components {
             action: string
             pausedAt: string
             /** @enum {unknown} */
-            reason: 'check_failed' | 'structure_changed'
+            reason: 'readback_failed' | 'structure_changed'
             /** @constant */
             state: 'paused'
           }

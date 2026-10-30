@@ -13,7 +13,7 @@ refused with `400 invalid_request`.
 - Keys are remembered **per device**. The same key on another device is a different write.
 - A successful key is remembered for at least 7 days.
 - A write that was refused before anything was written (`invalid_input`, `target_rejected`, an
-  action-specific 422 such as `unknown_author`, `not_found`) or not saved (`check_failed`) frees its
+  action-specific 422 such as `unknown_author`, `not_found`) or not saved (`readback_failed`) frees its
   key: you may retry with the same key. After changing the input, use a new key; the old one may
   still be remembered with the old input. `idempotency_conflict` does **not** free a key.
 
@@ -57,7 +57,7 @@ create, search by the value you wrote; for an update, read the record by id) and
 - cannot tell (the read action does not expose the field): stop and hand the case to a human with
   the record identifiers.
 
-### `409 check_failed`
+### `409 readback_failed`
 
 The write's result did not match, so nothing was saved, and the action is now paused. Do not retry;
 the next calls answer `503 action_paused` until Deepdock resumes it. Tell the user the change was not
@@ -74,7 +74,7 @@ pending ──send──▶ sent ──2xx (fresh or replayed)──────
                    │  ──idempotency_conflict, retries left ───▶ sent     (retry, same key, same input)
                    │  ──idempotency_conflict, retries spent ──▶ unknown  (read back before anything else)
                    │  ──outcome_unknown ──────────────────────▶ unknown  (read back before anything else)
-                   │  ──invalid_input, target_rejected, action-specific 422, not_found, check_failed ▶ refused  (key is free; new input gets a new key)
+                   │  ──invalid_input, target_rejected, action-specific 422, not_found, readback_failed ▶ refused  (key is free; new input gets a new key)
                    │  ──action_paused, system_unavailable ────▶ sent     (retry once the action is active again)
 ```
 

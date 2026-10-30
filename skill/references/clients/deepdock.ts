@@ -93,7 +93,7 @@ export type PairBody = { code: string; label?: string }
 
 export type ActionState =
   | { action: string; state: 'active' }
-  | { action: string; state: 'paused'; reason: 'structure_changed' | 'check_failed'; pausedAt: string }
+  | { action: string; state: 'paused'; reason: 'structure_changed' | 'readback_failed'; pausedAt: string }
 
 export type DeviceSystem = {
   system: string
@@ -306,7 +306,7 @@ export const attempt = async (dd: Deepdock, row: PendingWrite): Promise<PendingW
         : { ...row, status: 'unknown' }
     }
     if (err.code === 'outcome_unknown') return { ...row, status: 'unknown', requestId: err.requestId }
-    // invalid_input, target_rejected, action-specific 422s, not_found, check_failed, auth and
+    // invalid_input, target_rejected, action-specific 422s, not_found, readback_failed, auth and
     // resolution codes: nothing was written. Fix the cause; a changed input gets a new key.
     return { ...row, status: 'refused', refusedCode: err.code, result: { message: err.message } }
   }
