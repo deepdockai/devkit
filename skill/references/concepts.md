@@ -59,7 +59,7 @@ has a display `label` (may be `null`), a `version` the device reported (may be a
 | action state | `active` | the action can be called | normal |
 | action state | `paused` | the action is paused with a `reason` and `pausedAt` | calls answer `action_paused`; show the feature as paused, poll `GET .../systems` at a low rate |
 | pause `reason` | `structure_changed` | the system changed in a way the action depends on (for example a vendor update); Deepdock reviews and resumes | wait; nothing to do on your side |
-| pause `reason` | `check_failed` | a write's result did not match, so nothing was saved | wait; tell the user the change was not saved |
+| pause `reason` | `readback_failed` | a write's result did not match, so nothing was saved | wait; tell the user the change was not saved |
 | pause `reason` | `system_stopped`, `system_missing` | as the system statuses above; these need no resume and clear when the system is back | as above |
 
 Switch on these values; any value you do not know is shown as it is.
@@ -76,7 +76,7 @@ catalogue.
 - A **write** is `POST` (creates a record, answers `201`) or `PATCH` (updates a record, answers
   `200`), with a JSON body of string fields and an `Idempotency-Key` header.
 - A write **either fully applies or not**: Deepdock checks the result before confirming, and if the check fails it saves nothing
-  and pauses the action (`409 check_failed`).
+  and pauses the action (`409 readback_failed`).
 - An action is **active** or **paused**. `GET /v1/devices/{deviceId}/systems` shows each action's
   state with `reason` and `pausedAt`.
 
@@ -88,7 +88,7 @@ the action expects:
 | Reason | What you get | Meaning |
 |---|---|---|
 | `structure_changed` | `503 action_paused` | the system changed (for example a vendor update); Deepdock reviews and resumes |
-| `check_failed` | that call `409 check_failed`, later calls `503 action_paused` | a write's result did not match, so nothing was saved |
+| `readback_failed` | that call `409 readback_failed`, later calls `503 action_paused` | a write's result did not match, so nothing was saved |
 | `system_stopped`, `system_missing` | `503 system_unavailable` | the customer's program is stopped or not found on the device |
 
 Each pause opens an **incident** (`GET /v1/incidents`). Only Deepdock lifts a pause; staff at the

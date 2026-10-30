@@ -168,6 +168,6 @@ def attempt(dd: Deepdock, row: PendingWrite) -> PendingWrite:
             return replace(row, status="unknown")
         if e.code == "outcome_unknown":
             return replace(row, status="unknown", request_id=e.request_id)
-        # invalid_input, target_rejected, action-specific 422s, not_found, check_failed, auth and
+        # invalid_input, target_rejected, action-specific 422s, not_found, readback_failed, auth and
         # resolution codes: nothing was written. Fix the cause; a changed input gets a new key.
         return replace(row, status="refused", refused_code=e.code, result={"message": str(e)})

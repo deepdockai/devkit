@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.20
+
+- `409 check_failed` is renamed `409 readback_failed`, and a paused action's `reason` reads `readback_failed` instead of `check_failed`: Deepdock read the written record back, it did not match, so nothing was saved and the action is paused. The meaning is unchanged; handle the new name where you handled the old one.
+- `unknown_author`, `unknown_provider` and `no_open_case` leave the fixed list of error codes. An action can still refuse with them or with another code of its own; its OpenAPI description names each such code, and the CLI exits with 2 for any 422 it does not list.
+
 ## 1.0.19
 
 - A device answer Deepdock cannot read answers `502 device_answer_unreadable` instead of `500 internal_error`, on action calls and the systems list; the body carries `requestId` for support. Retrying does not help until the Deepdock client on that PC is updated; after a write, read the record back before writing again, since the device may have applied it. The skill's error reference lists it, and the CLI exits with 2 for it.

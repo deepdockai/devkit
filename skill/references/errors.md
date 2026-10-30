@@ -46,13 +46,10 @@ dashboard-only.
 |---|---|---|---|---|
 | `invalid_input` | 422 | a field is unknown, missing, too short or long, breaks its pattern or allowed values; a date that is not a calendar day; a search term without a letter or digit. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
 | `target_rejected` | 422 | the customer's system refused the write | no; the input is valid for Deepdock but not for the system | "the customer's system refused this; check the values" and offer support |
-| `unknown_author` | 422 | the write names an `authorUserId` the system does not list (read them with the users read the description names). Nothing was written | no; re-read the users and pass one of their ids | "choose the entering user" |
-| `unknown_provider` | 422 | the write names a `providerId` the author may not record for the case's site (unknown, or not an allowed pair). Nothing was written | no; read the providers with the providers read the description names and pass one of their ids | "choose a provider" |
-| `no_open_case` | 422 | the customer has no open case and the action never opens one. Nothing was written | no; open a case in the system, or name one with `caseId` | "open a case first" |
 | `record_locked` | 422 | the customer's system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
 | `record_restricted` | 422 | the customer's system restricts access to the record (for example a locked chart): a read returned no data, so an empty answer would be wrong, and a write wrote nothing | no; the practice lifts the restriction in its system | "access to this record is restricted in the customer's system" |
-| Other action-specific refusals | 422 | the action's OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |
+| Action-specific refusals | 422 | an action can refuse with a code of its own (for example `unknown_author` when the write names a user the system does not list, or `no_open_case`); its OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |
 
 ## Device and system availability
 
@@ -71,7 +68,7 @@ dashboard-only.
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
-| `check_failed` | 409 | the write's result did not match what the action expects, so nothing was saved; **the action is now paused** and an incident is open | no; the next calls answer `action_paused` | "the change was not saved; Deepdock is checking the customer system" |
+| `readback_failed` | 409 | the write's result did not match what the action expects, so nothing was saved; **the action is now paused** and an incident is open | no; the next calls answer `action_paused` | "the change was not saved; Deepdock is checking the customer system" |
 | `idempotency_conflict` | 409 | the key was used with a different input, its write is still running, or its outcome is unknown. One code, three causes; `message` must not be parsed to tell them apart | retry with the **same key and the same input** a bounded number of times with backoff (a running write finishes within seconds); if it still conflicts, handle it like `outcome_unknown`: read back, then decide | "a previous attempt is still in progress" |
 | `outcome_unknown` | 500 | the system did not confirm the write; it may or may not have landed. The key stays blocked | **no.** Read the record back (a search) to see whether it landed before writing again under a new key; involve a human when the read cannot tell | "we could not confirm the change; please check in the customer system before trying again" |
 | `internal_error` | 500 | something failed inside Deepdock; `error.requestId` is set | once, later; a write with the same key | "something went wrong"; log `requestId` for Deepdock support |
@@ -97,9 +94,6 @@ const REACTION: Record<string, Reaction> = {
   device_answer_unreadable: 'stop',
   invalid_input: 'fix-input',
   target_rejected: 'fix-input',
-  unknown_author: 'fix-input',
-  no_open_case: 'fix-input',
-  unknown_provider: 'fix-input',
   record_locked: 'stop',
   record_not_editable: 'stop',
   record_restricted: 'stop',
@@ -114,7 +108,7 @@ const REACTION: Record<string, Reaction> = {
   system_unavailable: 'retry-later',
   target_busy: 'retry-same-key',
   temporarily_unavailable: 'retry-same-key',
-  check_failed: 'wait-paused',
+  readback_failed: 'wait-paused',
   idempotency_conflict: 'retry-same-key', // bounded; then 'check-then-decide'
   outcome_unknown: 'check-then-decide',
   internal_error: 'retry-same-key',
