@@ -1,6 +1,6 @@
 {
   "name": "@deepdockai/cli",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "Deepdock partner CLI: pair devices, see systems and actions, create the API key your code runs them with.",
   "type": "module",
   "license": "MIT",
