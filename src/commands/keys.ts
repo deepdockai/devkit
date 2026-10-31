@@ -10,10 +10,12 @@ import { confirm } from '../output/confirm.ts'
 import { paint } from '../output/styles.ts'
 import { genericTable, isRecord, KEY_COLUMNS, stripControl } from '../output/human.ts'
 import type { Run } from '../program.ts'
+import { DEFAULT_BASE_URL } from '../runtime.ts'
 import { addKey, displayPath, findKey, removeKey } from '../writeEnv/ledger.ts'
 import { describeRemoval, settleWrittenLine } from '../writeEnv/removal.ts'
 import {
   API_KEY_VARIABLE,
+  BASE_URL_VARIABLE,
   checkDestination,
   windowsFileWarning,
   writeEnvValue,
@@ -63,6 +65,8 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
     org: org.slug,
   })
   const created = answer.key
+  // A key works only on the API it was created on; production needs no line.
+  const baseUrlLine = ctx.baseUrl === DEFAULT_BASE_URL ? undefined : ctx.baseUrl
   const entry = {
     org: org.slug,
     id: created.id,
@@ -84,7 +88,7 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
     // Once per run that writes the env file.
     const windows = windowsFileWarning(ctx.rt.platform, pending.file, configPath(ctx.rt))
     if (windows) ctx.note(windows)
-    await writeEnvValue(pending.file, pending.variable, created.key)
+    await writeEnvValue(pending.file, pending.variable, created.key, baseUrlLine)
   } catch (error) {
     // The value exists nowhere else; a key that cannot be delivered must not stay valid.
     let revoked = true
@@ -109,13 +113,14 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
   }
 
   const file = displayPath(ctx.rt, pending.file)
+  const written = baseUrlLine === undefined ? pending.variable : `${pending.variable}, ${BASE_URL_VARIABLE}`
   const days = Math.round((Date.parse(created.expiresAt) - ctx.rt.now().getTime()) / DAY_MS)
   const text = [
     `${paint(ctx.out, 'success', 'Created')} API key "${stripControl(created.name)}".`,
     `  ID:        ${created.id}`,
     `  Prefix:    ${created.keyPrefix}`,
     `  Expires:   ${created.expiresAt.slice(0, 10)} (${days} days)`,
-    `  Written:   ${file} (${pending.variable})`,
+    `  Written:   ${file} (${written})`,
     `The key value was shown to nobody and this CLI keeps no copy; your code reads it from ${file}.`,
     `To revoke it: ${paint(ctx.out, 'emphasis', `deepdock keys revoke ${created.id}`)}`,
     `${paint(ctx.out, 'emphasis', '`deepdock auth logout`')} revokes this key; use ${paint(ctx.out, 'emphasis', '`auth logout --keep-keys`')} to keep it.`,
@@ -129,7 +134,14 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
       createdAt: created.createdAt,
       expiresAt: created.expiresAt,
     },
-    meta: { requestId, written: { file, name: pending.variable } },
+    meta: {
+      requestId,
+      written: {
+        file,
+        name: pending.variable,
+        ...(baseUrlLine === undefined ? {} : { baseUrl: baseUrlLine }),
+      },
+    },
     text,
   }
 }

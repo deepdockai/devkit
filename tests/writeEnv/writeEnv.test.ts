@@ -218,6 +218,22 @@ describe('writeEnvValue', () => {
     },
   )
 
+  it('writes the base URL beside the key in the same write, replacing an older one', async () => {
+    const path = join(box.work, '.env.local')
+    writeFileSync(path, 'DEEPDOCK_BASE_URL=https://old.example\nA=1\n')
+    await writeEnvValue(path, 'DEEPDOCK_API_KEY', KEY, 'https://api.staging.example')
+    expect(readFileSync(path, 'utf8')).toBe(
+      `DEEPDOCK_BASE_URL=https://api.staging.example\nA=1\nDEEPDOCK_API_KEY=${KEY}\n`,
+    )
+    expect(readdirSync(box.work)).toEqual(['.env.local'])
+  })
+
+  it('without a base URL writes the key line only', async () => {
+    const path = join(box.work, '.env.local')
+    await writeEnvValue(path, 'DEEPDOCK_API_KEY', KEY)
+    expect(readFileSync(path, 'utf8')).toBe(`DEEPDOCK_API_KEY=${KEY}\n`)
+  })
+
   it('refuses a value that is not key-shaped', async () => {
     const path = join(box.work, '.env.local')
     await expect(writeEnvValue(path, 'DEEPDOCK_API_KEY', 'a\nB=injected')).rejects.toMatchObject({

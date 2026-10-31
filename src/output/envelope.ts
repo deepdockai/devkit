@@ -6,7 +6,7 @@ export type Meta = {
   org?: OrgRef
   requestId?: string
   hint?: string
-  written?: { file: string; name: string }
+  written?: { file: string; name: string; baseUrl?: string }
   organisations?: string[]
 }
 

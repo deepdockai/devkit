@@ -81,9 +81,12 @@ Arguments
 
 Flags
   --expires <duration>  7d, 30d or 90d (required; 90 days is the maximum from the CLI)
-  --write-env <file>    Write DEEPDOCK_API_KEY=<key> into this file (required). Inside a git
-                        repository the file must be ignored and not tracked; outside one
-                        the CLI warns
+  --write-env <file>    Write DEEPDOCK_API_KEY=<key> into this file (required), and
+                        DEEPDOCK_BASE_URL=<url> beside it when DEEPDOCK_BASE_URL points the
+                        CLI at another API than production. Inside a git repository the file
+                        must be ignored and not tracked, and so must the temporary file the
+                        CLI writes next to it (<file>.deepdock-tmp-*): a pattern such as
+                        .env* covers both. Outside a repository the CLI warns
   --no-wait             Print the request and exit; finish it with --wait
   --wait <request>      Finish a request started with --no-wait
   --no-browser          Do not open the link in a browser (also DEEPDOCK_NO_BROWSER=1)

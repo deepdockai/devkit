@@ -72,9 +72,16 @@ describe('keys create', () => {
     expect(finished.code).toBe(0)
     const doc = JSON.parse(finished.stdout)
     expect(Object.keys(doc.data).sort()).toEqual(['createdAt', 'expiresAt', 'id', 'name', 'prefix'])
-    expect(doc.meta.written).toEqual({ file: '.env.local', name: 'DEEPDOCK_API_KEY' })
     expect(doc.meta.org.slug).toBe('muster-it')
-    expect(readFileSync(envFile(), 'utf8')).toBe(`DEEPDOCK_API_KEY=${api.state.keyValue}\n`)
+    // The fake API is not production, so the base URL travels with the key.
+    expect(doc.meta.written).toEqual({
+      file: '.env.local',
+      name: 'DEEPDOCK_API_KEY',
+      baseUrl: api.url,
+    })
+    expect(readFileSync(envFile(), 'utf8')).toBe(
+      `DEEPDOCK_API_KEY=${api.state.keyValue}\nDEEPDOCK_BASE_URL=${api.url}\n`,
+    )
     if (process.platform !== 'win32') expect(statSync(envFile()).mode & 0o777).toBe(0o600)
     expect(finished.stdout + finished.stderr).not.toContain(api.state.keyValue)
   })
@@ -109,7 +116,7 @@ describe('keys create', () => {
     expect(outcome.stderr).toContain('A human approves "Create an API key in Muster IT?" there')
     expect(outcome.stdout).toContain('Created API key "myapp dev".')
     expect(outcome.stdout).toContain(`ID:        ${KEY_ID}`)
-    expect(outcome.stdout).toContain('Written:   .env.local (DEEPDOCK_API_KEY)')
+    expect(outcome.stdout).toContain('Written:   .env.local (DEEPDOCK_API_KEY, DEEPDOCK_BASE_URL)')
     expect(outcome.stdout).toContain('keeps no copy')
     expect(outcome.stdout + outcome.stderr).not.toContain(api.state.keyValue)
   })
@@ -139,10 +146,10 @@ describe('keys create', () => {
   })
 
   it('replaces an existing line in place', async () => {
-    writeFileSync(envFile(), 'A=1\nDEEPDOCK_API_KEY=old\nB=2\n')
+    writeFileSync(envFile(), 'A=1\nDEEPDOCK_API_KEY=old\nDEEPDOCK_BASE_URL=https://old.example\nB=2\n')
     await createFully()
     expect(readFileSync(envFile(), 'utf8')).toBe(
-      `A=1\nDEEPDOCK_API_KEY=${api.state.keyValue}\nB=2\n`,
+      `A=1\nDEEPDOCK_API_KEY=${api.state.keyValue}\nDEEPDOCK_BASE_URL=${api.url}\nB=2\n`,
     )
   })
 
@@ -236,7 +243,9 @@ describe('keys create', () => {
         expect(finished.stderr).toContain(
           `.env.local is ignored: ${reason}; make sure it is not committed.`,
         )
-        expect(readFileSync(envFile(), 'utf8')).toBe(`DEEPDOCK_API_KEY=${api.state.keyValue}\n`)
+        expect(readFileSync(envFile(), 'utf8')).toBe(
+          `DEEPDOCK_API_KEY=${api.state.keyValue}\nDEEPDOCK_BASE_URL=${api.url}\n`,
+        )
         if (process.platform !== 'win32') expect(statSync(envFile()).mode & 0o777).toBe(0o600)
         for (const outcome of [started, finished]) {
           expect(outcome.stdout + outcome.stderr).not.toContain(api.state.keyValue)
@@ -501,7 +510,8 @@ describe('keys revoke', () => {
     expect(outcome.stdout).toContain(
       'Revoked API key "myapp dev" and removed the DEEPDOCK_API_KEY line from .env.local.',
     )
-    expect(readFileSync(envFile(), 'utf8')).toBe('')
+    // Only the key line goes: the base URL is no secret, and other code may read it.
+    expect(readFileSync(envFile(), 'utf8')).toBe(`DEEPDOCK_BASE_URL=${api.url}\n`)
     expect(JSON.parse(readConfigText(box)).keys).toEqual([])
     expect(api.state.revokedKeys).toEqual([KEY_ID])
   })
@@ -541,7 +551,8 @@ describe('keys revoke', () => {
       org: 'muster-it',
       removed: { file: '.env.local', removal: 'done' },
     })
-    expect(readFileSync(envFile(), 'utf8')).toBe('')
+    // Only the key line goes: the base URL is no secret, and other code may read it.
+    expect(readFileSync(envFile(), 'utf8')).toBe(`DEEPDOCK_BASE_URL=${api.url}\n`)
     expect(JSON.parse(readConfigText(box)).keys).toEqual([])
   })
 
