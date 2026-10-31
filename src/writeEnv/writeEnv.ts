@@ -226,17 +226,21 @@ const atomicWrite = async (path: string, content: string): Promise<void> => {
 
 const KEY_SHAPE = /^[A-Za-z0-9_-]{16,}$/
 
+/** The API a key belongs to: `always` writes its line, otherwise only an existing line is updated. */
+export type BaseUrlLine = { url: string; always: boolean }
+
 /**
- * Writes the key line, and with `baseUrl` the `DEEPDOCK_BASE_URL` line beside it, in one atomic
- * replace: a key works only on the API it was created on, and the bundled clients fall back to
- * production without that line.
+ * Writes the key line and, per `baseUrl`, the `DEEPDOCK_BASE_URL` line beside it, in one atomic
+ * replace; answers whether it wrote the base URL. A key works only on the API it was created on,
+ * the bundled clients fall back to production without the line, and a line left from an earlier
+ * key would send this one to that key's API.
  */
 export const writeEnvValue = async (
   path: string,
   variable: string,
   value: string,
-  baseUrl?: string,
-): Promise<void> => {
+  baseUrl?: BaseUrlLine,
+): Promise<boolean> => {
   if (!KEY_SHAPE.test(value)) {
     throw internal(
       'The API answered a key in a shape this CLI will not write.',
@@ -250,10 +254,12 @@ export const writeEnvValue = async (
     if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error
   }
   const withKey = upsertLine(existing, variable, value)
-  await atomicWrite(
-    path,
-    baseUrl === undefined ? withKey : upsertLine(withKey, BASE_URL_VARIABLE, baseUrl),
-  )
+  const matcher = lineStart(BASE_URL_VARIABLE)
+  const writeBase =
+    baseUrl !== undefined &&
+    (baseUrl.always || withKey.split(/\r?\n/).some((line) => matcher.test(line)))
+  await atomicWrite(path, writeBase ? upsertLine(withKey, BASE_URL_VARIABLE, baseUrl.url) : withKey)
+  return writeBase
 }
 
 /**

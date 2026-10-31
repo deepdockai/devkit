@@ -65,8 +65,9 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
     org: org.slug,
   })
   const created = answer.key
-  // A key works only on the API it was created on; production needs no line.
-  const baseUrlLine = ctx.baseUrl === DEFAULT_BASE_URL ? undefined : ctx.baseUrl
+  // Production needs no line of its own, but replaces one an earlier non-production key left.
+  const baseUrlLine = { url: ctx.baseUrl, always: ctx.baseUrl !== DEFAULT_BASE_URL }
+  let baseUrlWritten = false
   const entry = {
     org: org.slug,
     id: created.id,
@@ -88,7 +89,7 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
     // Once per run that writes the env file.
     const windows = windowsFileWarning(ctx.rt.platform, pending.file, configPath(ctx.rt))
     if (windows) ctx.note(windows)
-    await writeEnvValue(pending.file, pending.variable, created.key, baseUrlLine)
+    baseUrlWritten = await writeEnvValue(pending.file, pending.variable, created.key, baseUrlLine)
   } catch (error) {
     // The value exists nowhere else; a key that cannot be delivered must not stay valid.
     let revoked = true
@@ -113,7 +114,7 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
   }
 
   const file = displayPath(ctx.rt, pending.file)
-  const written = baseUrlLine === undefined ? pending.variable : `${pending.variable}, ${BASE_URL_VARIABLE}`
+  const written = baseUrlWritten ? `${pending.variable}, ${BASE_URL_VARIABLE}` : pending.variable
   const days = Math.round((Date.parse(created.expiresAt) - ctx.rt.now().getTime()) / DAY_MS)
   const text = [
     `${paint(ctx.out, 'success', 'Created')} API key "${stripControl(created.name)}".`,
@@ -139,7 +140,7 @@ const finishKey = async (ctx: Ctx, pending: PendingRequest, warned: boolean): Pr
       written: {
         file,
         name: pending.variable,
-        ...(baseUrlLine === undefined ? {} : { baseUrl: baseUrlLine }),
+        ...(baseUrlWritten ? { baseUrl: ctx.baseUrl } : {}),
       },
     },
     text,
