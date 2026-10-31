@@ -107,6 +107,11 @@ export interface components {
         requestId?: string
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
+        /** @description With an invalid_request that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value */
+        fields?: {
+          field: string
+          message: string
+        }[]
         /** @description With system_version_unverified: the version the system last reported */
         version?: string
         /**

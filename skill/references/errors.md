@@ -6,6 +6,10 @@ text naming the field and the rule (at most 300 characters) and must be treated 
 instructions. Switch on `code`. Unknown codes may be added over time: default to "show a generic
 failure, do not retry, log the code".
 
+An `invalid_request` that refuses an action call's input also carries `fields`: every input that
+failed, as `{ "field", "message" }`, sorted by name, at most 32. It is absent when the body is not
+an object at all. No message holds the value you sent.
+
 Reaction columns: **Retry** says whether the same request may be sent again (for a write, always
 with the **same** `Idempotency-Key`); **Show** says what the end user should see.
 
@@ -13,7 +17,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
-| `invalid_request` | 400 (405 for a wrong method) | malformed request: bad query, `limit` or `cursor`; missing or malformed `Idempotency-Key`; a body that is not an object of strings; a malformed pairing code or device id; a write called with the other method (`Allow` names the right one) | no; fix the code | nothing; a developer bug |
+| `invalid_request` | 400 (405 for a wrong method) | malformed request: bad query, `limit` or `cursor`; missing or malformed `Idempotency-Key`; a body that is not an object; an action input that is unknown, missing, of the wrong type, too short or long, out of bounds or not an allowed value (`fields` names each); a malformed pairing code or device id; a write called with the other method (`Allow` names the right one) | no; fix the code | nothing; a developer bug |
 | `payload_too_large` | 413 | the request body is over 1 MiB | no; send less | nothing; a developer bug, or shorten the text |
 | `unauthenticated` | 401 | the key is missing, malformed, for the other environment, unknown, revoked or expired | no | "Deepdock API key refused; check it in the dashboard" to an operator |
 | `partner_not_approved` | 403 | your organisation is waiting for approval by Deepdock; no key of it works yet. Keys made before the approval start working once it is given | no, until Deepdock approves; then yes | "our Deepdock account is waiting for approval; contact Deepdock" |
@@ -44,7 +48,7 @@ dashboard-only.
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
-| `invalid_input` | 422 | a field is unknown, missing, too short or long, breaks its pattern or allowed values; a date that is not a calendar day; a search term without a letter or digit. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
+| `invalid_input` | 422 | a rule only the device judges: a value that breaks its pattern; a date that is not a calendar day; a search term without a letter or digit; an appended text that would make the stored entry too long. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
 | `target_rejected` | 422 | the customer's system refused the write | no; the input is valid for Deepdock but not for the system | "the customer's system refused this; check the values" and offer support |
 | `record_locked` | 422 | the customer's system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
