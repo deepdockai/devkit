@@ -146,7 +146,10 @@ describe('keys create', () => {
   })
 
   it('replaces an existing line in place', async () => {
-    writeFileSync(envFile(), 'A=1\nDEEPDOCK_API_KEY=old\nDEEPDOCK_BASE_URL=https://old.example\nB=2\n')
+    writeFileSync(
+      envFile(),
+      'A=1\nDEEPDOCK_API_KEY=old\nDEEPDOCK_BASE_URL=https://old.example\nB=2\n',
+    )
     await createFully()
     expect(readFileSync(envFile(), 'utf8')).toBe(
       `A=1\nDEEPDOCK_API_KEY=${api.state.keyValue}\nDEEPDOCK_BASE_URL=${api.url}\nB=2\n`,

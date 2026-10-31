@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.22
+
+- `keys create --write-env` writes `DEEPDOCK_BASE_URL=<url>` beside the key when `DEEPDOCK_BASE_URL` points the CLI at another API than production, since a key works only on the API it was created on and the bundled clients default to production. A production key points such a line, left by an earlier key, at production. `meta.written.baseUrl` names the URL when the line was written. Revoking a key removes only the key line.
+- The help of `keys create` names the temporary file the CLI writes beside the env file (`<file>.deepdock-tmp-*`), which git must ignore too; a pattern such as `.env*` covers both.
+
 ## 1.0.21
 
 - A bad action input is refused before it reaches the device, with `400 invalid_request`, and the answer lists every input that failed in `error.fields`: `{ field, message }` items, sorted by name, at most 32, never the value you sent. An unknown or missing input used to come back as `422 invalid_input`; it is now this 400. `invalid_input` stays for the rules only the device can judge, such as a pattern or a calendar date. The skill's error reference describes `fields`.
