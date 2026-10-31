@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.21
+
+- A bad action input is refused before it reaches the device, with `400 invalid_request`, and the answer lists every input that failed in `error.fields`: `{ field, message }` items, sorted by name, at most 32, never the value you sent. An unknown or missing input used to come back as `422 invalid_input`; it is now this 400. `invalid_input` stays for the rules only the device can judge, such as a pattern or a calendar date. The skill's error reference describes `fields`.
+
 ## 1.0.20
 
 - `409 check_failed` is renamed `409 readback_failed`, and a paused action's `reason` reads `readback_failed` instead of `check_failed`: Deepdock read the written record back, it did not match, so nothing was saved and the action is paused. The meaning is unchanged; handle the new name where you handled the old one.
