@@ -8,6 +8,7 @@ import { stripControl } from '../output/human.ts'
 import type { Runtime } from '../runtime.ts'
 
 export const API_KEY_VARIABLE = 'DEEPDOCK_API_KEY'
+export const BASE_URL_VARIABLE = 'DEEPDOCK_BASE_URL'
 
 /**
  * Windows has no POSIX modes: both files keep their folder's permissions, so each run that writes
@@ -225,11 +226,21 @@ const atomicWrite = async (path: string, content: string): Promise<void> => {
 
 const KEY_SHAPE = /^[A-Za-z0-9_-]{16,}$/
 
+/** The API a key belongs to: `always` writes its line, otherwise only an existing line is updated. */
+export type BaseUrlLine = { url: string; always: boolean }
+
+/**
+ * Writes the key line and, per `baseUrl`, the `DEEPDOCK_BASE_URL` line beside it, in one atomic
+ * replace; answers whether it wrote the base URL. A key works only on the API it was created on,
+ * the bundled clients fall back to production without the line, and a line left from an earlier
+ * key would send this one to that key's API.
+ */
 export const writeEnvValue = async (
   path: string,
   variable: string,
   value: string,
-): Promise<void> => {
+  baseUrl?: BaseUrlLine,
+): Promise<boolean> => {
   if (!KEY_SHAPE.test(value)) {
     throw internal(
       'The API answered a key in a shape this CLI will not write.',
@@ -242,7 +253,13 @@ export const writeEnvValue = async (
   } catch (error) {
     if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error
   }
-  await atomicWrite(path, upsertLine(existing, variable, value))
+  const withKey = upsertLine(existing, variable, value)
+  const matcher = lineStart(BASE_URL_VARIABLE)
+  const writeBase =
+    baseUrl !== undefined &&
+    (baseUrl.always || withKey.split(/\r?\n/).some((line) => matcher.test(line)))
+  await atomicWrite(path, writeBase ? upsertLine(withKey, BASE_URL_VARIABLE, baseUrl.url) : withKey)
+  return writeBase
 }
 
 /**
