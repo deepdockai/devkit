@@ -25,7 +25,7 @@ afterEach(async () => {
 })
 
 const orgHeaderOf = (): string | undefined => {
-  const request = api.requests.find((entry) => entry.path === '/partner/devices')
+  const request = api.requests.find((entry) => entry.path.startsWith('/partner/devices?'))
   return request?.headers['x-deepdock-org'] as string | undefined
 }
 
@@ -57,7 +57,7 @@ describe('organisation resolution', () => {
     expect(doc.error.code).toBe('org_required')
     expect(doc.meta.organisations).toEqual(['muster-it', 'beispiel-handel'])
     expect(doc.meta.hint).toContain('--org')
-    expect(api.requests.some((entry) => entry.path === '/partner/devices')).toBe(false)
+    expect(api.requests.some((entry) => entry.path.startsWith('/partner/devices?'))).toBe(false)
   })
 
   it('prints the human error with the organisations', async () => {

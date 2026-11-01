@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `devices list` and `incidents list` read every page of the API's paged answer (`limit` and `cursor`, following `nextCursor`), so no device or incident past the first 500 or 100 stays invisible. Output is unchanged. They stop after 200 pages with a warning on stderr. This needs the API that pages these lists; an older answer is refused with exit 3.
+
 ## 1.0.23
 
 - An incident's program version is named `programVersion` instead of `version`, in `GET /v1/incidents`, in `incidents list --json` and in the skill's concepts. Read the new name where you read the old one; the value is unchanged.
