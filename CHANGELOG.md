@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- An incident's program version is named `programVersion` instead of `version`, in `GET /v1/incidents`, in `incidents list --json` and in the skill's concepts. Read the new name where you read the old one; the value is unchanged.
+
 ## 1.0.21
 
 - A bad action input is refused before it reaches the device, with `400 invalid_request`, and the answer lists every input that failed in `error.fields`: `{ field, message }` items, sorted by name, at most 32, never the value you sent. An unknown or missing input used to come back as `422 invalid_input`; it is now this 400. `invalid_input` stays for the rules only the device can judge, such as a pattern or a calendar date. The skill's error reference describes `fields`.
