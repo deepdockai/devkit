@@ -218,6 +218,37 @@ describe('writeEnvValue', () => {
     },
   )
 
+  it('writes the base URL beside the key in the same write, replacing an older one', async () => {
+    const path = join(box.work, '.env.local')
+    writeFileSync(path, 'DEEPDOCK_BASE_URL=https://old.example\nA=1\n')
+    const written = await writeEnvValue(path, 'DEEPDOCK_API_KEY', KEY, {
+      url: 'https://api.staging.example',
+      always: true,
+    })
+    expect(written).toBe(true)
+    expect(readFileSync(path, 'utf8')).toBe(
+      `DEEPDOCK_BASE_URL=https://api.staging.example\nA=1\nDEEPDOCK_API_KEY=${KEY}\n`,
+    )
+    expect(readdirSync(box.work)).toEqual(['.env.local'])
+  })
+
+  it('for production writes no base URL line into a file that has none', async () => {
+    const path = join(box.work, '.env.local')
+    const production = { url: 'https://api.deepdock.ai', always: false }
+    expect(await writeEnvValue(path, 'DEEPDOCK_API_KEY', KEY, production)).toBe(false)
+    expect(readFileSync(path, 'utf8')).toBe(`DEEPDOCK_API_KEY=${KEY}\n`)
+  })
+
+  it('for production points a line an earlier key left at production', async () => {
+    const path = join(box.work, '.env.local')
+    writeFileSync(path, 'DEEPDOCK_API_KEY=old\nDEEPDOCK_BASE_URL=https://api.staging.example\n')
+    const production = { url: 'https://api.deepdock.ai', always: false }
+    expect(await writeEnvValue(path, 'DEEPDOCK_API_KEY', KEY, production)).toBe(true)
+    expect(readFileSync(path, 'utf8')).toBe(
+      `DEEPDOCK_API_KEY=${KEY}\nDEEPDOCK_BASE_URL=https://api.deepdock.ai\n`,
+    )
+  })
+
   it('refuses a value that is not key-shaped', async () => {
     const path = join(box.work, '.env.local')
     await expect(writeEnvValue(path, 'DEEPDOCK_API_KEY', 'a\nB=injected')).rejects.toMatchObject({
