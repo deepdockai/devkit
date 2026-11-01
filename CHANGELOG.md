@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.23
+
+- An incident's program version is named `programVersion` instead of `version`, in `GET /v1/incidents`, in `incidents list --json` and in the skill's concepts. Read the new name where you read the old one; the value is unchanged.
+
 ## 1.0.22
 
 - `keys create --write-env` writes `DEEPDOCK_BASE_URL=<url>` beside the key when `DEEPDOCK_BASE_URL` points the CLI at another API than production, since a key works only on the API it was created on and the bundled clients default to production. A production key points such a line, left by an earlier key, at production. `meta.written.baseUrl` names the URL when the line was written. Revoking a key removes only the key line.

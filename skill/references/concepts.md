@@ -95,7 +95,8 @@ Each pause opens an **incident** (`GET /v1/incidents`). Only Deepdock lifts a pa
 customer's site see that an action is paused but cannot resume it; there is no partner call to
 resume. A stopped or missing system needs no resume: its incident closes once the system is back.
 
-An incident has `id`, `system`, `version`, `action` (`null` for a system-level incident), `reason`,
+An incident has `id`, `system`, `programVersion` (the version of the vendor's program its devices
+run, `null` when they reported none), `action` (`null` for a system-level incident), `reason`,
 `openedAt`, `closedAt`, and `devices` with `deviceId`, `pausedAt`, `resumedAt` and `inactiveAt`. It
 closes once none of its devices is still paused. `GET /v1/incidents` lists incidents that are open
 or closed within the last 30 days, newest first, at most 100.
