@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.24
 
 - `devices list` and `incidents list` read every page of the API's paged answer (`limit` and `cursor`, following `nextCursor`), so no device or incident past the first 500 or 100 stays invisible. Output is unchanged. They stop after 200 pages with a warning on stderr. This needs the API that pages these lists; an older answer is refused with exit 3.
 
