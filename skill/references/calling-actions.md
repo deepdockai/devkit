@@ -81,7 +81,7 @@ of a customer, the note id of an update. The pattern is always the same:
 
 1. Read the reference with the matching read action (for example a users read, a case read, a
    customer search).
-2. Pass its id back as a string field in the write.
+2. Pass its id back in the type the write's schema declares, usually the integer the read returned.
 3. Handle the action-specific refusal the description names: for example `422 unknown_author` when
    the user is not one the system lists, or `422 no_open_case` when the customer has no open case and
    the action does not open one. Both mean nothing was written; fix the reference, do not retry
@@ -95,7 +95,7 @@ Never invent an id, copy one from another device, or hard-code one from a test r
   in as a JSON number (`"customerId": 1001`), one it declares as text goes in as text
   (`"customerId": "1001"`: digits only, no leading zero, at most 10 characters). A value of the
   wrong type is refused with `400 invalid_request`, never converted. Result field types also come
-  from the action's own output schema; an update may echo the id you sent as text.
+  from the action's own output schema.
 - **Mark every test text `TEST-DEEPDOCK-<id>`** on the demo device only, and list what you created
   ([testing.md](testing.md)).
 - A call with a query string, or with any method but `POST`, is refused (`400` and `405`), so a

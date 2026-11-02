@@ -94,7 +94,7 @@ describe('the pinned device API', () => {
         cursor: 'c1',
       },
     )
-    await client.write('d1', 'example-erp', 'updateNote', 'key-12345678', { noteId: '1001' })
+    await client.write('d1', 'example-erp', 'updateNote', 'key-12345678', { noteId: 1001 })
     const path = 'https://api.example.test/v1/devices/d1/systems/example-erp/actions'
     expect(seen).toEqual([
       {
@@ -106,7 +106,7 @@ describe('the pinned device API', () => {
       {
         url: `${path}/updateNote`,
         method: 'POST',
-        body: { noteId: '1001' },
+        body: { noteId: 1001 },
         key: 'key-12345678',
       },
     ])

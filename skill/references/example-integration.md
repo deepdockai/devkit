@@ -135,7 +135,7 @@ curl -sS -i -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/create
 # An update: also POST, same rules
 curl -sS -i -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/updateNote" \
   -H "$AUTH" -H "Idempotency-Key: demo-$(date +%s)-update" -H 'Content-Type: application/json' \
-  -d '{"noteId":"1001","text":"TEST-DEEPDOCK-K3M9QA edited"}'
+  -d '{"noteId":1001,"text":"TEST-DEEPDOCK-K3M9QA edited"}'
 
 # Release a device
 curl -sS -X DELETE "$BASE/v1/devices/$DEVICE" -H "$AUTH"
