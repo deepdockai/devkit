@@ -8,7 +8,7 @@
     "/v1/devices": {
       "get": {
         "operationId": "listDevices",
-        "summary": "The organisation's paired devices, newest claim first, one page at a time (REST list only; MCP has no list tool)",
+        "summary": "The organisation's paired devices, newest claim first, one page at a time",
         "parameters": [
           {
             "name": "limit",

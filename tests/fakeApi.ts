@@ -17,6 +17,9 @@ export type FakeState = {
   keyValue: string
   user: { firstName: string; email: string }
   devices: Record<string, unknown>[]
+  incidents: Record<string, unknown>[]
+  /** Rows per page on the paged lists; the cursor is the next offset. */
+  pageSize: number
   /** Statuses answered by successive login polls; the last one repeats until collected. */
   loginPolls: string[]
   keyPolls: string[]
@@ -60,6 +63,8 @@ export const defaultState = (): FakeState => ({
   keyValue: ['ddk', 'test', 'CANARYkey0123456789abcdefghij0123456789abcd'].join('_'),
   user: { firstName: 'Anna', email: 'anna.mueller@muster-it.example' },
   devices: [],
+  incidents: [],
+  pageSize: 500,
   loginPolls: ['approved'],
   keyPolls: ['approved'],
   headers: {},
@@ -127,7 +132,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
       const send = (status: number, payload: unknown): void =>
         respond(res, status, payload, state.headers)
 
-      const forced = state.forced[`${method} ${path}`]
+      const route = path.split('?')[0]
+      const forced = state.forced[`${method} ${path}`] ?? state.forced[`${method} ${route}`]
       if (forced) return send(forced.status, forced.body)
 
       const version = String(req.headers['x-deepdock-cli'] ?? '')
@@ -219,7 +225,19 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
           data: { openapi: '3.1.0', info: { title: openapiMatch[1], version: '1' } },
         })
       }
-      if (method === 'GET' && path === '/partner/devices') return send(200, { data: state.devices })
+      const paged = (rows: unknown[]): void => {
+        const query = new URL(path, 'http://x').searchParams
+        const start = Number(query.get('cursor') ?? 0)
+        const size = Math.min(Number(query.get('limit') ?? 100), state.pageSize)
+        const end = start + size
+        send(200, {
+          data: {
+            items: rows.slice(start, end),
+            nextCursor: end < rows.length ? String(end) : null,
+          },
+        })
+      }
+      if (method === 'GET' && route === '/partner/devices') return paged(state.devices)
       if (method === 'POST' && path === '/partner/devices') {
         if (record.code !== 'K7Q-4MX')
           return send(
@@ -304,7 +322,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
           })
         }
       }
-      if (method === 'GET' && path === '/partner/incidents') return send(200, { data: [] })
+      if (method === 'GET' && route === '/partner/incidents') return paged(state.incidents)
       if (method === 'GET' && path === '/partner/keys') {
         return send(200, {
           data: [

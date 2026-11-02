@@ -9,7 +9,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** The organisation's paired devices, newest claim first, one page at a time (REST list only; MCP has no list tool) */
+    /** The organisation's paired devices, newest claim first, one page at a time */
     get: operations['listDevices']
     put?: never
     /** Pair a device by the code its screen shows */

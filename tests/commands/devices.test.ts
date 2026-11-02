@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { MAX_PAGES } from '../../src/commands/pages.ts'
 import { DEVICE_ID, type FakeApi, OTHER_DEVICE_ID, startFakeApi } from '../fakeApi.ts'
 import { errorDocOf, execute, makeSandbox, type Sandbox, signInWith } from '../harness.ts'
 
@@ -65,6 +66,59 @@ describe('devices list', () => {
   it('says so when nothing is paired', async () => {
     const outcome = await run(['devices', 'list'], { tty: true })
     expect(outcome.stdout).toContain('No devices are paired.')
+  })
+})
+
+describe('paged lists', () => {
+  const manyDevices = (count: number): void => {
+    for (let index = 0; index < count; index++) {
+      api.state.devices.push({
+        id: `device-${index}`,
+        label: `PC ${index}`,
+        status: 'offline',
+        systems: [],
+      })
+    }
+  }
+  const listRequests = (): string[] =>
+    api.requests
+      .filter((entry) => entry.path.startsWith('/partner/devices?'))
+      .map((entry) => entry.path)
+
+  it('follows nextCursor across two pages and joins the rows', async () => {
+    manyDevices(5)
+    api.state.pageSize = 3
+    const outcome = await run(['devices', 'list', '--json'])
+    expect(JSON.parse(outcome.stdout).data).toEqual(api.state.devices)
+    expect(listRequests()).toEqual([
+      '/partner/devices?limit=500',
+      '/partner/devices?limit=500&cursor=3',
+    ])
+  })
+
+  it('pages incidents the same way', async () => {
+    for (let index = 0; index < 3; index++) {
+      api.state.incidents.push({ id: `incident-${index}` })
+    }
+    api.state.pageSize = 2
+    const outcome = await run(['incidents', 'list', '--json'])
+    expect(JSON.parse(outcome.stdout).data).toHaveLength(3)
+  })
+
+  it('refuses a bare array, which the API no longer answers', async () => {
+    api.state.forced['GET /partner/devices'] = { status: 200, body: { data: [] } }
+    const outcome = await run(['devices', 'list'])
+    expect(outcome.code).toBe(3)
+    expect(outcome.stderr).toContain('shape this CLI does not read')
+  })
+
+  it('stops at the page cap and says so on stderr', async () => {
+    manyDevices(MAX_PAGES + 5)
+    api.state.pageSize = 1
+    const outcome = await run(['devices', 'list', '--json'])
+    expect(outcome.code).toBe(0)
+    expect(JSON.parse(outcome.stdout).data).toHaveLength(MAX_PAGES)
+    expect(outcome.stderr).toContain(`stopped after ${MAX_PAGES} pages`)
   })
 })
 

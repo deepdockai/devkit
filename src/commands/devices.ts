@@ -15,6 +15,7 @@ import {
   systemsLabel,
 } from '../output/human.ts'
 import type { Run } from '../program.ts'
+import { readAllPages } from './pages.ts'
 
 const meta = (requestId: string | undefined): { requestId?: string } =>
   requestId ? { requestId } : {}
@@ -35,19 +36,18 @@ const updateNotes = (ctx: Ctx, devices: unknown[]): void => {
 }
 
 const list = async (ctx: Ctx): Promise<Result> => {
-  const response = await ctx.callInOrg({ method: 'GET', path: '/partner/devices' })
-  const devices = Array.isArray(response.data) ? response.data : []
+  const { items: devices, requestId } = await readAllPages(ctx, '/partner/devices')
   if (devices.length === 0) {
     return {
-      data: response.data,
-      meta: meta(response.requestId),
+      data: devices,
+      meta: meta(requestId),
       text: 'No devices are paired. Pair one with `deepdock devices pair <code>`.',
     }
   }
   updateNotes(ctx, devices)
   return {
-    data: response.data,
-    meta: meta(response.requestId),
+    data: devices,
+    meta: meta(requestId),
     text: deviceTable(devices, ctx.rt.now(), ctx.out),
   }
 }
@@ -104,10 +104,8 @@ const release = async (ctx: Ctx, id: string): Promise<Result> => {
   if (!ctx.opts.yes) {
     let label = ''
     try {
-      const response = await ctx.call({ method: 'GET', path: '/partner/devices', org: org.slug })
-      const found = Array.isArray(response.data)
-        ? response.data.filter(isRecord).find((device) => field(device, 'id') === deviceId)
-        : undefined
+      const { items } = await readAllPages(ctx, '/partner/devices', org.slug)
+      const found = items.filter(isRecord).find((device) => field(device, 'id') === deviceId)
       label = found ? field(found, 'label') : ''
     } catch {
       // The label only decorates the question; the release itself reports real failures.
