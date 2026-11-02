@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.26
+
+- Every action is called with `POST /v1/devices/{deviceId}/systems/{system}/actions/{action}` and its inputs in a flat JSON body, reads and updates included. There is no `GET` read and no `PATCH` update any more: any other method answers `405 invalid_request` with `Allow: POST`, and a query string on an action path answers `400 invalid_request` ("inputs go in the JSON body, not in the URL"), so no value reaches a URL, a request log or a proxy. A read takes `limit` (a JSON integer) and `cursor` (a string) in the same body; a write still needs an `Idempotency-Key`, a read ignores it. Values are typed as given: an integer input is a JSON number, and `"1001"` is refused where it is declared as one.
+- The action index keeps its route, but each entry's `method` is replaced by `operation` (`read`, `create` or `update`). `actions list` derives its read/write column from it.
+- The bundled TypeScript and Python clients send reads as `POST` with a JSON body, including `limit` and `cursor`. `write` always sends `POST`, so its `method` parameter (and `PendingWrite.method`) is gone; input values are typed (`string | number | boolean`) instead of text only. Idempotency handling is unchanged.
+- The skill's references describe the new contract.
+
 ## 1.0.25
 
 - Three new error codes for writes over a customer system's own HTTP interface: `applied_unverified` (409, exit 2: the write landed but its read-back did not finish; `error.created` names the entry as `{ chartId }`, or null), `credentials_rejected` and `certificate_changed` (503, exit 3: a person at the practice renews the login or confirms the certificate in the Deepdock client). An earlier CLI already exits with the same codes through its status fallback.
