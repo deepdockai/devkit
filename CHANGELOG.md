@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.25
+
+- Three new error codes for writes over a customer system's own HTTP interface: `applied_unverified` (409, exit 2: the write landed but its read-back did not finish; `error.created` names the entry as `{ chartId }`, or null), `credentials_rejected` and `certificate_changed` (503, exit 3: a person at the practice renews the login or confirms the certificate in the Deepdock client). An earlier CLI already exits with the same codes through its status fallback.
+- `system_version_unverified` can carry `error.reason: unreported` with `error.version: null`, and a system's `writes` can read `unverified` with reason `unreported`: such a write is verified for one exact release, and the system reported none.
+- `error.uncertain` is documented on `outcome_unknown`. The skill's error reference describes all of it.
+
 ## 1.0.24
 
 - `devices list` and `incidents list` read every page of the API's paged answer (`limit` and `cursor`, following `nextCursor`), so no device or incident past the first 500 or 100 stays invisible. Output is unchanged. They stop after 200 pages with a warning on stderr. This needs the API that pages these lists; an older answer is refused with exit 3.

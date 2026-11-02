@@ -62,10 +62,12 @@ dashboard-only.
 | `device_offline` | 503 | the device is not connected, is shutting down, did not answer within 20 s, or the call was cut off inside Deepdock by a restart or deploy. **A write may still have landed** | yes, with backoff (seconds to minutes); a write only with the same key | "the customer PC is offline; we will retry" |
 | `device_syncing` | 503 | the device has not reported its Deepdock client yet (just paired, or its report did not come through); Deepdock asks it again. Nothing was written | yes, after `Retry-After` (5 s); a write with the same key | "the customer PC is connecting; retrying" |
 | `device_outdated` | 409 | the device's Deepdock client is too old for this call. It updates itself when a newer version is released for your organisation, once nobody is signed in on the PC. Nothing was written | after the update (`outdated` on `GET /v1/devices/{deviceId}` turns `false`); retrying before it gets the same answer. A write keeps its key | "the Deepdock client on the customer PC needs an update" |
-| `system_version_unverified` | 409 | a write on a system whose vendor version Deepdock has not verified yet. Nothing was sent to the device; reads still work. `error.version` is the version the system last reported and `error.reason` is `unverified_version`, or `unparseable` when that version is not dotted digits | `unverified_version`: after Deepdock has verified that version (`writes` on the system in `GET /v1/devices/{deviceId}` turns `verified`); retrying before it gets the same answer. `unparseable`: retrying does not help, contact Deepdock; only a different reported version changes it. A write keeps its key | "the customer's system was updated to a version Deepdock has not yet verified; changes will work once it has" |
+| `system_version_unverified` | 409 | a write on a system whose vendor version Deepdock has not verified yet. Nothing was sent to the device; reads still work. `error.version` is the version the system last reported (null when it reported none) and `error.reason` is `unverified_version`, `unparseable` when that version is not dotted digits, or `unreported` when the system reported no version: a write over the system's own HTTP interface is verified for one exact release and needs it | `unverified_version`: after Deepdock has verified that version (`writes` on the system in `GET /v1/devices/{deviceId}` turns `verified`); retrying before it gets the same answer. `unparseable`: retrying does not help, contact Deepdock; only a different reported version changes it. `unreported`: later, once the device reports the system's version. A write keeps its key | "the customer's system was updated to a version Deepdock has not yet verified; changes will work once it has" |
 | `action_paused` | 503 | the action is paused on the device (`GET .../systems` shows `reason`); only Deepdock resumes it | later, when `GET .../systems` shows it active; do not loop | "this feature is paused while Deepdock checks the customer system" |
 | `system_unavailable` | 503 | the customer's program is stopped or missing on the device | later; often resolves when the customer restarts the program | "the customer's software is not running" |
 | `target_busy` | 503 | the customer's system is busy or unreachable | yes, with backoff | "the customer's system is busy; retrying" |
+| `credentials_rejected` | 503 | the customer's system refused the device's login. Nothing was sent | later, after a person at the customer has renewed the access in the Deepdock client; do not loop. A write keeps its key | "the connection to the customer's software needs to be renewed at the practice" |
+| `certificate_changed` | 503 | the customer's system shows a certificate other than the one the device trusts. Nothing was sent | later, after a person at the customer has confirmed the new certificate in the Deepdock client; do not loop. A write keeps its key | "the connection to the customer's software needs to be confirmed at the practice" |
 | `temporarily_unavailable` | 503 | Deepdock could not check the key or reach its own database (sent with `Retry-After: 5`) | yes, with backoff | "temporary problem; retrying" |
 
 ## Write outcomes
@@ -73,8 +75,9 @@ dashboard-only.
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
 | `readback_failed` | 409 | the write's result did not match what the action expects, so nothing was saved; **the action is now paused** and an incident is open | no; the next calls answer `action_paused` | "the change was not saved; Deepdock is checking the customer system" |
+| `applied_unverified` | 409 | a write on a system with no rollback was applied, but its read-back did not finish. The entry exists: `error.created` names it as `{ chartId }`, or is null when the entry is not known | **no.** The entry is there; writing again creates a second one. Check it in the customer system | "the change was saved but could not be confirmed; please check it in the customer system" |
 | `idempotency_conflict` | 409 | the key was used with a different input, its write is still running, or its outcome is unknown. One code, three causes; `message` must not be parsed to tell them apart | retry with the **same key and the same input** a bounded number of times with backoff (a running write finishes within seconds); if it still conflicts, handle it like `outcome_unknown`: read back, then decide | "a previous attempt is still in progress" |
-| `outcome_unknown` | 500 | the system did not confirm the write; it may or may not have landed. The key stays blocked | **no.** Read the record back (a search) to see whether it landed before writing again under a new key; involve a human when the read cannot tell | "we could not confirm the change; please check in the customer system before trying again" |
+| `outcome_unknown` | 500 | the system did not confirm the write; it may or may not have landed. The key stays blocked. On a system with no rollback, `error.uncertain` is true and `error.created` names the entry when one is known | **no.** Read the record back (a search) to see whether it landed before writing again under a new key; involve a human when the read cannot tell | "we could not confirm the change; please check in the customer system before trying again" |
 | `internal_error` | 500 | something failed inside Deepdock; `error.requestId` is set | once, later; a write with the same key | "something went wrong"; log `requestId` for Deepdock support |
 
 ## A reaction table for code
@@ -104,6 +107,8 @@ const REACTION: Record<string, Reaction> = {
   payload_too_large: 'fix-code',
   access_outdated: 'wait-setup',
   access_missing: 'wait-setup',
+  credentials_rejected: 'wait-setup',
+  certificate_changed: 'wait-setup',
   device_offline: 'retry-same-key',
   device_syncing: 'retry-same-key',
   device_outdated: 'retry-later',
@@ -113,6 +118,7 @@ const REACTION: Record<string, Reaction> = {
   target_busy: 'retry-same-key',
   temporarily_unavailable: 'retry-same-key',
   readback_failed: 'wait-paused',
+  applied_unverified: 'check-then-decide', // the entry exists; reading it back shows it
   idempotency_conflict: 'retry-same-key', // bounded; then 'check-then-decide'
   outcome_unknown: 'check-then-decide',
   internal_error: 'retry-same-key',
@@ -120,7 +126,7 @@ const REACTION: Record<string, Reaction> = {
 const reactionFor = (code: string): Reaction => REACTION[code] ?? 'stop'
 ```
 
-Action-specific 422 codes beyond the ones above (any the OpenAPI description lists) map to `fix-input`. Add them from the document, not from memory. `wait-setup` means a person at the customer must repeat the database access setup ("Erneut einrichten") in the Deepdock client first; there is no `Retry-After`, so do not loop. Check `access` on the system in `GET .../systems` (`ok` again), then retry; a write keeps its key. `retry-same-key` means the
+Action-specific 422 codes beyond the ones above (any the OpenAPI description lists) map to `fix-input`. Add them from the document, not from memory. `wait-setup` means a person at the customer must act in the Deepdock client first: repeat the database access setup ("Erneut einrichten") for `access_*`, renew the login for `credentials_rejected`, confirm the new certificate for `certificate_changed`; there is no `Retry-After`, so do not loop. Check `access` on the system in `GET .../systems` (`ok` again), then retry; a write keeps its key. `retry-same-key` means the
 pending write stays persisted and is retried from that state with backoff, also across process
 restarts; a device can be offline for hours, so the retry loop lives in a job or queue, not in the
 request that started the write.

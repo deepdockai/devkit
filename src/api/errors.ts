@@ -39,6 +39,8 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   rate_limited: 2,
   target_rejected: 2,
   readback_failed: 2,
+  // The write landed (the answer names it in `created`); repeating it would write it twice.
+  applied_unverified: 2,
   idempotency_conflict: 2,
   conflict: 2,
   already_member: 2,
@@ -56,6 +58,9 @@ export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
   action_paused: 3,
   access_outdated: 3,
   access_missing: 3,
+  // Like access_missing: a person at the practice renews the login or confirms the certificate.
+  credentials_rejected: 3,
+  certificate_changed: 3,
   system_unavailable: 3,
   target_busy: 3,
   temporarily_unavailable: 3,

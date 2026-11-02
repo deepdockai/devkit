@@ -13,15 +13,21 @@ export class DeepdockError extends Error {
   readonly code: string
   readonly requestId?: string
   readonly systems?: string[]
-  /** system_version_unverified: the version the system last reported. */
-  readonly version?: string
-  /** system_version_unverified: `unverified_version` or `unparseable`. */
+  /** system_version_unverified: the version the system last reported, `null` when it reported none. */
+  readonly version?: string | null
+  /** system_version_unverified: `unverified_version`, `unparseable` or `unreported`. */
   readonly reason?: string
+  /** applied_unverified, outcome_unknown on a system with no rollback: the entry, or `null` when not known. */
+  readonly created?: { chartId?: string } | null
+  /** outcome_unknown: `true` when the write may or may not have landed. */
+  readonly uncertain?: boolean
 
   constructor(status: number, code: string, message: string, requestId?: string,
     systems?: string[],
-    version?: string,
+    version?: string | null,
     reason?: string,
+    created?: { chartId?: string } | null,
+    uncertain?: boolean,
   ) {
     super(message)
     this.name = 'DeepdockError'
@@ -31,6 +37,8 @@ export class DeepdockError extends Error {
     this.systems = systems
     this.version = version
     this.reason = reason
+    this.created = created
+    this.uncertain = uncertain
   }
 }
 
@@ -42,7 +50,7 @@ export class DeepdockTransportError extends Error {
   }
 }
 
-type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string; reason?: string }
+type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string | null; reason?: string; created?: { chartId?: string } | null; uncertain?: boolean }
 type Envelope<T> = { data: T } | { error: ErrorBody }
 
 export type Page<Item> = { items: Item[]; nextCursor: string | null }
@@ -56,11 +64,12 @@ export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 
 /**
  * Whether writes on the system run. `unverified` makes writes answer system_version_unverified:
  * `unverified_version` clears once Deepdock verifies the version; `unparseable` does not clear by
- * waiting (contact Deepdock).
+ * waiting (contact Deepdock); `unreported` clears once the device reports the system's version (a
+ * write verified for one exact release needs it).
  */
 export type SystemWrites =
   | { state: 'verified' | 'unknown' | 'partial' }
-  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' }
+  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' | 'unreported' }
 
 export type Device = {
   id: string
@@ -165,8 +174,8 @@ export class Deepdock {
       throw new DeepdockTransportError(`non-JSON answer with status ${res.status}`)
     }
     if (body !== null && typeof body === 'object' && 'error' in body) {
-      const { code, message, requestId, systems, version, reason } = body.error
-      throw new DeepdockError(res.status, code, message, requestId, systems, version, reason)
+      const { code, message, requestId, systems, version, reason, created, uncertain } = body.error
+      throw new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
     }
     if (body === null || typeof body !== 'object' || !('data' in body)) {
       throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
@@ -305,7 +314,15 @@ export const attempt = async (dd: Deepdock, row: PendingWrite): Promise<PendingW
         ? { ...row, status: 'sent', conflictRetries: row.conflictRetries + 1 }
         : { ...row, status: 'unknown' }
     }
-    if (err.code === 'outcome_unknown') return { ...row, status: 'unknown', requestId: err.requestId }
+    // applied_unverified: the entry exists but was not verified; never write it again under a new
+    // key. `result.created` names it for the check.
+    if (err.code === 'outcome_unknown' || err.code === 'applied_unverified')
+      return {
+        ...row,
+        status: 'unknown',
+        requestId: err.requestId,
+        result: { created: err.created, uncertain: err.uncertain },
+      }
     // invalid_input, target_rejected, action-specific 422s, not_found, readback_failed, auth and
     // resolution codes: nothing was written. Fix the cause; a changed input gets a new key.
     return { ...row, status: 'refused', refusedCode: err.code, result: { message: err.message } }
