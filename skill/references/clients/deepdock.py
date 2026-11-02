@@ -20,7 +20,8 @@ class DeepdockError(Exception):
 
     def __init__(self, status: int, code: str, message: str, request_id: Optional[str] = None,
                  systems: Optional[List[str]] = None, version: Optional[str] = None,
-                 reason: Optional[str] = None):
+                 reason: Optional[str] = None, created: Optional[Dict[str, Any]] = None,
+                 uncertain: Optional[bool] = None):
         super().__init__(message)
         self.status = status
         self.code = code
@@ -28,6 +29,8 @@ class DeepdockError(Exception):
         self.systems = systems
         self.version = version  # system_version_unverified: the version the system last reported, None when it reported none
         self.reason = reason  # system_version_unverified: unverified_version, unparseable or unreported
+        self.created = created  # applied_unverified, outcome_unknown with no rollback: {"chartId"} or None
+        self.uncertain = uncertain  # outcome_unknown: True when the write may or may not have landed
 
 
 class DeepdockTransportError(Exception):
@@ -67,7 +70,7 @@ class Deepdock:
         if isinstance(body, dict) and "error" in body:
             e = body["error"]
             raise DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
-                                e.get("version"), e.get("reason"))
+                                e.get("version"), e.get("reason"), e.get("created"), e.get("uncertain"))
         if not isinstance(body, dict) or "data" not in body:
             raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
         return body["data"], r.headers
@@ -166,8 +169,11 @@ def attempt(dd: Deepdock, row: PendingWrite) -> PendingWrite:
             if row.conflict_retries < CONFLICT_RETRIES:
                 return replace(row, status="sent", conflict_retries=row.conflict_retries + 1)
             return replace(row, status="unknown")
-        if e.code == "outcome_unknown":
-            return replace(row, status="unknown", request_id=e.request_id)
+        # applied_unverified: the entry exists but was not verified; never write it again under a new
+        # key. result["created"] names it for the check.
+        if e.code in ("outcome_unknown", "applied_unverified"):
+            return replace(row, status="unknown", request_id=e.request_id,
+                           result={"created": e.created, "uncertain": e.uncertain})
         # invalid_input, target_rejected, action-specific 422s, not_found, readback_failed, auth and
         # resolution codes: nothing was written. Fix the cause; a changed input gets a new key.
         return replace(row, status="refused", refused_code=e.code, result={"message": str(e)})

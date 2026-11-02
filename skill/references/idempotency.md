@@ -74,6 +74,7 @@ pending ──send──▶ sent ──2xx (fresh or replayed)──────
                    │  ──idempotency_conflict, retries left ───▶ sent     (retry, same key, same input)
                    │  ──idempotency_conflict, retries spent ──▶ unknown  (read back before anything else)
                    │  ──outcome_unknown ──────────────────────▶ unknown  (read back before anything else)
+                   │  ──applied_unverified ───────────────────▶ unknown  (the entry exists: check it by result.created, never write it again)
                    │  ──invalid_input, target_rejected, action-specific 422, not_found, readback_failed ▶ refused  (key is free; new input gets a new key)
                    │  ──action_paused, system_unavailable ────▶ sent     (retry once the action is active again)
 ```

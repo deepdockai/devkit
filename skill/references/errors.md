@@ -118,7 +118,7 @@ const REACTION: Record<string, Reaction> = {
   target_busy: 'retry-same-key',
   temporarily_unavailable: 'retry-same-key',
   readback_failed: 'wait-paused',
-  applied_unverified: 'stop',
+  applied_unverified: 'check-then-decide', // the entry exists; reading it back shows it
   idempotency_conflict: 'retry-same-key', // bounded; then 'check-then-decide'
   outcome_unknown: 'check-then-decide',
   internal_error: 'retry-same-key',
