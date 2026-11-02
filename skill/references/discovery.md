@@ -7,7 +7,7 @@ Never hard-code an action's fields. Three sources, each authoritative for one th
 | Which systems and actions does my organisation have? | `deepdock systems list --json` | CLI sign-in |
 | What does this device run, and is each action active or paused? | `GET /v1/devices/{deviceId}/systems` | organisation |
 | Which actions can I call on this device's system, with which schemas? | `GET /v1/devices/{deviceId}/systems/{system}/actions` | organisation |
-| The exact paths, methods, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` (CLI sign-in) or `GET /v1/systems/{system}/openapi.json` (API key); per device `deepdock actions list <device> <system>` (CLI sign-in) | CLI sign-in or API key |
+| The exact paths, operations, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` (CLI sign-in) or `GET /v1/systems/{system}/openapi.json` (API key); per device `deepdock actions list <device> <system>` (CLI sign-in) | CLI sign-in or API key |
 
 ## The OpenAPI document
 
@@ -25,20 +25,19 @@ document into the repository and refresh it with the same command when you touch
 What to read off it:
 
 - **`paths`**: one operation per action at
-  `/v1/devices/{deviceId}/systems/{system}/actions/{action}`; the HTTP method is the action's
-  kind (`get` read, `post` create, `patch` update). Use the method the document gives; the other
-  write method answers `405 invalid_request` with an `Allow` header.
+  `/v1/devices/{deviceId}/systems/{system}/actions/{action}`; every one is a `post`;
+  its `operation` says whether it reads, creates or updates. Any other method answers
+  `405 invalid_request` with `Allow: POST`.
 - **`summary` and `description`**: what the action does and what it changes in the system, what
   an omitted optional input becomes, action-specific refusals (`code` and when), and what the
   system only warns about and what the action does then. Read the description before mapping your
   fields.
-- **Read inputs** are query parameters, all `type: string`, each with `maxLength` and possibly
-  `minLength`, `pattern`, `enum` and a `description` such as "prefix match: case, punctuation and
-  umlaut spelling are ignored". Plus `limit` (integer, 1 to 250, default 25) and `cursor` (opaque).
-  An optional parameter is not in `required` and its description says what an omitted value
-  becomes.
-- **Write inputs** are the `requestBody` object schema: `additionalProperties: false`, every
-  property `type: string`, `required` lists the mandatory ones. The `Idempotency-Key` header
+- **Inputs** are the `requestBody` object schema of every action, read or write:
+  `additionalProperties: false`, each property with its declared `type`, and for text `maxLength`
+  and possibly `minLength`, `pattern`, `enum` and a `description` such as "prefix match: case, punctuation and
+  umlaut spelling are ignored". A read's body also takes `limit` (integer, 1 to 250, default 25) and
+  `cursor` (opaque). An optional input is not in `required` and its description says what an
+  omitted value becomes. A write's `Idempotency-Key` header
   parameter carries its own pattern (8 to 128 characters of `A-Z a-z 0-9 _ -`).
 - **Responses**: a read's `200` is `{ data: { items: [...], nextCursor } }`; a create's `201` and a
   replayed `200`; an update's `200`. Item and result fields are typed `string`, `integer` or `number`,
@@ -57,7 +56,7 @@ curl "$BASE/v1/devices/$DEVICE/systems/example-erp/actions" \
   -H "Authorization: Bearer $DEEPDOCK_API_KEY"
 ```
 
-Answers `{ data: [ { name, method, description, input, output } ] }`, filtered to your assigned
+Answers `{ data: [ { name, operation, description, input, output } ] }`, filtered to your assigned
 actions, with the same JSON Schemas the OpenAPI document carries. Use it at runtime to confirm an
 action exists before offering it in your UI, or to validate input client-side before sending.
 
