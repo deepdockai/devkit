@@ -2,17 +2,20 @@
 
 It does the four things the OpenAPI document cannot tell you: the bearer header, the envelope
 unwrap, the Idempotency-Key header with replay detection, and a typed error carrying the code.
-Everything action-specific (paths, fields, methods) comes from the live OpenAPI document.
+Everything action-specific (fields, types, patterns) comes from the live OpenAPI document.
 """
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 import httpx
+
+# A flat JSON value as the action's schema declares it: a number is a number, never its text.
+InputValue = Union[str, int, float, bool]
 
 
 class DeepdockError(Exception):
@@ -79,18 +82,19 @@ class Deepdock:
     def _action_path(device_id: str, system: str, action: str) -> str:
         return f"/v1/devices/{quote(device_id, safe='')}/systems/{quote(system, safe='')}/actions/{quote(action, safe='')}"
 
-    def read(self, device_id: str, system: str, action: str, params: Dict[str, str],
+    def read(self, device_id: str, system: str, action: str, params: Dict[str, InputValue],
              limit: Optional[int] = None, cursor: Optional[str] = None) -> Page:
-        """Runs a read action. Pass `next_cursor` back as `cursor` for the next page."""
-        query: Dict[str, str] = dict(params)
+        """Runs a read action: a POST whose JSON body holds the inputs and the paging fields, no
+        Idempotency-Key. Pass `next_cursor` back as `cursor` for the next page."""
+        body: Dict[str, InputValue] = dict(params)
         if limit is not None:
-            query["limit"] = str(limit)
+            body["limit"] = limit
         if cursor is not None:
-            query["cursor"] = cursor
-        data, _ = self._send("GET", self._action_path(device_id, system, action), params=query)
+            body["cursor"] = cursor
+        data, _ = self._send("POST", self._action_path(device_id, system, action), json=body)
         return Page(items=data["items"], next_cursor=data.get("nextCursor"))
 
-    def read_all(self, device_id: str, system: str, action: str, params: Dict[str, str],
+    def read_all(self, device_id: str, system: str, action: str, params: Dict[str, InputValue],
                  limit: Optional[int] = None) -> Iterator[Dict[str, Any]]:
         """Reads every page of a read action, in order."""
         cursor: Optional[str] = None
@@ -101,10 +105,10 @@ class Deepdock:
                 return
             cursor = page.next_cursor
 
-    def write(self, device_id: str, system: str, action: str, method: str, idempotency_key: str,
-              body: Dict[str, str]) -> WriteResult:
-        """Runs a write action. `method` is POST or PATCH from the action index; `body` values are all strings."""
-        data, headers = self._send(method, self._action_path(device_id, system, action), json=body,
+    def write(self, device_id: str, system: str, action: str, idempotency_key: str,
+              body: Dict[str, InputValue]) -> WriteResult:
+        """Runs a write action (a create or an update) with POST; `body` values are typed as the action's schema declares."""
+        data, headers = self._send("POST", self._action_path(device_id, system, action), json=body,
                                    headers={"Idempotency-Key": idempotency_key})
         return WriteResult(data=data, replayed=headers.get("Idempotent-Replayed") == "true")
 
@@ -146,8 +150,7 @@ class PendingWrite:
     device_id: str
     system: str
     action: str
-    method: str
-    input: Dict[str, str]
+    input: Dict[str, InputValue]
     status: str = "pending"  # pending | sent | done | unknown | refused
     conflict_retries: int = 0
     result: Optional[Dict[str, Any]] = field(default=None)
@@ -158,7 +161,7 @@ class PendingWrite:
 def attempt(dd: Deepdock, row: PendingWrite) -> PendingWrite:
     """One attempt; returns the row with its new status. The caller persists it."""
     try:
-        res = dd.write(row.device_id, row.system, row.action, row.method, row.key, row.input)
+        res = dd.write(row.device_id, row.system, row.action, row.key, row.input)
         return replace(row, status="done", result=res.data)
     except DeepdockTransportError:
         return replace(row, status="sent")

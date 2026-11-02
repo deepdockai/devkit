@@ -68,4 +68,47 @@ describe('the pinned device API', () => {
       expect(pin.paths[path]?.[method.toLowerCase()], call).toBeDefined()
     }
   })
+
+  it('calls a read and a write with POST, the inputs in the JSON body and never in the URL', async () => {
+    const seen: { url: string; method?: string; body: unknown; key: string | null }[] = []
+    const record = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      seen.push({
+        url: String(url),
+        method: init?.method,
+        body: JSON.parse(String(init?.body)),
+        key: new Headers(init?.headers).get('Idempotency-Key'),
+      })
+      return Response.json({ data: { items: [], nextCursor: null } })
+    }
+    const client = new Deepdock('ddk_test_canary', {
+      base: 'https://api.example.test',
+      fetch: record as typeof fetch,
+    })
+    await client.read(
+      'd1',
+      'example-erp',
+      'searchCustomers',
+      { lastName: 'Müller', zip: 12345 },
+      {
+        limit: 50,
+        cursor: 'c1',
+      },
+    )
+    await client.write('d1', 'example-erp', 'updateNote', 'key-12345678', { noteId: '1001' })
+    const path = 'https://api.example.test/v1/devices/d1/systems/example-erp/actions'
+    expect(seen).toEqual([
+      {
+        url: `${path}/searchCustomers`,
+        method: 'POST',
+        body: { lastName: 'Müller', zip: 12345, limit: 50, cursor: 'c1' },
+        key: null,
+      },
+      {
+        url: `${path}/updateNote`,
+        method: 'POST',
+        body: { noteId: '1001' },
+        key: 'key-12345678',
+      },
+    ])
+  })
 })
