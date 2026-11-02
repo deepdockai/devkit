@@ -24,7 +24,7 @@ the API key the CLI wrote to the app's env file.
 | `devices rename <id> <label>` | rename a device | member |
 | `devices release <id>` | release a device (asks on a terminal; `--yes` otherwise) | admin |
 | `devices systems <id>` | the device's live systems and action state, paused reasons included; `device_offline` is a normal answer | member |
-| `actions list <device> <system>` | the action index: every action with its method and field schemas | member |
+| `actions list <device> <system>` | the action index: every action with its operation and field schemas | member |
 | `keys list` | the organisation's API keys: name, prefix, created, last used, expires, status | member |
 | `keys create <name> --expires <7d\|30d\|90d> --write-env <file>` | create an API key: opens a link, a human approves "Create an API key in <Org>?", the CLI receives the key once and writes `DEEPDOCK_API_KEY=<key>` into the file. It keeps no copy and shows the value to nobody. Answers id, name, prefix, expiry and where it was written | admin |
 | `keys revoke <id>` | revoke a key (asks on a terminal; `--yes` otherwise); removes the env entry if this CLI wrote it | admin |

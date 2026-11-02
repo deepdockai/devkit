@@ -23,7 +23,7 @@ import { Deepdock, DeepdockError, DeepdockTransportError, attempt, type PendingW
 const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // base from DEEPDOCK_BASE_URL, else production; 30 s timeout
 const page = await dd.read<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' }, { limit: 50 })
 for await (const p of dd.readAll<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' })) { /* every page */ }
-const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', 'POST', key, input)
+const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', key, input)
 const systems = await dd.systems(deviceId)                      // live; can throw device_offline
 const device = await dd.pair('K7Q-4MX', 'Demo')                 // keep device.id
 ```
@@ -33,7 +33,7 @@ from deepdock import Deepdock, DeepdockError, DeepdockTransportError, PendingWri
 
 dd = Deepdock(os.environ["DEEPDOCK_API_KEY"])
 page = dd.read(device_id, "example-erp", "searchNotes", {"text": "TEST-DEEPDOCK-"}, limit=50)
-res = dd.write(device_id, "example-erp", "createNote", "POST", key, body)   # res.data, res.replayed
+res = dd.write(device_id, "example-erp", "createNote", key, body)   # res.data, res.replayed
 ```
 
 Errors: `DeepdockError` has `status`, `code`, `requestId`, `systems`; switch on `code`
@@ -42,7 +42,7 @@ Errors: `DeepdockError` has `status`, `code`, `requestId`, `systems`; switch on 
 
 ## Sending a write: persist first, then one attempt at a time
 
-Persist the pending write (key, device, action, method, input, status) **before** the first send,
+Persist the pending write (key, device, action, input, status) **before** the first send,
 so a crash between send and answer cannot produce a second record under a new key. `attempt()`
 moves the row to `done`, `sent` (retry later, same key), `unknown` (read back before anything
 else) or `refused` (nothing was written; a changed input gets a new key). A job retries `sent`
@@ -51,7 +51,7 @@ rows with backoff: seconds, then minutes, for hours if the device stays offline.
 ```ts
 const row: PendingWrite = {
   key: `order-${order.id}-create-note`, // 8 to 128 chars of A-Z a-z 0-9 _ -, stable per business event
-  deviceId, system: 'example-erp', action: 'createNote', method: 'POST',
+  deviceId, system: 'example-erp', action: 'createNote',
   input, status: 'pending', conflictRetries: 0,
 }
 await store.save(row)                      // before the first send
@@ -74,7 +74,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export const run = async (store: { save: (row: PendingWrite) => Promise<void> }) => {
   const marker = `TEST-DEEPDOCK-${randomUUID().replaceAll('-', '').slice(0, 6).toUpperCase()}`
   let row: PendingWrite = {
-    key: `demo-${marker}-create`, deviceId, system, action: 'createNote', method: 'POST',
+    key: `demo-${marker}-create`, deviceId, system, action: 'createNote',
     input: { text: marker, orderNumber: '1001' },
     status: 'pending', conflictRetries: 0,
   }
@@ -122,8 +122,9 @@ curl -sS "$BASE/v1/devices/$DEVICE/systems" -H "$AUTH"
 # The action index (your assigned actions, with schemas)
 curl -sS "$BASE/v1/devices/$DEVICE/systems/example-erp/actions" -H "$AUTH"
 
-# A read, paged: pass data.nextCursor back as cursor
-curl -sS "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchNotes?text=TEST-DEEPDOCK-&limit=50" -H "$AUTH"
+# A read is a POST too, with its inputs and limit/cursor in the body; paged: pass data.nextCursor back as cursor
+curl -sS -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchNotes" \
+  -H "$AUTH" -H 'Content-Type: application/json' -d '{"text":"TEST-DEEPDOCK-","limit":50}'
 
 # A create: new Idempotency-Key per intended write, the same on every retry; 201, or 200 with
 # Idempotent-Replayed: true on a replay (-i shows the headers)
@@ -131,10 +132,10 @@ curl -sS -i -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/create
   -H "$AUTH" -H "Idempotency-Key: demo-$(date +%s)-create" -H 'Content-Type: application/json' \
   -d '{"text":"TEST-DEEPDOCK-K3M9QA","orderNumber":"1001"}'
 
-# An update: PATCH, same rules
-curl -sS -i -X PATCH "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/updateNote" \
+# An update: also POST, same rules
+curl -sS -i -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/updateNote" \
   -H "$AUTH" -H "Idempotency-Key: demo-$(date +%s)-update" -H 'Content-Type: application/json' \
-  -d '{"noteId":"1001","text":"TEST-DEEPDOCK-K3M9QA edited"}'
+  -d '{"noteId":1001,"text":"TEST-DEEPDOCK-K3M9QA edited"}'
 
 # Release a device
 curl -sS -X DELETE "$BASE/v1/devices/$DEVICE" -H "$AUTH"
@@ -142,7 +143,7 @@ curl -sS -X DELETE "$BASE/v1/devices/$DEVICE" -H "$AUTH"
 
 A port in another language keeps the clients' shape: one `send` that sets the bearer header,
 parses the envelope, throws a typed error with `code` on `{ error }` and a transport error on no
-answer or non-JSON; `read` with `limit` and `cursor`; `write` with `Idempotency-Key` and the
+answer or non-JSON; `read` as a POST with `limit` and `cursor` in the body; `write` with `Idempotency-Key` and the
 `Idempotent-Replayed` header; `attempt` over a persisted pending write.
 
 ## Mapping the user's intent to a call (checklist)
@@ -150,9 +151,9 @@ answer or non-JSON; `read` with `limit` and `cursor`; `write` with `Idempotency-
 1. Which device? From your product's configuration for that customer site; never from the
    user's free text.
 2. Is the action active? `systems()` once per session; show paused features as paused.
-3. Which action and method? From the stored index for that system.
+3. Which action and operation? From the stored index for that system.
 4. Does the write need a reference (author user, open case, record id)? Read it first.
-5. Build the input as strings; validate against the schema (`pattern`, `minLength`, `maxLength`,
+5. Build the input in the types the schema declares; validate against the schema (`pattern`, `minLength`, `maxLength`,
    `enum`) before sending so the user sees the rule where they typed.
 6. Choose the idempotency key from your business event and persist it with the pending write.
 7. Send; map the code with the reaction table; show the user the right sentence.

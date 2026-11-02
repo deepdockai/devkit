@@ -29,13 +29,20 @@ export const summary = (description: unknown): string | undefined => {
 // Name first, then a read/write kind and the field names when the action carries them, then
 // whatever other scalar keys it has.
 const actionRow = (action: Record<string, unknown>): Record<string, unknown> => {
-  const method = typeof action.method === 'string' ? action.method : undefined
+  const operation = typeof action.operation === 'string' ? action.operation : undefined
   const fields = fieldNames(action.input)
-  const { name, method: _method, input: _input, output: _output, description, ...rest } = action
+  const {
+    name,
+    operation: _operation,
+    input: _input,
+    output: _output,
+    description,
+    ...rest
+  } = action
   const brief = summary(description)
   return {
     ...(name === undefined ? {} : { name }),
-    ...(method ? { kind: method.toUpperCase() === 'GET' ? 'read' : 'write' } : {}),
+    ...(operation ? { kind: operation === 'read' ? 'read' : 'write' } : {}),
     ...(fields ? { fields } : {}),
     ...(brief ? { description: brief } : {}),
     ...rest,

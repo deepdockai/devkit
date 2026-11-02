@@ -72,9 +72,10 @@ offering it; it then runs the same way every time. Actions are
 **assigned** to your organisation by Deepdock, so the set you can call is yours, not the whole
 catalogue.
 
-- A **read** is `GET` with query parameters and pages.
-- A **write** is `POST` (creates a record, answers `201`) or `PATCH` (updates a record, answers
-  `200`), with a JSON body of string fields and an `Idempotency-Key` header.
+- Every action is called with `POST` and a flat JSON body; its `operation` says what it does.
+- A **read** also pages with `limit` and `cursor` in the body.
+- A **write** is a `create` (answers `201`) or an `update` (answers `200`), and needs an
+  `Idempotency-Key` header.
 - A write **either fully applies or not**: Deepdock checks the result before confirming, and if the check fails it saves nothing
   and pauses the action (`409 readback_failed`).
 - An action is **active** or **paused**. `GET /v1/devices/{deviceId}/systems` shows each action's

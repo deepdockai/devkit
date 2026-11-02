@@ -3,7 +3,7 @@
  *
  * It does the four things the OpenAPI document cannot tell you: the bearer header, the envelope
  * unwrap, the Idempotency-Key header with replay detection, and a typed error carrying the code.
- * Everything action-specific (paths, fields, methods) comes from the live OpenAPI document.
+ * Everything action-specific (fields, types, patterns) comes from the live OpenAPI document.
  */
 
 // Plain fields, no constructor parameter properties: Node runs this file with its default type
@@ -55,7 +55,9 @@ type Envelope<T> = { data: T } | { error: ErrorBody }
 
 export type Page<Item> = { items: Item[]; nextCursor: string | null }
 export type WriteResult<T> = { data: T; replayed: boolean }
-export type WriteMethod = 'POST' | 'PATCH'
+/** A flat JSON value as the action's schema declares it: a number is a number, never its text. */
+export type InputValue = string | number | boolean
+export type ActionInput = Record<string, InputValue>
 
 export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
 /** The database access the device last reported; `null` while none is known. */
@@ -187,19 +189,27 @@ export class Deepdock {
     return `/v1/devices/${encodeURIComponent(deviceId)}/systems/${encodeURIComponent(system)}/actions/${encodeURIComponent(action)}`
   }
 
-  /** Runs a read action. Pass `nextCursor` back as `cursor` for the next page. */
+  /**
+   * Runs a read action: a POST whose JSON body holds the inputs and the paging fields, no
+   * Idempotency-Key. Pass `nextCursor` back as `cursor` for the next page.
+   */
   async read<Item>(
     deviceId: string,
     system: string,
     action: string,
-    input: Record<string, string>,
+    input: ActionInput,
     page: { limit?: number; cursor?: string } = {},
   ): Promise<Page<Item>> {
-    const query = new URLSearchParams(input)
-    if (page.limit !== undefined) query.set('limit', String(page.limit))
-    if (page.cursor !== undefined) query.set('cursor', page.cursor)
-    const suffix = query.size > 0 ? `?${query}` : ''
-    return (await this.send<Page<Item>>(`${this.actionPath(deviceId, system, action)}${suffix}`, { method: 'GET' })).data
+    const body: ActionInput = { ...input }
+    if (page.limit !== undefined) body.limit = page.limit
+    if (page.cursor !== undefined) body.cursor = page.cursor
+    return (
+      await this.send<Page<Item>>(this.actionPath(deviceId, system, action), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    ).data
   }
 
   /** Reads every page of a read action, in order. */
@@ -207,7 +217,7 @@ export class Deepdock {
     deviceId: string,
     system: string,
     action: string,
-    input: Record<string, string>,
+    input: ActionInput,
     limit?: number,
   ): AsyncGenerator<Item> {
     let cursor: string | undefined
@@ -219,19 +229,18 @@ export class Deepdock {
   }
 
   /**
-   * Runs a write action. `method` comes from the action index or the OpenAPI document; `input`
-   * values are all strings. `idempotencyKey` is new per intended write and the same on every retry.
+   * Runs a write action (a create or an update) with POST. `input` values are typed as the action's
+   * schema declares. `idempotencyKey` is new per intended write and the same on every retry.
    */
   async write<Result>(
     deviceId: string,
     system: string,
     action: string,
-    method: WriteMethod,
     idempotencyKey: string,
-    input: Record<string, string>,
+    input: ActionInput,
   ): Promise<WriteResult<Result>> {
     const { data, headers } = await this.send<Result>(this.actionPath(deviceId, system, action), {
-      method,
+      method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(input),
     })
@@ -276,8 +285,7 @@ export type PendingWrite = {
   deviceId: string
   system: string
   action: string
-  method: WriteMethod
-  input: Record<string, string>
+  input: ActionInput
   status: PendingStatus
   conflictRetries: number
   result?: unknown
@@ -303,7 +311,7 @@ const RETRY_SAME_KEY = new Set([
 /** One attempt; returns the row with its new status. The caller persists it. */
 export const attempt = async (dd: Deepdock, row: PendingWrite): Promise<PendingWrite> => {
   try {
-    const { data } = await dd.write(row.deviceId, row.system, row.action, row.method, row.key, row.input)
+    const { data } = await dd.write(row.deviceId, row.system, row.action, row.key, row.input)
     return { ...row, status: 'done', result: data }
   } catch (err) {
     if (err instanceof DeepdockTransportError) return { ...row, status: 'sent' }
