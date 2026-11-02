@@ -104,6 +104,7 @@ export const EXIT_CODES_HELP = `Exit codes
   2  the API refused the request; do not repeat it unchanged
   3  retry later (device_offline, device_syncing, device_outdated,
      system_version_unverified, action_paused, access_outdated, access_missing,
+     credentials_rejected, certificate_changed,
      system_unavailable, target_busy, temporarily_unavailable, internal_error,
      outcome_unknown, connection_lost)
   4  the CLI is too old for the API (client_outdated)

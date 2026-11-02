@@ -26,8 +26,8 @@ class DeepdockError(Exception):
         self.code = code
         self.request_id = request_id
         self.systems = systems
-        self.version = version  # system_version_unverified: the version the system last reported
-        self.reason = reason  # system_version_unverified: unverified_version or unparseable
+        self.version = version  # system_version_unverified: the version the system last reported, None when it reported none
+        self.reason = reason  # system_version_unverified: unverified_version, unparseable or unreported
 
 
 class DeepdockTransportError(Exception):

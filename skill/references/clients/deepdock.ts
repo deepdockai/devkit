@@ -13,14 +13,14 @@ export class DeepdockError extends Error {
   readonly code: string
   readonly requestId?: string
   readonly systems?: string[]
-  /** system_version_unverified: the version the system last reported. */
-  readonly version?: string
-  /** system_version_unverified: `unverified_version` or `unparseable`. */
+  /** system_version_unverified: the version the system last reported, `null` when it reported none. */
+  readonly version?: string | null
+  /** system_version_unverified: `unverified_version`, `unparseable` or `unreported`. */
   readonly reason?: string
 
   constructor(status: number, code: string, message: string, requestId?: string,
     systems?: string[],
-    version?: string,
+    version?: string | null,
     reason?: string,
   ) {
     super(message)
@@ -42,7 +42,7 @@ export class DeepdockTransportError extends Error {
   }
 }
 
-type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string; reason?: string }
+type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string | null; reason?: string }
 type Envelope<T> = { data: T } | { error: ErrorBody }
 
 export type Page<Item> = { items: Item[]; nextCursor: string | null }
@@ -56,11 +56,12 @@ export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 
 /**
  * Whether writes on the system run. `unverified` makes writes answer system_version_unverified:
  * `unverified_version` clears once Deepdock verifies the version; `unparseable` does not clear by
- * waiting (contact Deepdock).
+ * waiting (contact Deepdock); `unreported` clears once the device reports the system's version (a
+ * write verified for one exact release needs it).
  */
 export type SystemWrites =
   | { state: 'verified' | 'unknown' | 'partial' }
-  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' }
+  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' | 'unreported' }
 
 export type Device = {
   id: string
