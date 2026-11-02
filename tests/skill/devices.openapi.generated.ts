@@ -97,6 +97,9 @@ export interface components {
           | 'target_busy'
           | 'target_rejected'
           | 'readback_failed'
+          | 'applied_unverified'
+          | 'credentials_rejected'
+          | 'certificate_changed'
           | 'idempotency_conflict'
           | 'outcome_unknown'
           | 'device_answer_unreadable'
@@ -105,6 +108,12 @@ export interface components {
         message: string
         /** @description With a 500: names the request for support */
         requestId?: string
+        /** @description With applied_unverified or outcome_unknown on a system with no rollback: what the write created, as { chartId }, or null when the entry is not known. Absent otherwise */
+        created?: {
+          chartId?: string
+        } | null
+        /** @description With outcome_unknown: true when the write may or may not have landed. Resolve it by the Idempotency-Key you sent: the replay returns the stored outcome */
+        uncertain?: boolean
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
         /** @description With an invalid_request that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value */
@@ -112,13 +121,13 @@ export interface components {
           field: string
           message: string
         }[]
-        /** @description With system_version_unverified: the version the system last reported */
-        version?: string
+        /** @description With system_version_unverified: the version the system last reported, or null when it reported none (an HTTP write needs the exact release) */
+        version?: string | null
         /**
-         * @description With system_version_unverified: unverified_version, or unparseable when the reported version is not dotted digits
+         * @description With system_version_unverified: unverified_version, unparseable when the reported version is not dotted digits, or unreported when the system reported none (an HTTP write only)
          * @enum {string}
          */
-        reason?: 'unverified_version' | 'unparseable'
+        reason?: 'unverified_version' | 'unparseable' | 'unreported'
       }
     }
     PairRequest: {
@@ -153,7 +162,7 @@ export interface components {
         writes:
           | {
               /** @enum {unknown} */
-              reason: 'unparseable' | 'unverified_version'
+              reason: 'unparseable' | 'unreported' | 'unverified_version'
               /** @constant */
               state: 'unverified'
             }

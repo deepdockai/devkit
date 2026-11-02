@@ -1358,6 +1358,9 @@
                   "target_busy",
                   "target_rejected",
                   "readback_failed",
+                  "applied_unverified",
+                  "credentials_rejected",
+                  "certificate_changed",
                   "idempotency_conflict",
                   "outcome_unknown",
                   "device_answer_unreadable",
@@ -1371,6 +1374,19 @@
               "requestId": {
                 "description": "With a 500: names the request for support",
                 "type": "string"
+              },
+              "created": {
+                "description": "With applied_unverified or outcome_unknown on a system with no rollback: what the write created, as { chartId }, or null when the entry is not known. Absent otherwise",
+                "type": ["object", "null"],
+                "properties": {
+                  "chartId": {
+                    "type": "string"
+                  }
+                }
+              },
+              "uncertain": {
+                "description": "With outcome_unknown: true when the write may or may not have landed. Resolve it by the Idempotency-Key you sent: the replay returns the stored outcome",
+                "type": "boolean"
               },
               "systems": {
                 "description": "With system_not_on_device: the systems this device reported or was assigned",
@@ -1396,13 +1412,13 @@
                 }
               },
               "version": {
-                "description": "With system_version_unverified: the version the system last reported",
-                "type": "string"
+                "description": "With system_version_unverified: the version the system last reported, or null when it reported none (an HTTP write needs the exact release)",
+                "type": ["string", "null"]
               },
               "reason": {
-                "description": "With system_version_unverified: unverified_version, or unparseable when the reported version is not dotted digits",
+                "description": "With system_version_unverified: unverified_version, unparseable when the reported version is not dotted digits, or unreported when the system reported none (an HTTP write only)",
                 "type": "string",
-                "enum": ["unverified_version", "unparseable"]
+                "enum": ["unverified_version", "unparseable", "unreported"]
               }
             }
           }
@@ -1600,7 +1616,7 @@
                       "type": "object",
                       "properties": {
                         "reason": {
-                          "enum": ["unparseable", "unverified_version"]
+                          "enum": ["unparseable", "unreported", "unverified_version"]
                         },
                         "state": {
                           "const": "unverified"
