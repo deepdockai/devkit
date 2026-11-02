@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.27
+
+- An update is called with `PATCH` again; a read and a create stay `POST`. All three take a flat JSON body and nothing in the URL. The method must be the action's own: any other answers `405 invalid_request` with `Allow` naming the one method (`POST` or `PATCH`), so a `POST` to an update is refused and does nothing. A query string on an action path is still `400 invalid_request`. A write still needs an `Idempotency-Key`; a read ignores it.
+- Each entry of the action index has a `method` (`POST` or `PATCH`) beside its `operation` (`read`, `create` or `update`).
+- The bundled clients' `write` takes the action's operation after the action name (`write(deviceId, system, action, 'create' | 'update', key, input)`) and sends `POST` for a create and `PATCH` for an update; `PendingWrite` carries it as `operation`. Reads are unchanged. Idempotency handling is unchanged.
+- The skill's references describe the contract.
+
 ## 1.0.26
 
 - Every action is called with `POST /v1/devices/{deviceId}/systems/{system}/actions/{action}` and its inputs in a flat JSON body, reads and updates included. There is no `GET` read and no `PATCH` update any more: any other method answers `405 invalid_request` with `Allow: POST`, and a query string on an action path answers `400 invalid_request` ("inputs go in the JSON body, not in the URL"), so no value reaches a URL, a request log or a proxy. A read takes `limit` (a JSON integer) and `cursor` (a string) in the same body; a write still needs an `Idempotency-Key`, a read ignores it. Values are typed as given: an integer input is a JSON number, and `"1001"` is refused where it is declared as one.
