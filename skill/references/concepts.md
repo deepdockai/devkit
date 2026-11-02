@@ -72,7 +72,8 @@ offering it; it then runs the same way every time. Actions are
 **assigned** to your organisation by Deepdock, so the set you can call is yours, not the whole
 catalogue.
 
-- Every action is called with `POST` and a flat JSON body; its `operation` says what it does.
+- Every action takes a flat JSON body; its `operation` says what it does: `POST` for a read or a
+  create, `PATCH` for an update.
 - A **read** also pages with `limit` and `cursor` in the body.
 - A **write** is a `create` (answers `201`) or an `update` (answers `200`), and needs an
   `Idempotency-Key` header.

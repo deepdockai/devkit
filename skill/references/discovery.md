@@ -25,9 +25,9 @@ document into the repository and refresh it with the same command when you touch
 What to read off it:
 
 - **`paths`**: one operation per action at
-  `/v1/devices/{deviceId}/systems/{system}/actions/{action}`; every one is a `post`;
-  its `operation` says whether it reads, creates or updates. Any other method answers
-  `405 invalid_request` with `Allow: POST`.
+  `/v1/devices/{deviceId}/systems/{system}/actions/{action}`; each is a `post` (read, create) or a `patch` (update);
+  its `operation` says which. Any other method answers `405 invalid_request` with `Allow` naming
+  the right one.
 - **`summary` and `description`**: what the action does and what it changes in the system, what
   an omitted optional input becomes, action-specific refusals (`code` and when), and what the
   system only warns about and what the action does then. Read the description before mapping your
@@ -56,7 +56,7 @@ curl "$BASE/v1/devices/$DEVICE/systems/example-erp/actions" \
   -H "Authorization: Bearer $DEEPDOCK_API_KEY"
 ```
 
-Answers `{ data: [ { name, operation, description, input, output } ] }`, filtered to your assigned
+Answers `{ data: [ { name, operation, method, description, input, output } ] }`, filtered to your assigned
 actions, with the same JSON Schemas the OpenAPI document carries. Use it at runtime to confirm an
 action exists before offering it in your UI, or to validate input client-side before sending.
 

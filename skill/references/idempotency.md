@@ -1,6 +1,6 @@
 # Idempotency for writes
 
-Every write (a `create` or `update` action, called with `POST`) carries an `Idempotency-Key` header. Without it the request is
+Every write (a `create` action, called with `POST`, or an `update`, called with `PATCH`) carries an `Idempotency-Key` header. Without it the request is
 refused with `400 invalid_request`. A read ignores the header.
 
 ## The key
