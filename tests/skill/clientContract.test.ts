@@ -69,7 +69,7 @@ describe('the pinned device API', () => {
     }
   })
 
-  it('calls a read and a write with POST, the inputs in the JSON body and never in the URL', async () => {
+  it('calls a read and a create with POST and an update with PATCH, the inputs in the JSON body and never in the URL', async () => {
     const seen: { url: string; method?: string; body: unknown; key: string | null }[] = []
     const record = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
       seen.push({
@@ -94,7 +94,10 @@ describe('the pinned device API', () => {
         cursor: 'c1',
       },
     )
-    await client.write('d1', 'example-erp', 'updateNote', 'key-12345678', { noteId: 1001 })
+    await client.write('d1', 'example-erp', 'createNote', 'create', 'key-create-1', { text: 'x' })
+    await client.write('d1', 'example-erp', 'updateNote', 'update', 'key-12345678', {
+      noteId: 1001,
+    })
     const path = 'https://api.example.test/v1/devices/d1/systems/example-erp/actions'
     expect(seen).toEqual([
       {
@@ -104,8 +107,14 @@ describe('the pinned device API', () => {
         key: null,
       },
       {
-        url: `${path}/updateNote`,
+        url: `${path}/createNote`,
         method: 'POST',
+        body: { text: 'x' },
+        key: 'key-create-1',
+      },
+      {
+        url: `${path}/updateNote`,
+        method: 'PATCH',
         body: { noteId: 1001 },
         key: 'key-12345678',
       },

@@ -57,6 +57,8 @@ export type Page<Item> = { items: Item[]; nextCursor: string | null }
 export type WriteResult<T> = { data: T; replayed: boolean }
 /** A flat JSON value as the action's schema declares it: a number is a number, never its text. */
 export type InputValue = string | number | boolean
+/** What a write action does, from `operation` in the action index: a create is POST, an update PATCH. */
+export type WriteOperation = 'create' | 'update'
 export type ActionInput = Record<string, InputValue>
 
 export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
@@ -229,18 +231,21 @@ export class Deepdock {
   }
 
   /**
-   * Runs a write action (a create or an update) with POST. `input` values are typed as the action's
-   * schema declares. `idempotencyKey` is new per intended write and the same on every retry.
+   * Runs a write action: POST for a `create`, PATCH for an `update`. Take `operation` from the
+   * action index; any other method answers 405 with `Allow` naming the right one. `input` values
+   * are typed as the action's schema declares. `idempotencyKey` is new per intended write and the
+   * same on every retry.
    */
   async write<Result>(
     deviceId: string,
     system: string,
     action: string,
+    operation: WriteOperation,
     idempotencyKey: string,
     input: ActionInput,
   ): Promise<WriteResult<Result>> {
     const { data, headers } = await this.send<Result>(this.actionPath(deviceId, system, action), {
-      method: 'POST',
+      method: operation === 'update' ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(input),
     })
@@ -285,6 +290,7 @@ export type PendingWrite = {
   deviceId: string
   system: string
   action: string
+  operation: WriteOperation
   input: ActionInput
   status: PendingStatus
   conflictRetries: number
@@ -311,7 +317,7 @@ const RETRY_SAME_KEY = new Set([
 /** One attempt; returns the row with its new status. The caller persists it. */
 export const attempt = async (dd: Deepdock, row: PendingWrite): Promise<PendingWrite> => {
   try {
-    const { data } = await dd.write(row.deviceId, row.system, row.action, row.key, row.input)
+    const { data } = await dd.write(row.deviceId, row.system, row.action, row.operation, row.key, row.input)
     return { ...row, status: 'done', result: data }
   } catch (err) {
     if (err instanceof DeepdockTransportError) return { ...row, status: 'sent' }
