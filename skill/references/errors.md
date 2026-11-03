@@ -24,9 +24,9 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | `not_found` | 404 | no such route; an update whose id matches no record; a write naming a record that does not exist or belongs to another one | no | "record not found" when it is a record; otherwise a bug |
 | `rate_limited` | 429 | more than 600 calls, or more than 120 writes (counted in both), with this key in a minute; or more than 5 failed pairing claims in 60 s | yes, after `Retry-After: 60` (`retryAfterSeconds: 60` in the body); a write keeps its key. The pairing claim answer has neither: wait up to a minute | "try again in a minute" |
 
-Codes your `/v1` code never receives, listed so the enum is complete: `organization_required`
-(403), `forbidden` (403), `conflict` (409), `already_member` (409) and `client_outdated` (400) are
-dashboard-only.
+`client_outdated` (400) is in the enum but answered only to the Deepdock CLI (by its
+`X-Deepdock-Cli` version), so your own `/v1` code never receives it. The dashboard tree's own codes
+(`organization_required`, `forbidden`, `conflict`, `already_member`) are not in the `/v1` enum.
 
 ## Device, system and action resolution
 

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { API_ERROR_CODES } from '../src/api/codes.generated.ts'
-import { EXIT_CODES } from '../src/api/errors.ts'
+import { EXIT_CODES, PARTNER_API_CODES } from '../src/api/errors.ts'
 import { type FakeApi, startFakeApi } from './fakeApi.ts'
 import { errorDocOf, execute, makeSandbox, type Sandbox, signInWith } from './harness.ts'
 
@@ -24,7 +24,7 @@ const failWith = async (status: number, body: unknown) => {
 }
 
 describe('exit codes over the wire', () => {
-  for (const code of API_ERROR_CODES) {
+  for (const code of [...API_ERROR_CODES, ...PARTNER_API_CODES]) {
     it(`${code} keeps its code in --json and exits ${code === 'unauthenticated' ? 5 : EXIT_CODES[code]}`, async () => {
       const error = {
         code,

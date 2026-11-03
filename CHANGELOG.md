@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.28
+
+- The device API's `Error.code` list no longer names `organization_required`, `forbidden`, `conflict` and `already_member`: only the dashboard tree (`/partner`) answers them, never `/v1`. The CLI still meets them on its own `/partner` calls and keeps their exit codes (`organization_required` 1, the other three 2), now from a list of its own. Nothing changes for a script that reads `--json` or the exit code.
+
 ## 1.0.27
 
 - An update is called with `PATCH` again; a read and a create stay `POST`. All three take a flat JSON body and nothing in the URL. The method must be the action's own: any other answers `405 invalid_request` with `Allow` naming the one method (`POST` or `PATCH`), so a `POST` to an update is refused and does nothing. A query string on an action path is still `400 invalid_request`. A write still needs an `Idempotency-Key`; a read ignores it.

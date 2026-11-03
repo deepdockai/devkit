@@ -10,8 +10,19 @@ export type CliCode =
 
 export type ExitCode = 0 | 1 | 2 | 3 | 4 | 5
 
+// Codes only the dashboard tree (`/partner`) answers, which the CLI calls too. They are not in the
+// pinned `/v1` document, so they are listed by hand; the API keeps the same list as
+// `PARTNER_ERROR_CODES` in apps/api/src/lib/v1Errors.ts.
+export const PARTNER_API_CODES = [
+  'organization_required',
+  'forbidden',
+  'conflict',
+  'already_member',
+] as const
+type PartnerApiCode = (typeof PARTNER_API_CODES)[number]
+
 // A new API code fails tsc here until it has a row: the Record is total over the union.
-export const EXIT_CODES: Record<ApiErrorCode | CliCode, ExitCode> = {
+export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCode> = {
   invalid_usage: 1,
   org_required: 1,
   organization_required: 1,

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { extractCodes, renderCodes } from '../../scripts/errorCodes.ts'
 import { API_ERROR_CODES } from '../../src/api/codes.generated.ts'
-import { EXIT_CODES, exitCodeFor } from '../../src/api/errors.ts'
+import { EXIT_CODES, exitCodeFor, PARTNER_API_CODES } from '../../src/api/errors.ts'
 import { EXIT_CODES_HELP } from '../../src/help.ts'
 
 // The exit-code table of the design (section 4), row by row: a row here that EXIT_CODES maps
@@ -56,7 +56,11 @@ describe('error codes', () => {
     expect([...API_ERROR_CODES]).toEqual(extractCodes(pin))
     const designCodes = Object.values(DESIGN_TABLE).flat()
     for (const code of designCodes.filter((c) => !isCliOwn(c)))
-      expect(API_ERROR_CODES).toContain(code)
+      expect([...API_ERROR_CODES, ...PARTNER_API_CODES]).toContain(code)
+  })
+
+  it('keeps the dashboard-only codes out of the pinned device API', () => {
+    for (const code of PARTNER_API_CODES) expect(API_ERROR_CODES).not.toContain(code)
   })
 
   it('gives every code the exit code the design table gives it', () => {
