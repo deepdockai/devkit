@@ -105,10 +105,15 @@ class Deepdock:
                 return
             cursor = page.next_cursor
 
-    def write(self, device_id: str, system: str, action: str, idempotency_key: str,
+    def write(self, device_id: str, system: str, action: str, operation: str, idempotency_key: str,
               body: Dict[str, InputValue]) -> WriteResult:
-        """Runs a write action (a create or an update) with POST; `body` values are typed as the action's schema declares."""
-        data, headers = self._send("POST", self._action_path(device_id, system, action), json=body,
+        """Runs a write action: POST for operation "create", PATCH for "update" (from the action index; any
+        other method answers 405 with `Allow` naming the right one). `body` values are typed as the
+        action's schema declares. Any other `operation` raises ValueError before anything is sent."""
+        if operation not in ("create", "update"):
+            raise ValueError(f"operation must be 'create' or 'update', got {operation!r}")
+        data, headers = self._send("PATCH" if operation == "update" else "POST",
+                                   self._action_path(device_id, system, action), json=body,
                                    headers={"Idempotency-Key": idempotency_key})
         return WriteResult(data=data, replayed=headers.get("Idempotent-Replayed") == "true")
 
@@ -150,6 +155,7 @@ class PendingWrite:
     device_id: str
     system: str
     action: str
+    operation: str  # create | update, from the action index
     input: Dict[str, InputValue]
     status: str = "pending"  # pending | sent | done | unknown | refused
     conflict_retries: int = 0
@@ -161,7 +167,7 @@ class PendingWrite:
 def attempt(dd: Deepdock, row: PendingWrite) -> PendingWrite:
     """One attempt; returns the row with its new status. The caller persists it."""
     try:
-        res = dd.write(row.device_id, row.system, row.action, row.key, row.input)
+        res = dd.write(row.device_id, row.system, row.action, row.operation, row.key, row.input)
         return replace(row, status="done", result=res.data)
     except DeepdockTransportError:
         return replace(row, status="sent")

@@ -212,8 +212,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
               system: 'example-erp',
               label: 'Example ERP',
               actions: [
-                { name: 'searchCustomers', kind: 'read', operation: 'read' },
-                { name: 'createNote', kind: 'write', operation: 'create' },
+                { name: 'searchCustomers', kind: 'read', operation: 'read', method: 'POST' },
+                { name: 'createNote', kind: 'write', operation: 'create', method: 'POST' },
               ],
             },
           ],
@@ -300,6 +300,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 {
                   name: 'searchCustomers',
                   operation: 'read',
+                  method: 'POST',
                   description:
                     'Finds customers whose last name starts with lastName. Matching ignores case.\n\nRefusals:\n- invalid_input: lastName is empty',
                   input: {
@@ -311,6 +312,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                 {
                   name: 'createNote',
                   operation: 'create',
+                  method: 'POST',
                   input: {
                     type: 'object',
                     properties: { text: { type: 'string' }, orderNumber: { type: 'string' } },

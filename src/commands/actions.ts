@@ -34,6 +34,7 @@ const actionRow = (action: Record<string, unknown>): Record<string, unknown> => 
   const {
     name,
     operation: _operation,
+    method: _method,
     input: _input,
     output: _output,
     description,

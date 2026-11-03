@@ -3,12 +3,13 @@
 All paths are under `/v1/devices/{deviceId}/systems/{system}/actions/{action}`. `deviceId` is the
 UUID from pairing; `system` and `action` are the slugs from the action index.
 
-## Calling an action: POST
+## Calling an action: POST, or PATCH for an update
 
-Every action, whether it reads, creates or updates, is called with `POST` and a flat JSON object as
-the body. What the action does is its `operation` (`read`, `create` or `update`) in the action
-index and the OpenAPI document; the HTTP method never says. Any other method answers
-`405 invalid_request` with `Allow: POST`.
+Every action is called with a flat JSON object as the body. A read and a create are `POST`, an
+update is `PATCH`. What the action does is its `operation` (`read`, `create` or `update`), and its
+`method` (`POST` or `PATCH`), in the action index and the OpenAPI document. Any other method
+answers `405 invalid_request` with `Allow` naming the action's one method, so a `POST` to an update
+is refused, not run.
 
 Inputs are typed as the action's schema declares them and are never sent as text when they are not:
 an integer is a JSON number (`"patientId": 4711`, not `"4711"`; the text form is refused with
@@ -64,7 +65,7 @@ curl -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/createNote" \
 
 - A create answers `201` with `{ data: { <returned fields> } }`, typically the new record's id. A
   replay of the same key answers `200` with the same data and `Idempotent-Replayed: true`.
-- An update is a `POST` too and answers `200` whether it ran now or is a replay; the header tells
+- An update is a `PATCH` to the same path, with the same body rules, and answers `200` whether it ran now or is a replay; the header tells
   you which.
 - The returned id is the system's own id (for example `noteId`). Store it as the system gave it;
   do not predict or re-key it. Result field types come from each action's own output schema: do not
@@ -98,14 +99,14 @@ Never invent an id, copy one from another device, or hard-code one from a test r
   from the action's own output schema.
 - **Mark every test text `TEST-DEEPDOCK-<id>`** on the demo device only, and list what you created
   ([testing.md](testing.md)).
-- A call with a query string, or with any method but `POST`, is refused (`400` and `405`), so a
+- A call with a query string, or with a method other than the action's own, is refused (`400` and `405`), so a
   client library that puts parameters in the URL for you needs its body mode.
 
 ## Refusals specific to the call shape
 
 | Answer | Cause | Fix |
 |---|---|---|
-| `405 invalid_request`, `Allow: POST` | any method but `POST` on an action path | call it with `POST` |
+| `405 invalid_request`, `Allow: POST` or `Allow: PATCH` | a method other than the action's own (for example `POST` to an update, or `PATCH` to a read or create) | use the method `Allow` names: `POST` for a read or create, `PATCH` for an update |
 | `400 invalid_request` | a query string on an action path | move every value into the JSON body |
 | `400 invalid_request` | an input of the wrong type, such as `"4711"` where an integer is declared | send the type the schema declares |
 
@@ -138,7 +139,7 @@ attempts per key per rolling 60 seconds, whose `429` carries neither the header 
 | Header | When | Meaning |
 |---|---|---|
 | `Idempotent-Replayed: true` | a write's `200` | the stored result of an earlier run; nothing written again |
-| `Allow` | `405 invalid_request` | always `POST`: every action is called with it |
+| `Allow` | `405 invalid_request` | the action's one method: `POST` for a read or create, `PATCH` for an update |
 | `WWW-Authenticate: Bearer` | `401` | the key was refused |
 | `Retry-After` | `429` | seconds to wait, when present |
 
