@@ -106,7 +106,12 @@ export type PairBody = { code: string; label?: string }
 
 export type ActionState =
   | { action: string; state: 'active' }
-  | { action: string; state: 'paused'; reason: 'structure_changed' | 'readback_failed'; pausedAt: string }
+  | {
+      action: string
+      state: 'paused'
+      reason: 'structure_changed' | 'readback_failed' | 'credentials_rejected' | 'certificate_changed'
+      pausedAt: string
+    }
 
 export type DeviceSystem = {
   system: string

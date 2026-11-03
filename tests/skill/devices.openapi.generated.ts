@@ -186,7 +186,11 @@ export interface components {
             action: string
             pausedAt: string
             /** @enum {unknown} */
-            reason: 'readback_failed' | 'structure_changed'
+            reason:
+              | 'certificate_changed'
+              | 'credentials_rejected'
+              | 'readback_failed'
+              | 'structure_changed'
             /** @constant */
             state: 'paused'
           }
