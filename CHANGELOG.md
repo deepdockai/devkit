@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.29
+
+- A paused action's `reason` can also read `credentials_rejected` (the program no longer accepts the stored sign-in) or `certificate_changed` (the program's server certificate changed). Both are fixed by the customer choosing "Anmeldung erneuern" in the Deepdock client, and the action resumes by itself. Calls answer `action_paused` meanwhile, as for any pause. The bundled device types and the skill's concepts list include them.
+
 ## 1.0.28
 
 - The device API's `Error.code` list no longer names `organization_required`, `forbidden`, `conflict` and `already_member`: only the dashboard tree (`/partner`) answers them, never `/v1`. The CLI still meets them on its own `/partner` calls and keeps their exit codes (`organization_required` 1, the other three 2), now from a list of its own. Nothing changes for a script that reads `--json` or the exit code.
