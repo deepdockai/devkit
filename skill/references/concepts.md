@@ -60,6 +60,8 @@ has a display `label` (may be `null`), a `version` the device reported (may be a
 | action state | `paused` | the action is paused with a `reason` and `pausedAt` | calls answer `action_paused`; show the feature as paused, poll `GET .../systems` at a low rate |
 | pause `reason` | `structure_changed` | the system changed in a way the action depends on (for example a vendor update); Deepdock reviews and resumes | wait; nothing to do on your side |
 | pause `reason` | `readback_failed` | a write's result did not match, so nothing was saved | wait; tell the user the change was not saved |
+| pause `reason` | `credentials_rejected` | the program no longer accepts the sign-in the device stored for it (for example a changed password) | tell the user to choose "Anmeldung erneuern" in the Deepdock client; the action resumes by itself once the new sign-in works, nothing to resume |
+| pause `reason` | `certificate_changed` | the program's server certificate is not the one the device accepted at sign-in | tell the user to choose "Anmeldung erneuern" in the Deepdock client, compare the fingerprint it shows and sign in again; the action resumes by itself, nothing to resume |
 | pause `reason` | `system_stopped`, `system_missing` | as the system statuses above; these need no resume and clear when the system is back | as above |
 
 Switch on these values; any value you do not know is shown as it is.
