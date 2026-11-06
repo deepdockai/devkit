@@ -101,6 +101,7 @@ export interface components {
           | 'device_answer_unreadable'
           | 'internal_error'
           | 'temporarily_unavailable'
+          | 'partner_deactivated'
         message: string
         /** @description With a 500: names the request for support */
         requestId?: string
@@ -287,9 +288,10 @@ export interface operations {
         }
       }
       /**
-       * @description Organisation not approved yet (partner_not_approved)
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
        *
        *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
        */
       403: {
         headers: {
@@ -299,7 +301,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'partner_not_approved'
+              code?: 'partner_not_approved' | 'partner_deactivated'
             }
           }
         }
@@ -422,9 +424,10 @@ export interface operations {
         }
       }
       /**
-       * @description Organisation not approved yet (partner_not_approved)
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
        *
        *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
        */
       403: {
         headers: {
@@ -434,7 +437,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'partner_not_approved'
+              code?: 'partner_not_approved' | 'partner_deactivated'
             }
           }
         }
@@ -610,9 +613,10 @@ export interface operations {
         }
       }
       /**
-       * @description Organisation not approved yet (partner_not_approved)
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
        *
        *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
        */
       403: {
         headers: {
@@ -622,7 +626,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'partner_not_approved'
+              code?: 'partner_not_approved' | 'partner_deactivated'
             }
           }
         }
@@ -761,9 +765,10 @@ export interface operations {
         }
       }
       /**
-       * @description Organisation not approved yet (partner_not_approved)
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
        *
        *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
        */
       403: {
         headers: {
@@ -773,7 +778,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'partner_not_approved'
+              code?: 'partner_not_approved' | 'partner_deactivated'
             }
           }
         }
@@ -912,9 +917,10 @@ export interface operations {
         }
       }
       /**
-       * @description Organisation not approved yet (partner_not_approved)
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
        *
        *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
        */
       403: {
         headers: {
@@ -924,7 +930,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'partner_not_approved'
+              code?: 'partner_not_approved' | 'partner_deactivated'
             }
           }
         }

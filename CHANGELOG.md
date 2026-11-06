@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- A new error code, `partner_deactivated` (403): Deepdock has deactivated the organisation, so none of its keys work and its devices are disconnected until Deepdock reactivates it. The CLI exits with 2 on it, as on `partner_not_approved`. The bundled device types and the skill's error reference include it.
+
 ## 1.1.0
 
 - Each system in a device's `systems` answer carries `connectors`: the connectors the device runs for that system, each with a `name` and a `kind` (`database` or `http`). The bundled device types and the client's `DeviceSystem` include it.
