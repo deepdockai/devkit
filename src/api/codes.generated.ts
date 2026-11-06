@@ -40,6 +40,7 @@ export const API_ERROR_CODES = [
   'device_answer_unreadable',
   'internal_error',
   'temporarily_unavailable',
+  'partner_deactivated',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]
