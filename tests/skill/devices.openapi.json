@@ -126,8 +126,8 @@
             }
           },
           "403": {
-            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
-            "x-error-codes": ["partner_not_approved"],
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
             "content": {
               "application/json": {
                 "schema": {
@@ -142,7 +142,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["partner_not_approved"]
+                              "enum": ["partner_not_approved", "partner_deactivated"]
                             }
                           }
                         }
@@ -334,8 +334,8 @@
             }
           },
           "403": {
-            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
-            "x-error-codes": ["partner_not_approved"],
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
             "content": {
               "application/json": {
                 "schema": {
@@ -350,7 +350,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["partner_not_approved"]
+                              "enum": ["partner_not_approved", "partner_deactivated"]
                             }
                           }
                         }
@@ -629,8 +629,8 @@
             }
           },
           "403": {
-            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
-            "x-error-codes": ["partner_not_approved"],
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
             "content": {
               "application/json": {
                 "schema": {
@@ -645,7 +645,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["partner_not_approved"]
+                              "enum": ["partner_not_approved", "partner_deactivated"]
                             }
                           }
                         }
@@ -866,8 +866,8 @@
             }
           },
           "403": {
-            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
-            "x-error-codes": ["partner_not_approved"],
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
             "content": {
               "application/json": {
                 "schema": {
@@ -882,7 +882,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["partner_not_approved"]
+                              "enum": ["partner_not_approved", "partner_deactivated"]
                             }
                           }
                         }
@@ -1108,8 +1108,8 @@
             }
           },
           "403": {
-            "description": "Organisation not approved yet (partner_not_approved)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet",
-            "x-error-codes": ["partner_not_approved"],
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
             "content": {
               "application/json": {
                 "schema": {
@@ -1124,7 +1124,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["partner_not_approved"]
+                              "enum": ["partner_not_approved", "partner_deactivated"]
                             }
                           }
                         }
@@ -1361,7 +1361,8 @@
                   "outcome_unknown",
                   "device_answer_unreadable",
                   "internal_error",
-                  "temporarily_unavailable"
+                  "temporarily_unavailable",
+                  "partner_deactivated"
                 ]
               },
               "message": {

@@ -30,6 +30,8 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   forbidden: 2,
   // Not a retry: Deepdock has to approve the organisation first.
   partner_not_approved: 2,
+  // Not a retry: Deepdock has to reactivate the organisation first.
+  partner_deactivated: 2,
   not_found: 2,
   device_not_found: 2,
   system_not_on_device: 2,
