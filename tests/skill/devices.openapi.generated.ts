@@ -200,6 +200,11 @@ export interface components {
             state: 'active'
           }
       )[]
+      connectors: {
+        /** @enum {unknown} */
+        kind: 'database' | 'http'
+        name: string
+      }[]
       label: string | null
       lockedActions: string[] | null
       /** @enum {unknown} */
