@@ -20,7 +20,7 @@ Copy the file into the project; do not reach into the skill directory at runtime
 ```ts
 import { Deepdock, DeepdockError, DeepdockTransportError, attempt, type PendingWrite } from './deepdock'
 
-const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // base from DEEPDOCK_BASE_URL, else production; 30 s timeout
+const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // base from DEEPDOCK_BASE_URL, else production; 35 s timeout, retries 503 target_busy
 const page = await dd.read<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' }, { limit: 50 })
 for await (const p of dd.readAll<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' })) { /* every page */ }
 const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', 'create', key, input)
