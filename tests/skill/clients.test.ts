@@ -177,7 +177,7 @@ print(inspect.signature(mod.Deepdock.__init__).parameters["timeout"].default)
         { encoding: 'utf8' },
       )
       expect(run.stderr).toBe('')
-      expect(run.stdout.trim()).toBe('target_busy 2 3 [2.0, 2.0]\n35.0')
+      expect(run.stdout.trim().replace(/\r\n/g, '\n')).toBe('target_busy 2 3 [2.0, 2.0]\n35.0')
     },
   )
 })
