@@ -21,6 +21,8 @@ export class DeepdockError extends Error {
   readonly created?: { chartId?: string } | null
   /** outcome_unknown: `true` when the write may or may not have landed. */
   readonly uncertain?: boolean
+  /** The `Retry-After` header as sent (seconds), when the answer carried one. */
+  retryAfter?: string
 
   constructor(status: number, code: string, message: string, requestId?: string,
     systems?: string[],
@@ -131,9 +133,24 @@ export type DeviceSystem = {
 export type DeepdockOptions = {
   /** Default: `DEEPDOCK_BASE_URL` from the environment (the CLI's own variable), else production. */
   base?: string
-  /** Above Deepdock's 20 s device wait, so you receive device_offline instead of timing out first. */
+  /** Per attempt, default 35 s: above the worst answer (up to 10 s for the device's slot, then up to 20 s on the device), so you receive the code instead of timing out first. */
   timeoutMs?: number
+  /** Attempts per call on `503 target_busy`, default 3; 1 turns the retry off. The same request is sent again, so a write keeps its idempotency key. */
+  maxAttempts?: number
   fetch?: typeof fetch
+  /** Waits between attempts; replace it in tests. */
+  sleep?: (ms: number) => Promise<void>
+}
+
+/** Longest wait between two attempts, whatever `Retry-After` asks for. */
+const MAX_RETRY_WAIT_MS = 15_000
+const DEFAULT_RETRY_WAIT_MS = 1_000
+
+const retryWaitMs = (header: string | null): number => {
+  const seconds = header === null ? Number.NaN : Number(header)
+  return Number.isFinite(seconds) && seconds >= 0
+    ? Math.min(seconds * 1000, MAX_RETRY_WAIT_MS)
+    : DEFAULT_RETRY_WAIT_MS
 }
 
 // `process` is absent in a browser, and Deno throws on `process.env` without --allow-env; then the
@@ -150,19 +167,50 @@ export class Deepdock {
   private readonly apiKey: string
   private readonly base: string
   private readonly timeoutMs: number
+  private readonly maxAttempts: number
   private readonly fetchImpl: typeof fetch
+  private readonly sleep: (ms: number) => Promise<void>
 
   constructor(
     apiKey: string,
-    { base = envBase() ?? 'https://api.deepdock.ai', timeoutMs = 30_000, fetch: fetchImpl = fetch }: DeepdockOptions = {},
+    {
+      base = envBase() ?? 'https://api.deepdock.ai',
+      timeoutMs = 35_000,
+      maxAttempts = 3,
+      fetch: fetchImpl = fetch,
+      sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    }: DeepdockOptions = {},
   ) {
     this.apiKey = apiKey
     this.base = base.replace(/\/$/, '')
     this.timeoutMs = timeoutMs
+    this.maxAttempts = Math.max(1, Math.floor(maxAttempts))
     this.fetchImpl = fetchImpl
+    this.sleep = sleep
   }
 
   private async send<T>(
+    path: string,
+    init: { method: string; headers?: Record<string, string>; body?: string },
+  ): Promise<{ data: T; headers: Headers }> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.sendOnce<T>(path, init)
+      } catch (err) {
+        if (
+          attempt >= this.maxAttempts ||
+          !(err instanceof DeepdockError) ||
+          err.status !== 503 ||
+          err.code !== 'target_busy'
+        ) {
+          throw err
+        }
+        await this.sleep(retryWaitMs(err.retryAfter ?? null))
+      }
+    }
+  }
+
+  private async sendOnce<T>(
     path: string,
     init: { method: string; headers?: Record<string, string>; body?: string },
   ): Promise<{ data: T; headers: Headers }> {
@@ -186,7 +234,9 @@ export class Deepdock {
     }
     if (body !== null && typeof body === 'object' && 'error' in body) {
       const { code, message, requestId, systems, version, reason, created, uncertain } = body.error
-      throw new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
+      const error = new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
+      error.retryAfter = res.headers.get('retry-after') ?? undefined
+      throw error
     }
     if (body === null || typeof body !== 'object' || !('data' in body)) {
       throw new DeepdockTransportError(`unexpected body with status ${res.status}`)

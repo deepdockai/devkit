@@ -92,7 +92,7 @@ const res = await fetch(url, {
     'Content-Type': 'application/json',
   },
   body: JSON.stringify(input),
-  signal: AbortSignal.timeout(30_000),
+  signal: AbortSignal.timeout(35_000),
 })
 const replayed = res.headers.get('Idempotent-Replayed') === 'true'
 ```

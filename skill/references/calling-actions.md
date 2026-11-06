@@ -114,8 +114,12 @@ Never invent an id, copy one from another device, or hard-code one from a test r
 
 - Every action call is sent to the customer's PC and run there. Expect a read to take from a few
   hundred milliseconds to a few seconds; a write about the same plus its verification.
-- Deepdock waits at most 20 seconds for the device, then answers `503 device_offline`. Set your HTTP
-  client timeout to 30 seconds so you receive the code instead of timing out first. A write that
+- A call can wait up to 10 seconds for the device's slot (`503 target_busy` with a `Retry-After`
+  header when it stays taken), then gets up to 20 seconds on the device (`503 device_offline`), so
+  the worst answer takes about 30 seconds. Set your HTTP client timeout to at least 35 seconds so
+  you receive the code instead of timing out first. The bundled clients do this and retry
+  `503 target_busy` up to three attempts, waiting the `Retry-After` seconds (at most 15), with the
+  same `Idempotency-Key`. A write that
   timed out or failed on the network on your side may still have landed: retry with the same
   `Idempotency-Key`.
 - An answer that is not JSON (a proxy's 502 or 504 page) is a transport failure: for a write, the

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- The bundled TypeScript and Python clients wait 35 seconds per attempt (was 30): a call can wait up to 10 seconds for the device's slot and then up to 20 seconds on the device. They also retry `503 target_busy` up to three attempts (`maxAttempts` / `max_attempts`), waiting the `Retry-After` seconds (at most 15, one second without the header) and sending the same request, so a write keeps its idempotency key. `DeepdockError` carries the header as `retryAfter` / `retry_after`.
+
 ## 1.1.0
 
 - Each system in a device's `systems` answer carries `connectors`: the connectors the device runs for that system, each with a `name` and a `kind` (`database` or `http`). The bundled device types and the client's `DeviceSystem` include it.

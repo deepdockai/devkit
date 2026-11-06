@@ -8,6 +8,7 @@ Everything action-specific (fields, types, patterns) comes from the live OpenAPI
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from urllib.parse import quote
@@ -33,7 +34,20 @@ class DeepdockError(Exception):
         self.version = version  # system_version_unverified: the version the system last reported, None when it reported none
         self.reason = reason  # system_version_unverified: unverified_version, unparseable or unreported
         self.created = created  # applied_unverified, outcome_unknown with no rollback: {"chartId"} or None
+        self.retry_after: Optional[str] = None  # the Retry-After header as sent (seconds), when the answer carried one
         self.uncertain = uncertain  # outcome_unknown: True when the write may or may not have landed
+
+
+MAX_RETRY_WAIT = 15.0  # longest wait between two attempts, whatever Retry-After asks for
+DEFAULT_RETRY_WAIT = 1.0
+
+
+def _retry_wait(header: Optional[str]) -> float:
+    try:
+        seconds = float(header) if header is not None else -1.0
+    except ValueError:
+        seconds = -1.0
+    return min(seconds, MAX_RETRY_WAIT) if seconds >= 0 else DEFAULT_RETRY_WAIT
 
 
 class DeepdockTransportError(Exception):
@@ -53,15 +67,31 @@ class WriteResult:
 
 
 class Deepdock:
-    def __init__(self, api_key: str, base: Optional[str] = None, timeout: float = 30.0,
-                 client: Optional[httpx.Client] = None):
-        # 30 s is above Deepdock's 20 s device wait, so device_offline arrives before a client timeout.
+    def __init__(self, api_key: str, base: Optional[str] = None, timeout: float = 35.0,
+                 client: Optional[httpx.Client] = None, max_attempts: int = 3, sleep=time.sleep):
+        # 35 s is above the worst answer (up to 10 s for the device's slot, then up to 20 s on the
+        # device), so the error code arrives before a client timeout.
+        # max_attempts: attempts per call on 503 target_busy (1 turns the retry off). The same
+        # request is sent again, so a write keeps its idempotency key.
+        self.max_attempts = max(1, int(max_attempts))
+        self._sleep = sleep
         # Default: DEEPDOCK_BASE_URL from the environment (the CLI's own variable), else production.
         base = base or os.environ.get("DEEPDOCK_BASE_URL") or "https://api.deepdock.ai"
         self.c = client or httpx.Client(base_url=base.rstrip("/"), timeout=timeout)
         self.c.headers["Authorization"] = f"Bearer {api_key}"
 
     def _send(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers]:
+        attempt = 1
+        while True:
+            try:
+                return self._send_once(method, path, **kw)
+            except DeepdockError as e:
+                if attempt >= self.max_attempts or e.status != 503 or e.code != "target_busy":
+                    raise
+                self._sleep(_retry_wait(e.retry_after))
+                attempt += 1
+
+    def _send_once(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers]:
         try:
             r = self.c.request(method, path, **kw)
         except httpx.HTTPError as e:  # timeouts and network errors
@@ -72,8 +102,10 @@ class Deepdock:
             raise DeepdockTransportError(f"non-JSON answer with status {r.status_code}")
         if isinstance(body, dict) and "error" in body:
             e = body["error"]
-            raise DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
+            err = DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
                                 e.get("version"), e.get("reason"), e.get("created"), e.get("uncertain"))
+            err.retry_after = r.headers.get("retry-after")
+            raise err
         if not isinstance(body, dict) or "data" not in body:
             raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
         return body["data"], r.headers
