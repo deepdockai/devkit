@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0
+
+- Each system in a device's `systems` answer carries `connectors`: the connectors the device runs for that system, each with a `name` and a `kind` (`database` or `http`). The bundled device types and the client's `DeviceSystem` include it.
+
 ## 1.0.29
 
 - A paused action's `reason` can also read `credentials_rejected` (the program no longer accepts the stored sign-in) or `certificate_changed` (the program's server certificate changed). Both are fixed by the customer choosing "Anmeldung erneuern" in the Deepdock client, and the action resumes by itself. Calls answer `action_paused` meanwhile, as for any pause. The bundled device types and the skill's concepts list include them.

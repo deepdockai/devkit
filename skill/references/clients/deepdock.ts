@@ -124,6 +124,8 @@ export type DeviceSystem = {
   /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for the spec set it runs now. */
   lockedActions: string[] | null
   actions: ActionState[]
+  /** The connectors the device runs for this system, by name and kind. */
+  connectors: { name: string; kind: 'database' | 'http' }[]
 }
 
 export type DeepdockOptions = {

@@ -1773,6 +1773,21 @@
               ]
             }
           },
+          "connectors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": ["database", "http"]
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": ["kind", "name"]
+            }
+          },
           "label": {
             "anyOf": [
               {
@@ -1811,6 +1826,7 @@
           "access",
           "accessLastCheckedAt",
           "actions",
+          "connectors",
           "label",
           "lockedActions",
           "status",
