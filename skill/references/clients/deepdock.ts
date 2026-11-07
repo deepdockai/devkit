@@ -79,7 +79,7 @@ export type SystemWrites =
   | { state: 'verified' | 'unknown' | 'partial' }
   | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' | 'unreported' }
 
-/** Why a system's `version` is missing, when the device says: its database service is not on the PC, its program file was not found, or the file carries no readable version. */
+/** Why a system's `version` is missing, when the device says. */
 export type VersionIssue = 'not_installed' | 'not_found' | 'unreadable'
 
 export type Device = {
@@ -99,7 +99,6 @@ export type Device = {
   systems: {
     system: string
     version: string | null
-    /** Why `version` is missing; `null` with a version, and from a device that does not say. */
     versionIssue: VersionIssue | null
     status: SystemStatus
     access: SystemAccess
@@ -126,7 +125,6 @@ export type DeviceSystem = {
   system: string
   label: string | null
   version?: string
-  /** Why `version` is missing; absent with a version, and from a device that does not say. */
   versionIssue?: VersionIssue
   status: SystemStatus
   access: SystemAccess
