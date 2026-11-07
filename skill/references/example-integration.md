@@ -23,6 +23,7 @@ import { Deepdock, DeepdockError, DeepdockTransportError, attempt, type PendingW
 const dd = new Deepdock(process.env.DEEPDOCK_API_KEY!)          // base from DEEPDOCK_BASE_URL, else production; 35 s timeout, retries 503 target_busy
 const page = await dd.read<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' }, { limit: 50 })
 for await (const p of dd.readAll<Note>(deviceId, 'example-erp', 'searchNotes', { text: 'TEST-DEEPDOCK-' })) { /* every page */ }
+const { bytes, contentType, filename } = await dd.download(deviceId, 'example-erp', 'downloadDocument', { documentId: 7 })  // a `file: true` action
 const { data, replayed } = await dd.write<{ noteId: number }>(deviceId, 'example-erp', 'createNote', 'create', key, input)
 const systems = await dd.systems(deviceId)                      // live; can throw device_offline
 const device = await dd.pair('K7Q-4MX', 'Demo')                 // keep device.id
@@ -33,6 +34,7 @@ from deepdock import Deepdock, DeepdockError, DeepdockTransportError, PendingWri
 
 dd = Deepdock(os.environ["DEEPDOCK_API_KEY"])
 page = dd.read(device_id, "example-erp", "searchNotes", {"text": "TEST-DEEPDOCK-"}, limit=50)
+doc = dd.download(device_id, "example-erp", "downloadDocument", {"documentId": 7})  # doc.content, doc.content_type, doc.filename
 res = dd.write(device_id, "example-erp", "createNote", "create", key, body)   # res.data, res.replayed
 ```
 
