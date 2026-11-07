@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
 - Every `/v1` answer uses one `data` envelope. A list (a `many` action read, `GET /v1/devices`) answers `{ "data": [...], "nextCursor": ... }` (was `{ "data": { "items": [...], "nextCursor": ... } }`); `nextCursor` sits beside `data` and appears only on a list that pages. A single-record read (`cardinality: one`) answers `{ "data": { ...record } }` and a record that is not found answers `404 not_found`. Writes and error bodies are unchanged.
 - Every refused action input (type, length, enum, bounds, a missing or unknown field, a bad `limit` or `cursor`) answers `422 invalid_input` with `error.fields`; `400 invalid_request` is for a malformed request only.
