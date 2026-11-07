@@ -181,6 +181,25 @@ describe('file actions in the bundled TypeScript client', () => {
     })
   })
 
+  it('times out a body that stops moving, the timer restarting on each chunk', async () => {
+    const fetch = (async (_url: string, init: RequestInit) => {
+      const body = new ReadableStream<Uint8Array>({
+        start: (controller) => {
+          controller.enqueue(pdf)
+          init.signal?.addEventListener('abort', () =>
+            controller.error(new DOMException('', 'AbortError')),
+          )
+        },
+      })
+      return new Response(body)
+    }) as unknown as typeof globalThis.fetch
+    const dd = new Deepdock('ddk_test_canary', { fetch, timeoutMs: 20 })
+    await expect(dd.download('d1', 's', 'a', {})).rejects.toMatchObject({
+      name: 'DeepdockTransportError',
+      message: 'download cut off: AbortError',
+    })
+  })
+
   it('throws the JSON refusal as a DeepdockError, retrying target_busy', async () => {
     const refusal = (code: string, status: number): Response =>
       Response.json({ error: { code, message: 'x' } }, { status })

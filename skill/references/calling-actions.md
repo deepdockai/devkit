@@ -78,9 +78,8 @@ curl -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/downloadDocum
   (a document title can name a patient): store and show it like any other record value.
 - The bundled clients do all of this in `download` (TypeScript: `{ bytes, contentType, filename }`;
   Python: `Download(content, content_type, filename)`), and throw `DeepdockTransportError` for a
-  short body. A large file can take longer than 35 seconds to transfer, so their timeout covers the
-  wait for the answer (TypeScript) or the gap between two reads (Python), not the whole transfer;
-  Deepdock stops a transfer that moves nothing for 60 seconds.
+  short body. A large file can take longer than 35 seconds to transfer, so their timeout bounds the
+  wait for the answer and each gap between two reads, not the whole transfer.
 
 ### Writes (create and update)
 

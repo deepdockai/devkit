@@ -269,25 +269,40 @@ export class Deepdock {
   }
 
   private async downloadOnce(path: string, init: SendInit): Promise<Download> {
-    // The timeout covers the wait for the answer only: a large file streams for longer, and
-    // Deepdock itself stops a transfer that moves nothing for 60 s.
+    // The timeout bounds the wait for the answer and then each gap between two chunks, not the
+    // whole transfer: a large file streams for longer than one attempt's timeout.
     const deadline = new AbortController()
-    const timer = setTimeout(() => deadline.abort(), this.timeoutMs)
+    let timer = setTimeout(() => deadline.abort(), this.timeoutMs)
+    const chunks: Uint8Array[] = []
+    let size = 0
     let res: Response
     try {
       res = await this.fetchOnce(path, init, deadline.signal)
+      if (!res.ok) {
+        await unwrap<unknown>(res)
+        throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
+      }
+      const reader = res.body?.getReader()
+      try {
+        while (reader) {
+          const { done, value } = await reader.read()
+          if (done) break
+          chunks.push(value)
+          size += value.byteLength
+          clearTimeout(timer)
+          timer = setTimeout(() => deadline.abort(), this.timeoutMs)
+        }
+      } catch (err) {
+        throw new DeepdockTransportError(`download cut off: ${(err as Error).name}`)
+      }
     } finally {
       clearTimeout(timer)
     }
-    if (!res.ok) {
-      await unwrap<unknown>(res)
-      throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
-    }
-    let bytes: Uint8Array
-    try {
-      bytes = new Uint8Array(await res.arrayBuffer())
-    } catch (err) {
-      throw new DeepdockTransportError(`download cut off: ${(err as Error).name}`)
+    const bytes = new Uint8Array(size)
+    let offset = 0
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset)
+      offset += chunk.byteLength
     }
     // Once the bytes flow, a failure can only end the body early. Content-Length counts encoded
     // bytes, so it is compared only on a body sent as is.
@@ -364,7 +379,7 @@ export class Deepdock {
    * file's bytes instead of JSON. A refusal is a DeepdockError as for any action; a body that ends
    * short of its Content-Length is a DeepdockTransportError, and the download can be run again.
    */
-  async download(deviceId: string, system: string, action: string, input: ActionInput): Promise<Download> {
+  download(deviceId: string, system: string, action: string, input: ActionInput): Promise<Download> {
     return this.retrying(() =>
       this.downloadOnce(this.actionPath(deviceId, system, action), {
         method: 'POST',
