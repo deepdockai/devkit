@@ -1024,13 +1024,17 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": ["data", "nextCursor"],
                   "properties": {
                     "data": {
                       "type": "array",
                       "items": {
                         "$ref": "#/components/schemas/SystemState"
                       }
+                    },
+                    "nextCursor": {
+                      "description": "Pass as cursor for the next page; null on the last page",
+                      "type": ["string", "null"]
                     }
                   }
                 }
@@ -1320,7 +1324,7 @@
                 "enum": [
                   "invalid_request",
                   "payload_too_large",
-                  "client_outdated",
+                  "cli_outdated",
                   "unauthenticated",
                   "partner_not_approved",
                   "not_found",

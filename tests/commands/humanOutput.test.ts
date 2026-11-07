@@ -14,7 +14,7 @@ beforeEach(async () => {
   api = await startFakeApi()
   box = makeSandbox()
   await signInWith(box, api.url)
-  await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
 })
 afterEach(async () => {
   await api.close()
@@ -188,13 +188,13 @@ describe('update note', () => {
 
 describe('organisations, API line and systems list', () => {
   it('lists the default organisation first with the role in words and a switch hint', async () => {
-    await execute(box, ['org', 'select', 'beispiel-handel'], { baseUrl: api.url })
-    const outcome = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    await execute(box, ['orgs', 'select', 'beispiel-handel'], { baseUrl: api.url })
+    const outcome = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(outcome.stdout).toMatch(/NAME\s+SLUG\s+ROLE/)
     expect(outcome.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
     expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s*\n/)
     expect(outcome.stdout).not.toContain('org:')
-    expect(outcome.stdout).toContain('Switch the default with `deepdock org select <slug>`.')
+    expect(outcome.stdout).toContain('Switch the default with `deepdock orgs select <slug>`.')
     const rows = outcome.stdout.split('\n').filter((line) => /muster-it|beispiel-handel/.test(line))
     expect(rows[0]).toContain('beispiel-handel')
   })

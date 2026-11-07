@@ -10,7 +10,7 @@ beforeEach(async () => {
   api = await startFakeApi()
   box = makeSandbox()
   await signInWith(box, api.url)
-  await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
   api.requests.length = 0
 })
 afterEach(async () => {
@@ -105,8 +105,13 @@ describe('paged lists', () => {
     expect(JSON.parse(outcome.stdout).data).toHaveLength(3)
   })
 
-  it('refuses a bare array, which the API no longer answers', async () => {
-    api.state.forced['GET /partner/devices'] = { status: 200, body: { data: [] } }
+  it.each([
+    ['the earlier items form', { data: { items: [], nextCursor: null } }],
+    ['a list without nextCursor', { data: [] }],
+    ['an empty cursor', { data: [], nextCursor: '' }],
+    ['a non-string cursor', { data: [], nextCursor: 3 }],
+  ])('refuses %s, which the API no longer answers', async (_name, body) => {
+    api.state.forced['GET /partner/devices'] = { status: 200, body }
     const outcome = await run(['devices', 'list'])
     expect(outcome.code).toBe(3)
     expect(outcome.stderr).toContain('shape this CLI does not read')

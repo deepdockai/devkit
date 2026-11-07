@@ -103,5 +103,5 @@ Pairing answers:
 
 Successful claims do not count against the limit; malformed codes are refused before counting.
 
-With the CLI: `deepdock devices pair <code> [--label <text>]`, `deepdock devices release <id>`
+With the CLI: `deepdock devices pair <code> [--label <text>]`, `deepdock devices release <deviceId>`
 (admin).

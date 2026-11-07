@@ -65,7 +65,7 @@ export interface components {
         code:
           | 'invalid_request'
           | 'payload_too_large'
-          | 'client_outdated'
+          | 'cli_outdated'
           | 'unauthenticated'
           | 'partner_not_approved'
           | 'not_found'
@@ -874,6 +874,8 @@ export interface operations {
         content: {
           'application/json': {
             data: components['schemas']['SystemState'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
           }
         }
       }

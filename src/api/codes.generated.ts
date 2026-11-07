@@ -4,7 +4,7 @@
 export const API_ERROR_CODES = [
   'invalid_request',
   'payload_too_large',
-  'client_outdated',
+  'cli_outdated',
   'unauthenticated',
   'partner_not_approved',
   'not_found',

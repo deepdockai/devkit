@@ -9,7 +9,7 @@ import { orgTable, roleLabel, stripControl } from '../output/human.ts'
 import type { Run } from '../program.ts'
 
 const list = async (ctx: Ctx): Promise<Result> => {
-  const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+  const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
   const orgs = await parseAnswer('orgs', response.data)
   const config = await ctx.update((current) => {
     current.organisations = orgs
@@ -21,7 +21,7 @@ const list = async (ctx: Ctx): Promise<Result> => {
       : [
           orgTable(orgs, defaultOrg, ctx.out),
           '',
-          'Switch the default with `deepdock org select <slug>`.',
+          'Switch the default with `deepdock orgs select <slug>`.',
         ].join('\n')
   return {
     data: response.data,
@@ -31,7 +31,7 @@ const list = async (ctx: Ctx): Promise<Result> => {
 }
 
 const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
-  const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+  const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
   const orgs = await parseAnswer('orgs', response.data)
   const choices = selectableOrgs(orgs)
   const config = await ctx.config()
@@ -43,7 +43,7 @@ const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
       throw new CliError({
         code: 'invalid_usage',
         message: 'Choosing an organisation without a slug needs a terminal.',
-        hint: 'Pass the slug: `deepdock org select <slug>`.',
+        hint: 'Pass the slug: `deepdock orgs select <slug>`.',
         organisations: slugs,
       })
     }
@@ -83,7 +83,7 @@ const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
 
 export const registerOrg = (program: Command, run: Run): void => {
   const org = program
-    .command('org')
+    .command('orgs')
     .description('List your organisations and choose the default one')
 
   org

@@ -31,7 +31,7 @@ const orgHeaderOf = (): string | undefined => {
 
 describe('organisation resolution', () => {
   it('prefers --org over DEEPDOCK_ORG over the stored default', async () => {
-    await execute(box, ['org', 'select', 'beispiel-handel'], { baseUrl: api.url })
+    await execute(box, ['orgs', 'select', 'beispiel-handel'], { baseUrl: api.url })
     await execute(box, ['devices', 'list'], { baseUrl: api.url })
     expect(orgHeaderOf()).toBe('beispiel-handel')
 
@@ -93,17 +93,17 @@ describe('organisation resolution', () => {
 
 describe('default marking and a lost default', () => {
   it('marks the organisation that commands would use: --org, then DEEPDOCK_ORG, then stored', async () => {
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
-    const stored = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
+    const stored = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(stored.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
-    const env = await execute(box, ['org', 'list'], {
+    const env = await execute(box, ['orgs', 'list'], {
       baseUrl: api.url,
       tty: true,
       env: { DEEPDOCK_ORG: 'beispiel-handel' },
     })
     expect(env.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
     expect(env.stdout).not.toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
-    const flag = await execute(box, ['org', 'list', '--org', 'beispiel-handel'], {
+    const flag = await execute(box, ['orgs', 'list', '--org', 'beispiel-handel'], {
       baseUrl: api.url,
       tty: true,
       env: { DEEPDOCK_ORG: 'muster-it' },
@@ -111,14 +111,14 @@ describe('default marking and a lost default', () => {
     expect(flag.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member\s+default/)
   })
 
-  it("hints at `org select` when the stored default is no longer one of the person's", async () => {
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  it("hints at `orgs select` when the stored default is no longer one of the person's", async () => {
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
     api.state.orgs.splice(0, 1)
     const outcome = await execute(box, ['devices', 'list'], { baseUrl: api.url })
     expect(outcome.code).toBe(1)
     const error = errorDocOf(outcome.stderr)
     expect(error.error.message).toContain('"muster-it"')
-    expect(error.meta.hint).toContain('deepdock org select')
+    expect(error.meta.hint).toContain('deepdock orgs select')
     const flagged = await execute(box, ['devices', 'list', '--org', 'muster-it'], {
       baseUrl: api.url,
     })
@@ -128,19 +128,19 @@ describe('default marking and a lost default', () => {
 
 describe('org commands', () => {
   it('lists the organisations and marks the default', async () => {
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
-    const outcome = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
+    const outcome = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(outcome.stdout).toMatch(/Muster IT\s+muster-it\s+Admin\s+default/)
     expect(outcome.stdout).toMatch(/Beispiel Handel GmbH\s+beispiel-handel\s+Member/)
   })
 
-  it('org list --json passes the API data through unchanged', async () => {
-    const outcome = await execute(box, ['org', 'list', '--json'], { baseUrl: api.url })
+  it('orgs list --json passes the API data through unchanged', async () => {
+    const outcome = await execute(box, ['orgs', 'list', '--json'], { baseUrl: api.url })
     expect(JSON.parse(outcome.stdout).data).toEqual(api.state.orgs)
   })
 
   it('selects by slug', async () => {
-    const outcome = await execute(box, ['org', 'select', 'beispiel-handel'], {
+    const outcome = await execute(box, ['orgs', 'select', 'beispiel-handel'], {
       baseUrl: api.url,
       tty: true,
     })
@@ -151,7 +151,7 @@ describe('org commands', () => {
   })
 
   it('picks from a list on a terminal', async () => {
-    const outcome = await execute(box, ['org', 'select'], {
+    const outcome = await execute(box, ['orgs', 'select'], {
       baseUrl: api.url,
       tty: true,
       stdin: '2\n',
@@ -162,18 +162,18 @@ describe('org commands', () => {
   })
 
   it('takes the first entry on an empty answer', async () => {
-    await execute(box, ['org', 'select'], { baseUrl: api.url, tty: true, stdin: '\n' })
+    await execute(box, ['orgs', 'select'], { baseUrl: api.url, tty: true, stdin: '\n' })
     expect(JSON.parse(readConfigText(box)).defaultOrg).toBe('muster-it')
   })
 
   it('without a terminal and without a slug is a usage error naming the slugs', async () => {
-    const outcome = await execute(box, ['org', 'select'], { baseUrl: api.url })
+    const outcome = await execute(box, ['orgs', 'select'], { baseUrl: api.url })
     expect(outcome.code).toBe(1)
     expect(errorDocOf(outcome.stderr).meta.organisations).toEqual(['muster-it', 'beispiel-handel'])
   })
 
   it('refuses an unknown slug with exit 1', async () => {
-    const outcome = await execute(box, ['org', 'select', 'nope'], { baseUrl: api.url, tty: true })
+    const outcome = await execute(box, ['orgs', 'select', 'nope'], { baseUrl: api.url, tty: true })
     expect(outcome.code).toBe(1)
     expect(outcome.stderr).toContain(
       'You are not a member of an organisation with the slug "nope" [invalid_usage].',

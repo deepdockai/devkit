@@ -14,7 +14,7 @@ export type ExitCode = 0 | 1 | 2 | 3 | 4 | 5
 // pinned `/v1` document, so they are listed by hand; the API keeps the same list as
 // `PARTNER_ERROR_CODES` in apps/api/src/lib/v1Errors.ts.
 export const PARTNER_API_CODES = [
-  'organization_required',
+  'organisation_required',
   'forbidden',
   'conflict',
   'already_member',
@@ -25,7 +25,7 @@ type PartnerApiCode = (typeof PARTNER_API_CODES)[number]
 export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCode> = {
   invalid_usage: 1,
   org_required: 1,
-  organization_required: 1,
+  organisation_required: 1,
   invalid_request: 2,
   forbidden: 2,
   // Not a retry: Deepdock has to approve the organisation first.
@@ -81,7 +81,7 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   // The CLI runs no action, so an unknown outcome can only be a failed request: retry later.
   outcome_unknown: 3,
   connection_lost: 3,
-  client_outdated: 4,
+  cli_outdated: 4,
   unauthenticated: 5,
   sign_in_needed: 5,
   approval_denied: 5,

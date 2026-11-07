@@ -140,7 +140,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
       if (!version || compareVersions(version, '0.1.0') < 0) {
         return send(
           426,
-          fail('client_outdated', `This CLI (${version}) is older than the API accepts.`),
+          fail('cli_outdated', `This CLI (${version}) is older than the API accepts.`),
         )
       }
 
@@ -152,10 +152,10 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
       const org = state.orgs.find((candidate) => candidate.slug === orgSlug)
       const needsOrg =
         path.startsWith('/partner/') &&
-        path !== '/partner/orgs' &&
+        path !== '/partner/organisations' &&
         !path.startsWith('/partner/cli-keys')
       if (needsOrg && !org)
-        return send(403, fail('organization_required', 'Choose an organisation.'))
+        return send(403, fail('organisation_required', 'Choose an organisation.'))
       const isAdmin = org?.role === 'org:admin'
       const record =
         typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
@@ -196,7 +196,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
           },
         })
       }
-      if (method === 'GET' && path === '/partner/orgs') return send(200, { data: state.orgs })
+      if (method === 'GET' && path === '/partner/organisations')
+        return send(200, { data: state.orgs })
       if (method === 'GET' && path === '/partner/cli-keys')
         return send(200, { data: state.cliKeys })
       const cliKeyMatch = /^\/partner\/cli-keys\/(.+)$/.exec(path)
@@ -231,10 +232,8 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         const size = Math.min(Number(query.get('limit') ?? 100), state.pageSize)
         const end = start + size
         send(200, {
-          data: {
-            items: rows.slice(start, end),
-            nextCursor: end < rows.length ? String(end) : null,
-          },
+          data: rows.slice(start, end),
+          nextCursor: end < rows.length ? String(end) : null,
         })
       }
       if (method === 'GET' && route === '/partner/devices') return paged(state.devices)

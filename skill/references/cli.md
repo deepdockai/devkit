@@ -15,16 +15,16 @@ the API key the CLI wrote to the app's env file.
 | `auth login` | opens a link to the dashboard where the human clicks Approve; prints `Signed in as <email>.` and the person's organisations; the sign-in lasts 90 days | anyone |
 | `auth status` | signed-in person, sign-in expiry, organisations, default organisation, the API keys this CLI created (id, prefix, expiry, where it was written); prints the same document and exits 5 when not signed in | anyone |
 | `auth logout [--keep-keys]` | revokes the sign-in and, unless `--keep-keys`, every API key this CLI created (on a terminal it lists them and asks, default keep; with `--json` or no terminal it revokes them unless `--keep-keys`); removes the entries it wrote, says what it revoked or kept | anyone |
-| `org list` | the person's organisations: slug, name, role, which one is the default | member |
-| `org select [slug]` | sets the default organisation; without a slug, a pick-list on a terminal | member |
+| `orgs list` | the person's organisations: slug, name, role, which one is the default | member |
+| `orgs select [slug]` | sets the default organisation; without a slug, a pick-list on a terminal | member |
 | `systems list` | the systems and actions assigned to the organisation | member |
 | `systems openapi <system>` | the system's OpenAPI document on stdout; redirect it to a file | member |
 | `devices list` | paired devices with id, label, status, systems, last seen | member |
 | `devices pair <code> [--label <text>]` | claim a device by the code on its screen | member |
-| `devices rename <id> <label>` | rename a device | member |
-| `devices release <id>` | release a device (asks on a terminal; `--yes` otherwise) | admin |
-| `devices systems <id>` | the device's live systems and action state, paused reasons included; `device_offline` is a normal answer | member |
-| `actions list <device> <system>` | the action index: every action with its operation and field schemas | member |
+| `devices rename <deviceId> <label>` | rename a device | member |
+| `devices release <deviceId>` | release a device (asks on a terminal; `--yes` otherwise) | admin |
+| `devices systems <deviceId>` | the device's live systems and action state, paused reasons included; `device_offline` is a normal answer | member |
+| `actions list <deviceId> <system>` | the action index: every action with its operation and field schemas | member |
 | `keys list` | the organisation's API keys: name, prefix, created, last used, expires, status | member |
 | `keys create <name> --expires <7d\|30d\|90d> --write-env <file>` | create an API key: opens a link, a human approves "Create an API key in <Org>?", the CLI receives the key once and writes `DEEPDOCK_API_KEY=<key>` into the file. It keeps no copy and shows the value to nobody. Answers id, name, prefix, expiry and where it was written | admin |
 | `keys revoke <id>` | revoke a key (asks on a terminal; `--yes` otherwise); removes the env entry if this CLI wrote it | admin |
@@ -32,8 +32,8 @@ the API key the CLI wrote to the app's env file.
 | `skill [--agent claude\|codex\|cursor\|all]` | writes this skill into the current repository | anyone |
 
 Every command that acts in an organisation uses `--org <slug>` after the command, else
-`DEEPDOCK_ORG`, else the default from `org select`; if you belong to exactly one organisation it is used and named on
-stderr; with several and none chosen it stops with `org_required` and lists them. Always pass `--org` from an agent: `org select` changes the human's
+`DEEPDOCK_ORG`, else the default from `orgs select`; if you belong to exactly one organisation it is used and named on
+stderr; with several and none chosen it stops with `org_required` and lists them. Always pass `--org` from an agent: `orgs select` changes the human's
 default in every terminal.
 
 `auth login` and `keys create` also open the approval link in the human's browser on a terminal, unless `--no-browser`, `DEEPDOCK_NO_BROWSER=1`, `CI` or a missing display says otherwise.
@@ -85,7 +85,7 @@ A failure is one document on stderr: the API's error object unchanged plus what 
 | 1 | something on the command line to fix | `invalid_usage` (a bad flag, an unknown slug, a question with no terminal and no `--yes`, an env file git does not ignore), `org_required` |
 | 2 | the API refused the request; do not repeat it unchanged | `invalid_request`, `not_found`, `device_not_found`, `pairing_code_invalid`, `other_partner_build`, `rate_limited`, `forbidden`, `conflict` and the other refusals (not `access_outdated` and `access_missing`, see exit 3) |
 | 3 | retry later (`access_outdated` and `access_missing`: after the customer repeats "Erneut einrichten" in the Deepdock client) | `device_offline`, `device_syncing`, `device_outdated`, `system_version_unverified`, `action_paused`, `access_outdated`, `access_missing`, `credentials_rejected`, `certificate_changed`, `system_unavailable`, `target_busy`, `temporarily_unavailable`, `internal_error`, `outcome_unknown`, `connection_lost` |
-| 4 | the CLI is too old for the API: run `npx @deepdockai/cli@latest` | `client_outdated` |
+| 4 | the CLI is too old for the API: run `npx @deepdockai/cli@latest` | `cli_outdated` |
 | 5 | sign-in needed: run `deepdock auth login` | `sign_in_needed`, `approval_denied`, `approval_expired` |
 
 Branch on the exit code or on `error.code`, never on `message`.

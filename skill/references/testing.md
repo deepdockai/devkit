@@ -40,7 +40,7 @@ No action deletes anything, and nothing is undone through the API. So:
 
 The CLI runs no action, so this loop is your code's, against the demo device:
 
-1. `deepdock devices systems <device> --org <slug> --json`: the system is running and every action
+1. `deepdock devices systems <deviceId> --org <slug> --json`: the system is running and every action
    you need is active; otherwise stop and read the pause reason and `deepdock incidents list`.
 2. **Create** with a fresh idempotency key and `TEST-DEEPDOCK-` names: expect `201` and an id.
 3. **Replay** the same request with the same key: expect `200`, `Idempotent-Replayed: true`, no

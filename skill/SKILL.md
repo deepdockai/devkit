@@ -42,13 +42,13 @@ and what your code does with the result.
 1. **Sign in.** `deepdock auth login --json`: without a terminal the CLI prints the request and
    exits; show the human the link and wait for them to click Approve in the dashboard, then run
    `deepdock auth login --wait <request>`. You never see the resulting sign-in. Then pass
-   `--org <slug>` on every command (`deepdock org list --json` shows the slugs).
+   `--org <slug>` on every command (`deepdock orgs list --json` shows the slugs).
 2. **See what you have.** `deepdock systems list --json` (the systems and actions assigned to your
    organisation) and `deepdock devices list --json` (your paired devices). If the human has a demo
    device that is not yet paired, they read the code off its screen and you run
    `deepdock devices pair <code> --label "Demo"`.
 3. **Fetch the schemas.** `deepdock systems openapi <system> --org <slug> > openapi/<system>.json`
-   and read it; `deepdock actions list <device> <system> --json` shows the same fields per device.
+   and read it; `deepdock actions list <deviceId> <system> --json` shows the same fields per device.
    Check the document into the repository and refresh it with the same command. Write code only for
    actions that appear both in the document and in `systems list`.
 4. **Write the client.** A thin client in the project's own language: bearer header, envelope

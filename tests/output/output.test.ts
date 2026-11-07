@@ -24,24 +24,24 @@ afterEach(async () => {
 
 const signedIn = async (): Promise<void> => {
   await signInWith(box, api.url)
-  await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
   api.requests.length = 0
 }
 
 describe('json by default', () => {
   it('prints one JSON document off a terminal and a table on one', async () => {
     await signedIn()
-    const piped = await execute(box, ['org', 'list'], { baseUrl: api.url })
+    const piped = await execute(box, ['orgs', 'list'], { baseUrl: api.url })
     expect(JSON.parse(piped.stdout).data).toHaveLength(2)
     expect(piped.stdout.trim().split('\n')).toHaveLength(1)
-    const terminal = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    const terminal = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(terminal.stdout).toContain('SLUG')
     expect(() => JSON.parse(terminal.stdout)).toThrow()
   })
 
   it('--json forces JSON on a terminal', async () => {
     await signedIn()
-    const forced = await execute(box, ['org', 'list', '--json'], { baseUrl: api.url, tty: true })
+    const forced = await execute(box, ['orgs', 'list', '--json'], { baseUrl: api.url, tty: true })
     expect(JSON.parse(forced.stdout).meta).toBeDefined()
   })
 
@@ -137,14 +137,14 @@ describe('sign-in and version errors', () => {
     expect(api.requests).toHaveLength(0)
   })
 
-  it('maps client_outdated to exit 4 with the npx command', async () => {
+  it('maps cli_outdated to exit 4 with the npx command', async () => {
     const outcome = await execute(box, ['auth', 'login'], {
       baseUrl: api.url,
       version: '0.0.9',
       tty: true,
     })
     expect(outcome.code).toBe(4)
-    expect(outcome.stderr).toContain('[client_outdated]')
+    expect(outcome.stderr).toContain('[cli_outdated]')
     expect(outcome.stderr).toContain('Run `npx @deepdockai/cli@latest auth login`.')
   })
 
@@ -225,7 +225,7 @@ describe('help', () => {
     expect(names).toEqual(
       expect.arrayContaining([
         'auth',
-        'org',
+        'orgs',
         'systems',
         'devices',
         'actions',
@@ -251,12 +251,12 @@ describe('update notice', () => {
 
   it('prints one dim stderr line on a terminal, once a day', async () => {
     await setup()
-    const first = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    const first = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(first.stderr).toContain('A newer CLI is available (0.2.0): npx @deepdockai/cli@latest')
-    const second = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    const second = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(second.stderr).not.toContain('A newer CLI')
     const tomorrow = (): Date => new Date(Date.now() + 36 * 3600_000)
-    const third = await execute(box, ['org', 'list'], {
+    const third = await execute(box, ['orgs', 'list'], {
       baseUrl: api.url,
       tty: true,
       now: tomorrow,
@@ -271,7 +271,7 @@ describe('update notice', () => {
       { tty: false, json: false },
       { tty: true, json: false, ci: true },
     ]) {
-      const argv = options.json ? ['org', 'list', '--json'] : ['org', 'list']
+      const argv = options.json ? ['orgs', 'list', '--json'] : ['orgs', 'list']
       const outcome = await execute(box, argv, {
         baseUrl: api.url,
         tty: options.tty,
@@ -286,14 +286,14 @@ describe('update notice', () => {
     await setup()
     api.state.headers['x-deepdock-cli-latest'] = '0.1.0'
     expect(
-      (await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })).stderr,
+      (await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })).stderr,
     ).not.toContain('A newer CLI')
     api.state.headers['x-deepdock-cli-latest'] = '0.2.0'
-    api.state.forced['GET /partner/orgs'] = {
+    api.state.forced['GET /partner/organisations'] = {
       status: 500,
       body: { error: { code: 'internal_error', message: 'x' } },
     }
-    const failed = await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })
+    const failed = await execute(box, ['orgs', 'list'], { baseUrl: api.url, tty: true })
     expect(failed.stderr).not.toContain('A newer CLI')
   })
 })

@@ -171,19 +171,19 @@ export const registerDevices = (program: Command, run: Run): void => {
   devices
     .command('rename')
     .description("Change a device's label")
-    .argument('<id>', 'the full device id')
+    .argument('<deviceId>', 'the full device id')
     .argument('<label>', 'the new label, 1 to 100 characters')
     .action((id, label, _options, cmd) => run(cmd, (ctx) => rename(ctx, id, label)))
 
   devices
     .command('release')
     .description('Release a device from the organisation (admin)')
-    .argument('<id>', 'the full device id')
+    .argument('<deviceId>', 'the full device id')
     .action((id, _options, cmd) => run(cmd, (ctx) => release(ctx, id)))
 
   devices
     .command('systems')
     .description('Show the systems a device runs and the state of their actions')
-    .argument('<id>', 'the full device id')
+    .argument('<deviceId>', 'the full device id')
     .action((id, _options, cmd) => run(cmd, (ctx) => systemsOf(ctx, id)))
 }

@@ -44,7 +44,7 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'internal_error',
     'connection_lost',
   ],
-  4: ['client_outdated'],
+  4: ['cli_outdated'],
   5: ['sign_in_needed', 'approval_denied', 'approval_expired'],
 }
 
@@ -117,7 +117,7 @@ describe('error codes', () => {
 
   it('maps the codes the design table leaves out explicitly', () => {
     expect(EXIT_CODES.unauthenticated).toBe(5)
-    expect(EXIT_CODES.organization_required).toBe(1)
+    expect(EXIT_CODES.organisation_required).toBe(1)
     expect(EXIT_CODES.outcome_unknown).toBe(3)
   })
 
