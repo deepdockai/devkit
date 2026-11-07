@@ -39,7 +39,7 @@ What to read off it:
   `cursor` (opaque). An optional input is not in `required` and its description says what an
   omitted value becomes. A write's `Idempotency-Key` header
   parameter carries its own pattern (8 to 128 characters of `A-Z a-z 0-9 _ -`).
-- **Responses**: a read's `200` is `{ data: [...], nextCursor }` for `cardinality: many` (`nextCursor` only when the read can page) and `{ data: { ...record } }` for `cardinality: one`, which answers `404 not_found` when nothing matches; a create's `201` and a
+- **Responses**: a read's `200` is `{ data: [...], nextCursor }` for `cardinality: many` (`nextCursor` only when the read can page) and `{ data: { ...record } }` for `cardinality: one`, which answers `404 not_found` when nothing matches; a file action's `200` is the file's bytes under its declared content type, with `Content-Disposition` and, when known, `Content-Length` ([calling-actions.md](calling-actions.md#file-actions)); a create's `201` and a
   replayed `200`; an update's `200`. Item and result fields are typed `string`, `integer` or `number`,
   often nullable (`["integer", "null"]`). The `Error` schema's `code` enum is the full list of codes.
 - **`servers`**: the base URL of the API.
@@ -57,7 +57,8 @@ curl "$BASE/v1/devices/$DEVICE/systems/example-erp/actions" \
 ```
 
 Answers `{ data: [ { name, operation, method, description, input, output } ] }`, filtered to your assigned
-actions, with the same JSON Schemas the OpenAPI document carries. Use it at runtime to confirm an
+actions, with the same JSON Schemas the OpenAPI document carries. A file action also carries
+`file: true`: it answers with the file's bytes, not JSON. Use it at runtime to confirm an
 action exists before offering it in your UI, or to validate input client-side before sending.
 
 ## The device's systems

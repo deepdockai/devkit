@@ -5,6 +5,7 @@
 - Every `/v1` answer uses one `data` envelope. A list (a `many` action read, `GET /v1/devices`) answers `{ "data": [...], "nextCursor": ... }` (was `{ "data": { "items": [...], "nextCursor": ... } }`); `nextCursor` sits beside `data` and appears only on a list that pages. A single-record read (`cardinality: one`) answers `{ "data": { ...record } }` and a record that is not found answers `404 not_found`. Writes and error bodies are unchanged.
 - Every refused action input (type, length, enum, bounds, a missing or unknown field, a bad `limit` or `cursor`) answers `422 invalid_input` with `error.fields`; `400 invalid_request` is for a malformed request only.
 - The bundled TypeScript and Python clients read the new shape (`Page.items` keeps its name and holds `data`) and gain `readOne` / `read_one` for a single-record read. The skill and its references show the new answers.
+- The bundled TypeScript and Python clients gain `download` for a file action (`file: true` in the action index): it posts the inputs like a read and returns the bytes, the content type and the file name from `Content-Disposition` (`filename*` first). A body shorter than its `Content-Length` throws `DeepdockTransportError`; a refusal is a `DeepdockError` as for any action, and `503 target_busy` is retried the same way. The TypeScript client's timeout covers the wait for the answer, not the transfer of a large file. The skill describes file actions in `calling-actions.md`.
 
 ## 1.1.2
 

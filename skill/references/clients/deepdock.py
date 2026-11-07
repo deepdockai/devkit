@@ -8,15 +8,17 @@ Everything action-specific (fields, types, patterns) comes from the live OpenAPI
 from __future__ import annotations
 
 import os
+import re
 import time
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
-from urllib.parse import quote
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, TypeVar, Union
+from urllib.parse import quote, unquote
 
 import httpx
 
 # A flat JSON value as the action's schema declares it: a number is a number, never its text.
 InputValue = Union[str, int, float, bool]
+T = TypeVar("T")
 
 
 class DeepdockError(Exception):
@@ -66,6 +68,45 @@ class WriteResult:
     replayed: bool
 
 
+@dataclass
+class Download:
+    """A file action's answer: the bytes, the type the action declares, and the name to save it under."""
+    content: bytes
+    content_type: str
+    filename: Optional[str]
+
+
+def _filename(disposition: Optional[str]) -> Optional[str]:
+    # Deepdock sends filename* (UTF-8) beside an ASCII filename; the name is already safe to save on
+    # Windows, and can carry personal data (a patient's name in a document title).
+    if disposition is None:
+        return None
+    extended = re.search(r"filename\*=UTF-8''([^;]+)", disposition, re.IGNORECASE)
+    if extended:
+        try:
+            return unquote(extended.group(1).strip(), errors="strict")
+        except UnicodeDecodeError:
+            pass  # a malformed escape: fall back to the ASCII name
+    plain = re.search(r'filename="([^"]*)"', disposition, re.IGNORECASE)
+    return plain.group(1) if plain else None
+
+
+def _unwrap(r: httpx.Response) -> Tuple[Any, Optional[str]]:
+    try:
+        body = r.json()
+    except ValueError:
+        raise DeepdockTransportError(f"non-JSON answer with status {r.status_code}")
+    if isinstance(body, dict) and "error" in body:
+        e = body["error"]
+        err = DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
+                            e.get("version"), e.get("reason"), e.get("created"), e.get("uncertain"))
+        err.retry_after = r.headers.get("retry-after")
+        raise err
+    if not isinstance(body, dict) or "data" not in body:
+        raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
+    return body["data"], body.get("nextCursor")
+
+
 class Deepdock:
     def __init__(self, api_key: str, base: Optional[str] = None, timeout: float = 35.0,
                  client: Optional[httpx.Client] = None, max_attempts: int = 3, sleep=time.sleep):
@@ -80,35 +121,44 @@ class Deepdock:
         self.c = client or httpx.Client(base_url=base.rstrip("/"), timeout=timeout)
         self.c.headers["Authorization"] = f"Bearer {api_key}"
 
-    def _send(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers, Optional[str]]:
+    def _retrying(self, once: Callable[[], T]) -> T:
         attempt = 1
         while True:
             try:
-                return self._send_once(method, path, **kw)
+                return once()
             except DeepdockError as e:
                 if attempt >= self.max_attempts or e.status != 503 or e.code != "target_busy":
                     raise
                 self._sleep(_retry_wait(e.retry_after))
                 attempt += 1
 
-    def _send_once(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers, Optional[str]]:
+    def _request(self, method: str, path: str, **kw: Any) -> httpx.Response:
         try:
-            r = self.c.request(method, path, **kw)
-        except httpx.HTTPError as e:  # timeouts and network errors
+            return self.c.request(method, path, **kw)
+        except httpx.HTTPError as e:  # timeouts, network errors, and a body cut off mid-way
             raise DeepdockTransportError(f"no answer from Deepdock: {type(e).__name__}") from e
-        try:
-            body = r.json()
-        except ValueError:
-            raise DeepdockTransportError(f"non-JSON answer with status {r.status_code}")
-        if isinstance(body, dict) and "error" in body:
-            e = body["error"]
-            err = DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
-                                e.get("version"), e.get("reason"), e.get("created"), e.get("uncertain"))
-            err.retry_after = r.headers.get("retry-after")
-            raise err
-        if not isinstance(body, dict) or "data" not in body:
+
+    def _send(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers, Optional[str]]:
+        def once() -> Tuple[Any, httpx.Headers, Optional[str]]:
+            r = self._request(method, path, **kw)
+            data, next_cursor = _unwrap(r)
+            return data, r.headers, next_cursor
+        return self._retrying(once)
+
+    def _download_once(self, path: str, params: Dict[str, InputValue]) -> Download:
+        r = self._request("POST", path, json=params)
+        if not 200 <= r.status_code < 300:
+            _unwrap(r)
             raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
-        return body["data"], r.headers, body.get("nextCursor")
+        # Once the bytes flow, a failure can only end the body early. Content-Length counts encoded
+        # bytes, so it is compared only on a body sent as is.
+        declared = r.headers.get("content-length")
+        encoded = r.headers.get("content-encoding", "identity") != "identity"
+        if declared is not None and not encoded and int(declared) != len(r.content):
+            raise DeepdockTransportError(f"download ended at {len(r.content)} of {declared} bytes")
+        return Download(content=r.content,
+                        content_type=r.headers.get("content-type", "application/octet-stream"),
+                        filename=_filename(r.headers.get("content-disposition")))
 
     @staticmethod
     def _action_path(device_id: str, system: str, action: str) -> str:
@@ -142,6 +192,13 @@ class Deepdock:
             if page.next_cursor is None:
                 return
             cursor = page.next_cursor
+
+    def download(self, device_id: str, system: str, action: str, params: Dict[str, InputValue]) -> Download:
+        """Runs a file action (`file: true` in the action index): a POST like a read, answered with the file's
+        bytes instead of JSON. A refusal raises DeepdockError as for any action; a body that ends short of its
+        Content-Length raises DeepdockTransportError, and the download can be run again. The client's timeout
+        applies between bytes, so a large file streams as long as it keeps moving."""
+        return self._retrying(lambda: self._download_once(self._action_path(device_id, system, action), params))
 
     def write(self, device_id: str, system: str, action: str, operation: str, idempotency_key: str,
               body: Dict[str, InputValue]) -> WriteResult:
