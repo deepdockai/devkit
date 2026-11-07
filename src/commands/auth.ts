@@ -213,7 +213,7 @@ const status = async (ctx: Ctx): Promise<Result> => {
   let requestId: string | undefined
   if (config.signIn && Date.parse(config.signIn.expiresAt) > ctx.rt.now().getTime()) {
     try {
-      const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+      const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
       const orgs = await parseAnswer('orgs', response.data)
       await ctx.update((current) => {
         current.organisations = orgs

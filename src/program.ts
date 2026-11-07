@@ -233,7 +233,7 @@ export const runCli = async (argv: string[], rt: Runtime): Promise<number> => {
       return 0
     }
     const cliError = toCliError(error, program, argv)
-    if (cliError.code === 'client_outdated') {
+    if (cliError.code === 'cli_outdated') {
       cliError.hint = `Run \`npx @deepdockai/cli@latest ${argv.join(' ')}\`.`
     }
     const json = state.ctx?.json ?? wantsJson(rt, argv.includes('--json'))

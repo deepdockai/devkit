@@ -137,14 +137,14 @@ describe('sign-in and version errors', () => {
     expect(api.requests).toHaveLength(0)
   })
 
-  it('maps client_outdated to exit 4 with the npx command', async () => {
+  it('maps cli_outdated to exit 4 with the npx command', async () => {
     const outcome = await execute(box, ['auth', 'login'], {
       baseUrl: api.url,
       version: '0.0.9',
       tty: true,
     })
     expect(outcome.code).toBe(4)
-    expect(outcome.stderr).toContain('[client_outdated]')
+    expect(outcome.stderr).toContain('[cli_outdated]')
     expect(outcome.stderr).toContain('Run `npx @deepdockai/cli@latest auth login`.')
   })
 
@@ -289,7 +289,7 @@ describe('update notice', () => {
       (await execute(box, ['org', 'list'], { baseUrl: api.url, tty: true })).stderr,
     ).not.toContain('A newer CLI')
     api.state.headers['x-deepdock-cli-latest'] = '0.2.0'
-    api.state.forced['GET /partner/orgs'] = {
+    api.state.forced['GET /partner/organisations'] = {
       status: 500,
       body: { error: { code: 'internal_error', message: 'x' } },
     }

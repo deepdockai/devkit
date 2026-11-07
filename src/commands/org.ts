@@ -9,7 +9,7 @@ import { orgTable, roleLabel, stripControl } from '../output/human.ts'
 import type { Run } from '../program.ts'
 
 const list = async (ctx: Ctx): Promise<Result> => {
-  const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+  const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
   const orgs = await parseAnswer('orgs', response.data)
   const config = await ctx.update((current) => {
     current.organisations = orgs
@@ -31,7 +31,7 @@ const list = async (ctx: Ctx): Promise<Result> => {
 }
 
 const select = async (ctx: Ctx, slug: string | undefined): Promise<Result> => {
-  const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+  const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
   const orgs = await parseAnswer('orgs', response.data)
   const choices = selectableOrgs(orgs)
   const config = await ctx.config()

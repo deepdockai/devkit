@@ -107,7 +107,7 @@ export const EXIT_CODES_HELP = `Exit codes
      credentials_rejected, certificate_changed,
      system_unavailable, target_busy, temporarily_unavailable, internal_error,
      outcome_unknown, connection_lost)
-  4  the CLI is too old for the API (client_outdated)
+  4  the CLI is too old for the API (cli_outdated)
   5  sign-in needed (sign_in_needed, approval_denied, approval_expired; auth status when nobody is signed in)
 
 With --json (or off a terminal) a failure is one JSON document on stderr:

@@ -111,7 +111,7 @@ export const createContext = (rt: Runtime, opts: GlobalOptions): Ctx => {
     organisations: async (refresh = false) => {
       const current = await config()
       if (!refresh && current.organisations) return current.organisations
-      const response = await ctx.call({ method: 'GET', path: '/partner/orgs' })
+      const response = await ctx.call({ method: 'GET', path: '/partner/organisations' })
       const orgs = await parseAnswer('orgs', response.data)
       await ctx.update((config) => {
         config.organisations = orgs
@@ -147,7 +147,7 @@ export const createContext = (rt: Runtime, opts: GlobalOptions): Ctx => {
       } catch (error) {
         // The stored list may still hold an organisation the person has since lost: refresh it
         // and, if that is the cause, explain it instead of passing on the bare API refusal.
-        if (error instanceof CliError && error.code === 'organization_required') {
+        if (error instanceof CliError && error.code === 'organisation_required') {
           const refreshed = await ctx.organisations(true)
           const current = await config()
           const requested = requestedSlug(opts.org, rt.env, current)
