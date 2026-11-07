@@ -107,7 +107,7 @@ and what your code does with the result.
 | [references/concepts.md](references/concepts.md) | you need the vocabulary: device, system, action, pause, incident, release |
 | [references/auth-and-keys.md](references/auth-and-keys.md) | creating, storing, sending or revoking a key; pairing or releasing a device |
 | [references/discovery.md](references/discovery.md) | reading the action index or the OpenAPI document |
-| [references/calling-actions.md](references/calling-actions.md) | writing the client: reads, writes, paging, authoring fields, timeouts |
+| [references/calling-actions.md](references/calling-actions.md) | writing the client: reads, writes, paging, file downloads, authoring fields, timeouts |
 | [references/errors.md](references/errors.md) | handling any `error.code` |
 | [references/idempotency.md](references/idempotency.md) | retries, replays, unknown outcomes |
 | [references/cli.md](references/cli.md) | any `deepdock ...` command |

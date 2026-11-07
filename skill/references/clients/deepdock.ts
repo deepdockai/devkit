@@ -143,6 +143,45 @@ export type DeepdockOptions = {
   sleep?: (ms: number) => Promise<void>
 }
 
+type SendInit = { method: string; headers?: Record<string, string>; body?: string }
+
+/** A file action's answer: the bytes, the type the action declares, and the name to save it under. */
+export type Download = { bytes: Uint8Array; contentType: string; filename: string | null }
+
+const unwrap = async <T>(res: Response): Promise<{ data: T; nextCursor: string | null }> => {
+  let body: Envelope<T>
+  try {
+    body = (await res.json()) as Envelope<T>
+  } catch {
+    throw new DeepdockTransportError(`non-JSON answer with status ${res.status}`)
+  }
+  if (body !== null && typeof body === 'object' && 'error' in body) {
+    const { code, message, requestId, systems, version, reason, created, uncertain } = body.error
+    const error = new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
+    error.retryAfter = res.headers.get('retry-after') ?? undefined
+    throw error
+  }
+  if (body === null || typeof body !== 'object' || !('data' in body)) {
+    throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
+  }
+  return { data: body.data, nextCursor: body.nextCursor ?? null }
+}
+
+// Deepdock sends `filename*` (UTF-8) beside an ASCII `filename`; the name is already safe to save
+// on Windows, and can carry personal data (a patient's name in a document title).
+const filenameOf = (disposition: string | null): string | null => {
+  if (disposition === null) return null
+  const extended = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]
+  if (extended !== undefined) {
+    try {
+      return decodeURIComponent(extended.trim())
+    } catch {
+      // A malformed escape: fall back to the ASCII name.
+    }
+  }
+  return /filename="([^"]*)"/i.exec(disposition)?.[1] ?? null
+}
+
 /** Longest wait between two attempts, whatever `Retry-After` asks for. */
 const MAX_RETRY_WAIT_MS = 15_000
 const DEFAULT_RETRY_WAIT_MS = 1_000
@@ -190,13 +229,10 @@ export class Deepdock {
     this.sleep = sleep
   }
 
-  private async send<T>(
-    path: string,
-    init: { method: string; headers?: Record<string, string>; body?: string },
-  ): Promise<{ data: T; headers: Headers; nextCursor: string | null }> {
+  private async retrying<R>(once: () => Promise<R>): Promise<R> {
     for (let attempt = 1; ; attempt++) {
       try {
-        return await this.sendOnce<T>(path, init)
+        return await once()
       } catch (err) {
         if (
           attempt >= this.maxAttempts ||
@@ -211,38 +247,75 @@ export class Deepdock {
     }
   }
 
-  private async sendOnce<T>(
-    path: string,
-    init: { method: string; headers?: Record<string, string>; body?: string },
-  ): Promise<{ data: T; headers: Headers; nextCursor: string | null }> {
-    let res: Response
+  private async fetchOnce(path: string, init: SendInit, signal: AbortSignal): Promise<Response> {
     try {
-      res = await this.fetchImpl(`${this.base}${path}`, {
+      return await this.fetchImpl(`${this.base}${path}`, {
         method: init.method,
         headers: { Authorization: `Bearer ${this.apiKey}`, ...init.headers },
         body: init.body,
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal,
       })
     } catch (err) {
       // TimeoutError from AbortSignal.timeout, AbortError, or a network TypeError.
       throw new DeepdockTransportError(`no answer from Deepdock: ${(err as Error).name}`)
     }
-    let body: Envelope<T>
+  }
+
+  private send<T>(path: string, init: SendInit): Promise<{ data: T; headers: Headers; nextCursor: string | null }> {
+    return this.retrying(async () => {
+      const res = await this.fetchOnce(path, init, AbortSignal.timeout(this.timeoutMs))
+      return { ...(await unwrap<T>(res)), headers: res.headers }
+    })
+  }
+
+  private async downloadOnce(path: string, init: SendInit): Promise<Download> {
+    // The timeout bounds the wait for the answer and then each gap between two chunks, not the
+    // whole transfer: a large file streams for longer than one attempt's timeout.
+    const deadline = new AbortController()
+    let timer = setTimeout(() => deadline.abort(), this.timeoutMs)
+    const chunks: Uint8Array[] = []
+    let size = 0
+    let res: Response
     try {
-      body = (await res.json()) as Envelope<T>
-    } catch {
-      throw new DeepdockTransportError(`non-JSON answer with status ${res.status}`)
+      res = await this.fetchOnce(path, init, deadline.signal)
+      if (!res.ok) {
+        await unwrap<unknown>(res)
+        throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
+      }
+      const reader = res.body?.getReader()
+      try {
+        while (reader) {
+          const { done, value } = await reader.read()
+          if (done) break
+          chunks.push(value)
+          size += value.byteLength
+          clearTimeout(timer)
+          timer = setTimeout(() => deadline.abort(), this.timeoutMs)
+        }
+      } catch (err) {
+        throw new DeepdockTransportError(`download cut off: ${(err as Error).name}`)
+      }
+    } finally {
+      clearTimeout(timer)
     }
-    if (body !== null && typeof body === 'object' && 'error' in body) {
-      const { code, message, requestId, systems, version, reason, created, uncertain } = body.error
-      const error = new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
-      error.retryAfter = res.headers.get('retry-after') ?? undefined
-      throw error
+    const bytes = new Uint8Array(size)
+    let offset = 0
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset)
+      offset += chunk.byteLength
     }
-    if (body === null || typeof body !== 'object' || !('data' in body)) {
-      throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
+    // Once the bytes flow, a failure can only end the body early. Content-Length counts encoded
+    // bytes, so it is compared only on a body sent as is.
+    const declared = res.headers.get('content-length')
+    const encoded = (res.headers.get('content-encoding') ?? 'identity') !== 'identity'
+    if (declared !== null && !encoded && Number(declared) !== bytes.byteLength) {
+      throw new DeepdockTransportError(`download ended at ${bytes.byteLength} of ${declared} bytes`)
     }
-    return { data: body.data, headers: res.headers, nextCursor: body.nextCursor ?? null }
+    return {
+      bytes,
+      contentType: res.headers.get('content-type') ?? 'application/octet-stream',
+      filename: filenameOf(res.headers.get('content-disposition')),
+    }
   }
 
   private actionPath(deviceId: string, system: string, action: string): string {
@@ -299,6 +372,21 @@ export class Deepdock {
       for (const item of page.items) yield item
       cursor = page.nextCursor ?? undefined
     } while (cursor !== undefined)
+  }
+
+  /**
+   * Runs a file action (`file: true` in the action index): a POST like a read, answered with the
+   * file's bytes instead of JSON. A refusal is a DeepdockError as for any action; a body that ends
+   * short of its Content-Length is a DeepdockTransportError, and the download can be run again.
+   */
+  download(deviceId: string, system: string, action: string, input: ActionInput): Promise<Download> {
+    return this.retrying(() =>
+      this.downloadOnce(this.actionPath(deviceId, system, action), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      }),
+    )
   }
 
   /**
