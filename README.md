@@ -173,7 +173,7 @@ Deepdock model (organisation, API key, device, system, action), the recipe from 
 tested integration, how to read the OpenAPI document instead of guessing field names, writes
 with `Idempotency-Key`, every error code and whether to retry it, and the rule that it never
 asks for, reads or prints an API key value. It ships with reference clients in TypeScript and
-Python.
+Python. Calls are fastest over one reused HTTP connection (keep-alive), because a fresh connection can hit a cold start.
 
 ```bash
 deepdock skill                      # all three agents

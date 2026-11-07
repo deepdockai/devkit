@@ -145,6 +145,7 @@ Never invent an id, copy one from another device, or hard-code one from a test r
 
 - Every action call is sent to the customer's PC and run there. Expect a read to take from a few
   hundred milliseconds to a few seconds; a write about the same plus its verification.
+- Calls are fastest over one reused HTTP connection (keep-alive), because a fresh connection can hit a cold start.
 - A call can wait up to 10 seconds for the device's slot (`503 target_busy` with a `Retry-After`
   header when it stays taken), then gets up to 20 seconds on the device (`503 device_offline`), so
   the worst answer takes about 30 seconds. Set your HTTP client timeout to at least 35 seconds so

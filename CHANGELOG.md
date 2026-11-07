@@ -6,6 +6,7 @@
 - The CLI follows the API's British spelling and its renamed code: `GET /partner/organisations` (was `/partner/orgs`), the error code `organisation_required` (was `organization_required`) and `cli_outdated` (was `client_outdated`, still exit 4). The bundled device types and the skill's error reference include them. These need the API from the next Deepdock release.
 - The command group `org` is now `orgs` (`deepdock orgs list`, `deepdock orgs select`); the old name is gone, with no alias.
 - A device is named `<deviceId>` in every usage string, help text, the README and the bundled skill (`devices rename|release|systems <deviceId>`, `actions list <deviceId> <system>`).
+- The README and the bundled skill advise reusing one HTTP connection for calls (keep-alive), because a fresh connection can hit a cold start.
 
 ## 1.2.0
 
