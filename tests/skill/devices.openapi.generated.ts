@@ -38,6 +38,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/devices/{deviceId}/systems/{system}/actions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The actions of a system on a device, with each one's input and output schemas */
+    get: operations['listDeviceSystemActions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/devices/{deviceId}/systems': {
     parameters: {
       query?: never
@@ -59,6 +76,28 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    ActionIndexEntry: {
+      answered: {
+        [key: string]: unknown
+      }
+      description: string
+      input: {
+        [key: string]: unknown
+      }
+      /** @enum {unknown} */
+      method: 'PATCH' | 'POST'
+      name: string
+      nextCursor: boolean
+      /** @enum {unknown} */
+      operation: 'create' | 'read' | 'update'
+      output: {
+        [key: string]: unknown
+      }
+      /** @constant */
+      availability?: 'locked_pending_access'
+      /** @constant */
+      file?: true
+    }
     Error: {
       error: {
         /** @enum {string} */
@@ -153,7 +192,7 @@ export interface components {
         lockedActions: string[] | null
         reportedAt: string
         /** @enum {unknown} */
-        status: 'missing' | 'running' | 'stopped' | 'unknown'
+        status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
         system: string
         version: string | null
         writes:
@@ -209,7 +248,7 @@ export interface components {
       label: string | null
       lockedActions: string[] | null
       /** @enum {unknown} */
-      status: 'missing' | 'running' | 'stopped' | 'unknown'
+      status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
       system: string
       version?: string
     }
@@ -795,6 +834,181 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'device_not_found'
+            }
+          }
+        }
+      }
+      /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
+            }
+          }
+        }
+      }
+      /**
+       * @description Internal error (internal_error)
+       *
+       *     - internal_error: internal error; requestId names the request for support
+       */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'internal_error'
+            }
+          }
+        }
+      }
+      /**
+       * @description Cannot take the call now (temporarily_unavailable)
+       *
+       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'temporarily_unavailable'
+            }
+          }
+        }
+      }
+    }
+  }
+  listDeviceSystemActions: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        deviceId: string
+        system: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The index of the actions */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['ActionIndexEntry'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
+          }
+        }
+      }
+      /**
+       * @description Malformed request (invalid_request)
+       *
+       *     - invalid_request: deviceId is not a UUID
+       */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'invalid_request'
+            }
+          }
+        }
+      }
+      /**
+       * @description API key missing or wrong (unauthenticated)
+       *
+       *     - unauthenticated: the API key is missing or wrong
+       */
+      401: {
+        headers: {
+          'WWW-Authenticate'?: 'Bearer'
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'unauthenticated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved' | 'partner_deactivated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Device not found (device_not_found, action_not_found, system_not_on_device)
+       *
+       *     - device_not_found: no device of this key has that id
+       *     - action_not_found: no actions of this system are assigned to the key
+       *     - system_not_on_device: the device does not run that system
+       */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'device_not_found' | 'action_not_found' | 'system_not_on_device'
+            }
+          }
+        }
+      }
+      /**
+       * @description The device cannot take the call (device_learning_only)
+       *
+       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry
+       */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'device_learning_only'
             }
           }
         }

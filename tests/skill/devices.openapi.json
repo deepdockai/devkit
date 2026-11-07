@@ -1002,6 +1002,293 @@
         }
       }
     },
+    "/v1/devices/{deviceId}/systems/{system}/actions": {
+      "get": {
+        "operationId": "listDeviceSystemActions",
+        "summary": "The actions of a system on a device, with each one's input and output schemas",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "system",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{1,48}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The index of the actions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data", "nextCursor"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ActionIndexEntry"
+                      }
+                    },
+                    "nextCursor": {
+                      "description": "Pass as cursor for the next page; null on the last page",
+                      "type": ["string", "null"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request (invalid_request)\n\n- invalid_request: deviceId is not a UUID",
+            "x-error-codes": ["invalid_request"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["invalid_request"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key missing or wrong (unauthenticated)\n\n- unauthenticated: the API key is missing or wrong",
+            "x-error-codes": ["unauthenticated"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["unauthenticated"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "WWW-Authenticate": {
+                "schema": {
+                  "type": "string",
+                  "enum": ["Bearer"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)\n\n- partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet\n- partner_deactivated: the key belongs to an organisation that Deepdock has deactivated",
+            "x-error-codes": ["partner_not_approved", "partner_deactivated"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["partner_not_approved", "partner_deactivated"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found (device_not_found, action_not_found, system_not_on_device)\n\n- device_not_found: no device of this key has that id\n- action_not_found: no actions of this system are assigned to the key\n- system_not_on_device: the device does not run that system",
+            "x-error-codes": ["device_not_found", "action_not_found", "system_not_on_device"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": [
+                                "device_not_found",
+                                "action_not_found",
+                                "system_not_on_device"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The device cannot take the call (device_learning_only)\n\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry",
+            "x-error-codes": ["device_learning_only"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["device_learning_only"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "x-error-codes": ["rate_limited"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["rate_limited"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error (internal_error)\n\n- internal_error: internal error; requestId names the request for support",
+            "x-error-codes": ["internal_error"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["internal_error"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "x-error-codes": ["temporarily_unavailable"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["temporarily_unavailable"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/devices/{deviceId}/systems": {
       "get": {
         "operationId": "listDeviceSystems",
@@ -1311,6 +1598,54 @@
   },
   "components": {
     "schemas": {
+      "ActionIndexEntry": {
+        "type": "object",
+        "properties": {
+          "answered": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "description": {
+            "type": "string"
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "method": {
+            "enum": ["PATCH", "POST"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nextCursor": {
+            "type": "boolean"
+          },
+          "operation": {
+            "enum": ["create", "read", "update"]
+          },
+          "output": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "availability": {
+            "const": "locked_pending_access"
+          },
+          "file": {
+            "const": true
+          }
+        },
+        "required": [
+          "answered",
+          "description",
+          "input",
+          "method",
+          "name",
+          "nextCursor",
+          "operation",
+          "output"
+        ]
+      },
       "Error": {
         "type": "object",
         "required": ["error"],
@@ -1590,7 +1925,7 @@
                   "type": "string"
                 },
                 "status": {
-                  "enum": ["missing", "running", "stopped", "unknown"]
+                  "enum": ["missing", "running", "stopped", "unknown", "vanished"]
                 },
                 "system": {
                   "type": "string"
@@ -1812,7 +2147,7 @@
             ]
           },
           "status": {
-            "enum": ["missing", "running", "stopped", "unknown"]
+            "enum": ["missing", "running", "stopped", "unknown", "vanished"]
           },
           "system": {
             "type": "string"
