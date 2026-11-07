@@ -10,7 +10,7 @@ beforeEach(async () => {
   api = await startFakeApi()
   box = makeSandbox()
   await signInWith(box, api.url)
-  await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
   api.requests.length = 0
 })
 afterEach(async () => {

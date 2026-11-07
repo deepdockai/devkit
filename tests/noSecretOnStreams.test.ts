@@ -54,8 +54,8 @@ describe('no secret on any stream', () => {
     await run(['auth', 'login', '--wait', '3c9d0e1a-5b6c-4d7e-8f90-a1b2c3d4e5f6'])
     for (const options of both) {
       await run(['auth', 'status'], options)
-      await run(['org', 'list'], options)
-      await run(['org', 'select', 'muster-it'], options)
+      await run(['orgs', 'list'], options)
+      await run(['orgs', 'select', 'muster-it'], options)
       await run(['systems', 'list'], options)
       await run(['systems', 'openapi', 'example-erp'], options)
       await run(['devices', 'list'], options)
@@ -131,7 +131,7 @@ describe('no secret on any stream', () => {
     await execute(box, ['auth', 'login', '--wait', '3c9d0e1a-5b6c-4d7e-8f90-a1b2c3d4e5f6'], {
       baseUrl: api.url,
     })
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
     const args = ['keys', 'create', 'myapp dev', '--expires', '30d', '--write-env', '.env.local']
     const started = await execute(box, [...args, '--no-wait'], { baseUrl: api.url })
     const finished = await execute(

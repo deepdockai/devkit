@@ -121,7 +121,7 @@ const finishLogin = async (ctx: Ctx, pending: PendingRequest): Promise<Result> =
         `${paint(ctx.out, 'success', 'Selected')} ${sole.name} (${sole.slug}) as your organisation.`,
       )
     } else {
-      lines.push('Choose one with `deepdock org select <slug>` or pass --org to each command.')
+      lines.push('Choose one with `deepdock orgs select <slug>` or pass --org to each command.')
     }
   }
   return {
@@ -250,8 +250,8 @@ const status = async (ctx: Ctx): Promise<Result> => {
         indented(orgTable(data.organisations, defaultOrg, ctx.out)),
         '',
         defaultOrg
-          ? 'Switch the default with `deepdock org select <slug>`.'
-          : 'No default yet: choose one with `deepdock org select <slug>`.',
+          ? 'Switch the default with `deepdock orgs select <slug>`.'
+          : 'No default yet: choose one with `deepdock orgs select <slug>`.',
       )
     }
   } else {

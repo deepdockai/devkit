@@ -48,7 +48,7 @@ Signed in as anna.mueller@muster-it.example.
 Choose the organisation to work in, then look around:
 
 ```bash
-deepdock org select muster-it           # the default for every later command
+deepdock orgs select muster-it           # the default for every later command
 deepdock devices list                   # paired devices, their status and systems
 deepdock systems list                   # the systems and actions assigned to you
 deepdock systems openapi example-erp > example-erp.openapi.json
@@ -82,29 +82,29 @@ knowledge into your coding agent.
 deepdock auth      login | status | logout
 deepdock org       list | select [slug]
 deepdock systems   list | openapi <system>
-deepdock devices   list | pair <code> | rename <id> <label> | release <id> | systems <id>
-deepdock actions   list <device> <system>
+deepdock devices   list | pair <code> | rename <deviceId> <label> | release <deviceId> | systems <deviceId>
+deepdock actions   list <deviceId> <system>
 deepdock keys      list | create <name> | revoke <id>
 deepdock incidents list
 deepdock skill
 ```
 
-| Command                                               | What it does                                                                                                                                                            |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth login`                                          | sign in as yourself, approved in the browser; the sign-in lasts 90 days                                                                                                 |
-| `auth status`                                         | who is signed in, the organisations, and the keys this CLI created (id, name, prefix, expiry, file; never the value); exits 5 when not signed in, like `gh auth status` |
-| `auth logout [--keep-keys]`                           | revoke the sign-in and every key this CLI created (`--keep-keys`: only the sign-in)                                                                                     |
-| `org list`, `org select [slug]`                       | your organisations; set the default one                                                                                                                                 |
-| `systems list`                                        | the systems and actions assigned to your organisation                                                                                                                   |
-| `systems openapi <system>`                            | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                          |
-| `devices list`                                        | paired devices with id, label, status, systems and last seen                                                                                                            |
-| `devices pair <code> [--label <text>]`                | claim a device by the code on its screen                                                                                                                                |
-| `devices rename <id> <label>`, `devices release <id>` | rename a device; unpair it from the organisation (admin)                                                                                                                |
-| `devices systems <id>`                                | a device's live systems and action state, paused reasons included                                                                                                       |
-| `actions list <device> <system>`                      | every action a device offers, with its operation and fields                                                                                                             |
-| `keys list`, `keys create <name>`, `keys revoke <id>` | the organisation's API keys (create and revoke: admin)                                                                                                                  |
-| `incidents list`                                      | open incidents, and those closed within the last 30 days                                                                                                                |
-| `skill [--agent claude\|codex\|cursor\|all]`          | install the agent skill into the current directory                                                                                                                      |
+| Command                                                           | What it does                                                                                                                                                            |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth login`                                                      | sign in as yourself, approved in the browser; the sign-in lasts 90 days                                                                                                 |
+| `auth status`                                                     | who is signed in, the organisations, and the keys this CLI created (id, name, prefix, expiry, file; never the value); exits 5 when not signed in, like `gh auth status` |
+| `auth logout [--keep-keys]`                                       | revoke the sign-in and every key this CLI created (`--keep-keys`: only the sign-in)                                                                                     |
+| `orgs list`, `orgs select [slug]`                                 | your organisations; set the default one                                                                                                                                 |
+| `systems list`                                                    | the systems and actions assigned to your organisation                                                                                                                   |
+| `systems openapi <system>`                                        | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                          |
+| `devices list`                                                    | paired devices with id, label, status, systems and last seen                                                                                                            |
+| `devices pair <code> [--label <text>]`                            | claim a device by the code on its screen                                                                                                                                |
+| `devices rename <deviceId> <label>`, `devices release <deviceId>` | rename a device; unpair it from the organisation (admin)                                                                                                                |
+| `devices systems <deviceId>`                                      | a device's live systems and action state, paused reasons included                                                                                                       |
+| `actions list <deviceId> <system>`                                | every action a device offers, with its operation and fields                                                                                                             |
+| `keys list`, `keys create <name>`, `keys revoke <id>`             | the organisation's API keys (create and revoke: admin)                                                                                                                  |
+| `incidents list`                                                  | open incidents, and those closed within the last 30 days                                                                                                                |
+| `skill [--agent claude\|codex\|cursor\|all]`                      | install the agent skill into the current directory                                                                                                                      |
 
 Global flags: `--org <slug>` and `--json` on every command, `--yes` to confirm `devices release`
 and `keys revoke` without a question, `-h, --help` everywhere and `-v, --version` at the root.
@@ -112,7 +112,7 @@ and `keys revoke` without a question, `-h, --help` everywhere and `-v, --version
 
 Two things are never guessed. A device is always named by its full id: no default device, no
 lookup by label. The organisation comes from `--org`, then `DEEPDOCK_ORG`, then the default
-chosen with `deepdock org select`. With exactly one organisation it is used without asking (and
+chosen with `deepdock orgs select`. With exactly one organisation it is used without asking (and
 named on stderr); with several and none chosen the command stops and lists them.
 
 ## The approval flow
@@ -150,7 +150,7 @@ On a terminal you get tables and plain sentences. When stdout is not a terminal,
 `systems openapi` is the one exception off a terminal: it prints the OpenAPI document itself, so
 `deepdock systems openapi <system> > openapi.json` saves a document a generator can read (`--json`
 gives the envelope). For list and show commands `data` is the API's answer unchanged, so what the CLI shows is what
-your code will receive; `auth`, `org select` and `keys create` build it from named fields. A
+your code will receive; `auth`, `orgs select` and `keys create` build it from named fields. A
 failure is one document on stderr, `{ "error": { "code", "message" }, "meta": { "hint" } }`,
 with the API's error object unchanged. Switch on `code` or on the exit code, never on `message`.
 

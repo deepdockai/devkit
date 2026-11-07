@@ -29,7 +29,7 @@ beforeEach(async () => {
   api = await startFakeApi()
   box = makeSandbox()
   await signInWith(box, api.url)
-  await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url })
+  await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
   initRepo(box.work, '.env*\n')
   api.requests.length = 0
 })
@@ -261,7 +261,7 @@ describe('keys create', () => {
   it('on Windows the run that writes the env file says both files keep their folder permissions', async () => {
     const windows = { platform: 'win32' as const, env: { APPDATA: join(box.home, 'AppData') } }
     await signInWith(box, api.url, windows)
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...windows })
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url, ...windows })
     const settings = join(box.home, 'AppData', 'deepdock', 'config.json')
     const sentence = `On Windows these files keep the permissions of their folder: ${envFile()} and the settings file ${settings} hold secrets; under C:\\Users\\<you> only you can read them, in other folders other users of this PC may be able to.`
     const started = await run([...createArgs, '--no-wait'], windows)
@@ -274,14 +274,14 @@ describe('keys create', () => {
     expect(started.stdout + started.stderr + finished.stdout + finished.stderr).not.toContain(
       api.state.keyValue,
     )
-    const other = await run(['org', 'list'], windows)
+    const other = await run(['orgs', 'list'], windows)
     expect(other.stderr).not.toContain('On Windows')
   })
 
   it('an interactive run on Windows prints the line once', async () => {
     const windows = { platform: 'win32' as const, env: { APPDATA: join(box.home, 'AppData') } }
     await signInWith(box, api.url, windows)
-    await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...windows })
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url, ...windows })
     const outcome = await run(createArgs, { ...windows, tty: true })
     expect(outcome.code).toBe(0)
     expect(outcome.stderr.split('On Windows these files').length).toBe(2)
@@ -296,7 +296,7 @@ describe('keys create', () => {
       // sign-in made under the host's own platform would not be found on a Windows host.
       const linux = { platform: 'linux' as const }
       await signInWith(box, api.url, linux)
-      await execute(box, ['org', 'select', 'muster-it'], { baseUrl: api.url, ...linux })
+      await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url, ...linux })
       const started = await run([...createArgs, '--no-wait'], linux)
       expect(started.code).toBe(0)
       const finished = await run(
@@ -470,10 +470,10 @@ describe('keys create', () => {
   it('prunes requests long expired when the settings are read, but keeps recent ones', async () => {
     await run([...createArgs, '--no-wait'])
     const soon = (): Date => new Date(Date.now() + 30 * 60_000)
-    await run(['org', 'list'], { now: soon })
+    await run(['orgs', 'list'], { now: soon })
     expect(JSON.parse(readConfigText(box)).pending).toHaveLength(1)
     const muchLater = (): Date => new Date(Date.now() + 3 * 3600_000)
-    await run(['org', 'list'], { now: muchLater })
+    await run(['orgs', 'list'], { now: muchLater })
     expect(JSON.parse(readConfigText(box)).pending).toEqual([])
   })
 
@@ -675,11 +675,11 @@ describe('keys revoke', () => {
       await createKey()
       await run(['auth', 'logout', '--keep-keys'])
       await signInWith(box, api.url)
-      await run(['org', 'select', 'muster-it'])
+      await run(['orgs', 'select', 'muster-it'])
       await run(['auth', 'logout', '--json'])
       expect(api.state.revokedKeys).toEqual([])
       await signInWith(box, api.url)
-      await run(['org', 'select', 'muster-it'])
+      await run(['orgs', 'select', 'muster-it'])
       const outcome = await run(['keys', 'revoke', KEY_ID, '--yes', '--json'])
       expect(JSON.parse(outcome.stdout).data.removed.removal).toBe('done')
       expect(readFileSync(envFile(), 'utf8')).not.toContain('DEEPDOCK_API_KEY=')
@@ -730,7 +730,7 @@ describe('keys revoke', () => {
       await run(['auth', 'logout', '--json'])
       vi.restoreAllMocks()
       await signInWith(box, api.url)
-      await run(['org', 'select', 'muster-it'])
+      await run(['orgs', 'select', 'muster-it'])
       const outcome = await run(['keys', 'revoke', KEY_ID, '--yes', '--json'])
       expect(outcome.code).toBe(0)
       expect(JSON.parse(outcome.stdout).data.removed).toBeNull()

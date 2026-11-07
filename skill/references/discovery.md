@@ -7,7 +7,7 @@ Never hard-code an action's fields. Three sources, each authoritative for one th
 | Which systems and actions does my organisation have? | `deepdock systems list --json` | CLI sign-in |
 | What does this device run, and is each action active or paused? | `GET /v1/devices/{deviceId}/systems` | organisation |
 | Which actions can I call on this device's system, with which schemas? | `GET /v1/devices/{deviceId}/systems/{system}/actions` | organisation |
-| The exact paths, operations, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` (CLI sign-in) or `GET /v1/systems/{system}/openapi.json` (API key); per device `deepdock actions list <device> <system>` (CLI sign-in) | CLI sign-in or API key |
+| The exact paths, operations, fields, patterns, enums, lengths, responses | `deepdock systems openapi <system>` (CLI sign-in) or `GET /v1/systems/{system}/openapi.json` (API key); per device `deepdock actions list <deviceId> <system>` (CLI sign-in) | CLI sign-in or API key |
 
 ## The OpenAPI document
 

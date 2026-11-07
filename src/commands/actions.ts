@@ -56,7 +56,7 @@ export const registerActions = (program: Command, run: Run): void => {
   actions
     .command('list')
     .description('List the actions a device offers for a system, with every field')
-    .argument('<device>', 'the full device id')
+    .argument('<deviceId>', 'the full device id')
     .argument('<system>', 'the system name')
     .action((device, system, _options, cmd) =>
       run(cmd, async (ctx): Promise<Result> => {

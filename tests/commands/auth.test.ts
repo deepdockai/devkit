@@ -286,7 +286,7 @@ describe('base URL binding', () => {
 
   it('never sends the sign-in to a different base URL', async () => {
     await signInWith(box, api.url)
-    const outcome = await execute(box, ['org', 'list'], { baseUrl: other.url })
+    const outcome = await execute(box, ['orgs', 'list'], { baseUrl: other.url })
     expect(outcome.code).toBe(5)
     const error = errorDocOf(outcome.stderr)
     expect(error.error.code).toBe('sign_in_needed')

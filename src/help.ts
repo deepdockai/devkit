@@ -16,7 +16,7 @@ Commands
   skill       Install the Deepdock skill for your coding agent
 
 Global flags
-  --org <slug>      The organisation to act in (default: DEEPDOCK_ORG, then \`deepdock org select\`)
+  --org <slug>      The organisation to act in (default: DEEPDOCK_ORG, then \`deepdock orgs select\`)
   --json            JSON output (the default when stdout is not a terminal)
   --yes             Answer the confirmation question of release and revoke with yes
   -h, --help        Help for a command
@@ -37,7 +37,7 @@ export const AUTH_LOGIN_HELP = `Sign in to Deepdock as yourself.
 
 Opens a link to the Deepdock dashboard. There you click Approve, and this CLI receives a
 sign-in valid for 90 days. The sign-in is yours, not an organisation's: afterwards you choose
-an organisation with --org or \`deepdock org select\`.
+an organisation with --org or \`deepdock orgs select\`.
 
 The sign-in manages devices, keys and settings and lists what a device offers. It never runs
 an action; actions run from your code with an API key (\`deepdock keys create\`).
@@ -115,7 +115,7 @@ With --json (or off a terminal) a failure is one JSON document on stderr:
 `
 
 const EXAMPLES: Readonly<Record<string, readonly string[]>> = {
-  'org select': ['deepdock org select muster-it'],
+  'orgs select': ['deepdock orgs select muster-it'],
   'devices pair': ['deepdock devices pair K7Q-4MX --label "Demo PC"'],
   'devices release': ['deepdock devices release 450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f --yes'],
   'actions list': ['deepdock actions list 450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f example-erp'],

@@ -27,7 +27,7 @@ export const resolveOrg = (
     throw new CliError({
       code: 'org_required',
       message: 'No organisation chosen.',
-      hint: 'Pass --org <slug> or run `deepdock org select`.',
+      hint: 'Pass --org <slug> or run `deepdock orgs select`.',
       organisations: slugs,
     })
   }
@@ -37,7 +37,7 @@ export const resolveOrg = (
       code: 'invalid_usage',
       message: `You are not a member of an organisation with the slug "${requested}".`,
       hint: fromStoredDefault
-        ? 'That is your stored default. Run `deepdock org select` to choose another.'
+        ? 'That is your stored default. Run `deepdock orgs select` to choose another.'
         : undefined,
       organisations: slugs,
     })
