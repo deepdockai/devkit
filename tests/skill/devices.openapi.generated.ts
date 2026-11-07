@@ -874,6 +874,8 @@ export interface operations {
         content: {
           'application/json': {
             data: components['schemas']['SystemState'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
           }
         }
       }
