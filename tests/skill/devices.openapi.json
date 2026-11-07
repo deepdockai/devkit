@@ -38,23 +38,17 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": ["data", "nextCursor"],
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "required": ["items", "nextCursor"],
-                      "properties": {
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/PartnerDevice"
-                          }
-                        },
-                        "nextCursor": {
-                          "description": "Pass as cursor for the next page; null on the last page",
-                          "type": ["string", "null"]
-                        }
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PartnerDevice"
                       }
+                    },
+                    "nextCursor": {
+                      "description": "Pass as cursor for the next page; null on the last page",
+                      "type": ["string", "null"]
                     }
                   }
                 }

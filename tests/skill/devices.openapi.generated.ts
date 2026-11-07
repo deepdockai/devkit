@@ -242,11 +242,9 @@ export interface operations {
         }
         content: {
           'application/json': {
-            data: {
-              items: components['schemas']['PartnerDevice'][]
-              /** @description Pass as cursor for the next page; null on the last page */
-              nextCursor: string | null
-            }
+            data: components['schemas']['PartnerDevice'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
           }
         }
       }

@@ -80,7 +80,7 @@ class Deepdock:
         self.c = client or httpx.Client(base_url=base.rstrip("/"), timeout=timeout)
         self.c.headers["Authorization"] = f"Bearer {api_key}"
 
-    def _send(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers]:
+    def _send(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers, Optional[str]]:
         attempt = 1
         while True:
             try:
@@ -91,7 +91,7 @@ class Deepdock:
                 self._sleep(_retry_wait(e.retry_after))
                 attempt += 1
 
-    def _send_once(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers]:
+    def _send_once(self, method: str, path: str, **kw: Any) -> Tuple[Any, httpx.Headers, Optional[str]]:
         try:
             r = self.c.request(method, path, **kw)
         except httpx.HTTPError as e:  # timeouts and network errors
@@ -108,7 +108,7 @@ class Deepdock:
             raise err
         if not isinstance(body, dict) or "data" not in body:
             raise DeepdockTransportError(f"unexpected body with status {r.status_code}")
-        return body["data"], r.headers
+        return body["data"], r.headers, body.get("nextCursor")
 
     @staticmethod
     def _action_path(device_id: str, system: str, action: str) -> str:
@@ -116,15 +116,21 @@ class Deepdock:
 
     def read(self, device_id: str, system: str, action: str, params: Dict[str, InputValue],
              limit: Optional[int] = None, cursor: Optional[str] = None) -> Page:
-        """Runs a read action: a POST whose JSON body holds the inputs and the paging fields, no
+        """Runs a read action with `cardinality: many`: a POST whose JSON body holds the inputs and the paging fields, no
         Idempotency-Key. Pass `next_cursor` back as `cursor` for the next page."""
         body: Dict[str, InputValue] = dict(params)
         if limit is not None:
             body["limit"] = limit
         if cursor is not None:
             body["cursor"] = cursor
-        data, _ = self._send("POST", self._action_path(device_id, system, action), json=body)
-        return Page(items=data["items"], next_cursor=data.get("nextCursor"))
+        data, _, next_cursor = self._send("POST", self._action_path(device_id, system, action), json=body)
+        return Page(items=data, next_cursor=next_cursor)
+
+    def read_one(self, device_id: str, system: str, action: str, params: Dict[str, InputValue]) -> Dict[str, Any]:
+        """Runs a single-record read (`cardinality: one`): the answer's `data` is the record itself.
+        A record that does not exist raises DeepdockError with status 404 and code "not_found"."""
+        data, _, _ = self._send("POST", self._action_path(device_id, system, action), json=params)
+        return data
 
     def read_all(self, device_id: str, system: str, action: str, params: Dict[str, InputValue],
                  limit: Optional[int] = None) -> Iterator[Dict[str, Any]]:
@@ -144,14 +150,14 @@ class Deepdock:
         action's schema declares. Any other `operation` raises ValueError before anything is sent."""
         if operation not in ("create", "update"):
             raise ValueError(f"operation must be 'create' or 'update', got {operation!r}")
-        data, headers = self._send("PATCH" if operation == "update" else "POST",
+        data, headers, _ = self._send("PATCH" if operation == "update" else "POST",
                                    self._action_path(device_id, system, action), json=body,
                                    headers={"Idempotency-Key": idempotency_key})
         return WriteResult(data=data, replayed=headers.get("Idempotent-Replayed") == "true")
 
     def systems(self, device_id: str) -> List[Dict[str, Any]]:
         """The device's systems and each action's state. A live call: can answer device_offline."""
-        data, _ = self._send("GET", f"/v1/devices/{quote(device_id, safe='')}/systems")
+        data, _, _ = self._send("GET", f"/v1/devices/{quote(device_id, safe='')}/systems")
         return data
 
     def pair(self, code: str, label: Optional[str] = None) -> Dict[str, Any]:
@@ -159,7 +165,7 @@ class Deepdock:
         body: Dict[str, str] = {"code": code}
         if label is not None:
             body["label"] = label
-        data, _ = self._send("POST", "/v1/devices", json=body)
+        data, _, _ = self._send("POST", "/v1/devices", json=body)
         return data
 
     def release(self, device_id: str) -> None:

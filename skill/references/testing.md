@@ -66,7 +66,7 @@ The proof is your client; the CLI only shows what the device offers.
 
 ## Logs and prompts
 
-- Never log an action's `input` or a read's `items` in your running product: they are the customer's
+- Never log an action's `input` or a read's rows in your running product: they are the customer's
   records. Log the device id, the action, the code and the request id.
 - Never paste real records into an agent prompt or a ticket. Use the `TEST-DEEPDOCK-` records from
   the demo device when you need a concrete example.

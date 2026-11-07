@@ -14,6 +14,8 @@ export type ApiRequest = {
 
 export type ApiResponse = {
   data: unknown
+  /** The top-level `nextCursor` of a paged list; absent on any other answer. */
+  nextCursor?: unknown
   requestId?: string
 }
 
@@ -137,7 +139,7 @@ export const createApi = (rt: Runtime): Api => {
         status: response.status,
       })
     }
-    return { data: json.data, requestId: headerRequestId }
+    return { data: json.data, nextCursor: json.nextCursor, requestId: headerRequestId }
   }
 
   return { request, latest: () => latest }

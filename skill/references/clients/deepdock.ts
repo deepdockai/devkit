@@ -53,8 +53,9 @@ export class DeepdockTransportError extends Error {
 }
 
 type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string | null; reason?: string; created?: { chartId?: string } | null; uncertain?: boolean }
-type Envelope<T> = { data: T } | { error: ErrorBody }
+type Envelope<T> = { data: T; nextCursor?: string | null } | { error: ErrorBody }
 
+/** One page of a `many` read: `items` is the answer's `data` array, `nextCursor` its top-level sibling. */
 export type Page<Item> = { items: Item[]; nextCursor: string | null }
 export type WriteResult<T> = { data: T; replayed: boolean }
 /** A flat JSON value as the action's schema declares it: a number is a number, never its text. */
@@ -192,7 +193,7 @@ export class Deepdock {
   private async send<T>(
     path: string,
     init: { method: string; headers?: Record<string, string>; body?: string },
-  ): Promise<{ data: T; headers: Headers }> {
+  ): Promise<{ data: T; headers: Headers; nextCursor: string | null }> {
     for (let attempt = 1; ; attempt++) {
       try {
         return await this.sendOnce<T>(path, init)
@@ -213,7 +214,7 @@ export class Deepdock {
   private async sendOnce<T>(
     path: string,
     init: { method: string; headers?: Record<string, string>; body?: string },
-  ): Promise<{ data: T; headers: Headers }> {
+  ): Promise<{ data: T; headers: Headers; nextCursor: string | null }> {
     let res: Response
     try {
       res = await this.fetchImpl(`${this.base}${path}`, {
@@ -241,7 +242,7 @@ export class Deepdock {
     if (body === null || typeof body !== 'object' || !('data' in body)) {
       throw new DeepdockTransportError(`unexpected body with status ${res.status}`)
     }
-    return { data: body.data, headers: res.headers }
+    return { data: body.data, headers: res.headers, nextCursor: body.nextCursor ?? null }
   }
 
   private actionPath(deviceId: string, system: string, action: string): string {
@@ -249,7 +250,7 @@ export class Deepdock {
   }
 
   /**
-   * Runs a read action: a POST whose JSON body holds the inputs and the paging fields, no
+   * Runs a read action with `cardinality: many`: a POST whose JSON body holds the inputs and the paging fields, no
    * Idempotency-Key. Pass `nextCursor` back as `cursor` for the next page.
    */
   async read<Item>(
@@ -262,11 +263,24 @@ export class Deepdock {
     const body: ActionInput = { ...input }
     if (page.limit !== undefined) body.limit = page.limit
     if (page.cursor !== undefined) body.cursor = page.cursor
+    const { data, nextCursor } = await this.send<Item[]>(this.actionPath(deviceId, system, action), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    return { items: data, nextCursor }
+  }
+
+  /**
+   * Runs a single-record read (`cardinality: one`): the answer's `data` is the record itself. A
+   * record that does not exist throws a DeepdockError with status 404 and code `not_found`.
+   */
+  async readOne<Row>(deviceId: string, system: string, action: string, input: ActionInput): Promise<Row> {
     return (
-      await this.send<Page<Item>>(this.actionPath(deviceId, system, action), {
+      await this.send<Row>(this.actionPath(deviceId, system, action), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(input),
       })
     ).data
   }

@@ -23,12 +23,7 @@ type Expect<_ extends true> = true
 type _ClientContract = [
   Expect<Same<Device, Data<paths['/v1/devices']['post']['responses'][201]>>>,
   Expect<Same<Device, Data<paths['/v1/devices/{deviceId}']['get']['responses'][200]>>>,
-  Expect<
-    Same<
-      { items: Device[]; nextCursor: string | null },
-      Data<paths['/v1/devices']['get']['responses'][200]>
-    >
-  >,
+  Expect<Same<Device[], Data<paths['/v1/devices']['get']['responses'][200]>>>,
   Expect<
     Same<DeviceSystem[], Data<paths['/v1/devices/{deviceId}/systems']['get']['responses'][200]>>
   >,
@@ -78,7 +73,7 @@ describe('the pinned device API', () => {
         body: JSON.parse(String(init?.body)),
         key: new Headers(init?.headers).get('Idempotency-Key'),
       })
-      return Response.json({ data: { items: [], nextCursor: null } })
+      return Response.json({ data: [], nextCursor: null })
     }
     const client = new Deepdock('ddk_test_canary', {
       base: 'https://api.example.test',
