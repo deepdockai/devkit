@@ -64,7 +64,8 @@ export type InputValue = string | number | boolean
 export type WriteOperation = 'create' | 'update'
 export type ActionInput = Record<string, InputValue>
 
-export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown'
+/** `missing`: never found on the PC; `vanished`: found once and not any more. */
+export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown' | 'vanished'
 /** The database access the device last reported; `null` while none is known. */
 export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 'not_set_up' | null
 
