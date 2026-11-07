@@ -79,6 +79,9 @@ export type SystemWrites =
   | { state: 'verified' | 'unknown' | 'partial' }
   | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' | 'unreported' }
 
+/** Why a system's `version` is missing, when the device says. */
+export type VersionIssue = 'not_installed' | 'not_found' | 'unreadable'
+
 export type Device = {
   id: string
   label: string | null
@@ -96,6 +99,7 @@ export type Device = {
   systems: {
     system: string
     version: string | null
+    versionIssue: VersionIssue | null
     status: SystemStatus
     access: SystemAccess
     /** Set when `access` is the last known value (the device could not read it): when it last did. */
@@ -121,6 +125,7 @@ export type DeviceSystem = {
   system: string
   label: string | null
   version?: string
+  versionIssue?: VersionIssue
   status: SystemStatus
   access: SystemAccess
   /** Set when `access` is the last known value (the device could not read it): when it last did. */

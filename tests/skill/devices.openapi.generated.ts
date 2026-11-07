@@ -195,6 +195,7 @@ export interface components {
         status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
         system: string
         version: string | null
+        versionIssue: 'not_found' | 'not_installed' | 'unreadable' | null
         writes:
           | {
               /** @enum {unknown} */
@@ -251,6 +252,8 @@ export interface components {
       status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
       system: string
       version?: string
+      /** @enum {unknown} */
+      versionIssue?: 'not_found' | 'not_installed' | 'unreadable'
     }
   }
   responses: never
