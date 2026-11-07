@@ -108,6 +108,8 @@ describe('paged lists', () => {
   it.each([
     ['the earlier items form', { data: { items: [], nextCursor: null } }],
     ['a list without nextCursor', { data: [] }],
+    ['an empty cursor', { data: [], nextCursor: '' }],
+    ['a non-string cursor', { data: [], nextCursor: 3 }],
   ])('refuses %s, which the API no longer answers', async (_name, body) => {
     api.state.forced['GET /partner/devices'] = { status: 200, body }
     const outcome = await run(['devices', 'list'])
