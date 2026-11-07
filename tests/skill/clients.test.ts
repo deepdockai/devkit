@@ -99,6 +99,41 @@ describe('the bundled TypeScript client retry', () => {
   })
 })
 
+describe('the data envelope in the bundled clients', () => {
+  const answer = (body: unknown, status = 200): typeof globalThis.fetch =>
+    (async () => Response.json(body, { status })) as unknown as typeof globalThis.fetch
+
+  it('reads a many-read page from data and the top-level nextCursor, and one record from data', async () => {
+    const page = await new Deepdock('ddk_test_canary', {
+      fetch: answer({ data: [{ id: 1 }, { id: 2 }], nextCursor: 'c2' }),
+    }).read('d1', 's', 'a', {})
+    expect(page).toEqual({ items: [{ id: 1 }, { id: 2 }], nextCursor: 'c2' })
+
+    const last = await new Deepdock('ddk_test_canary', { fetch: answer({ data: [] }) }).read(
+      'd1',
+      's',
+      'a',
+      {},
+    )
+    expect(last.nextCursor).toBeNull()
+
+    const record = await new Deepdock('ddk_test_canary', {
+      fetch: answer({ data: { id: 1, lastName: 'Müller' } }),
+    }).readOne('d1', 's', 'a', { id: 1 })
+    expect(record).toEqual({ id: 1, lastName: 'Müller' })
+  })
+
+  it('throws a DeepdockError for a single-record read that finds nothing', async () => {
+    const dd = new Deepdock('ddk_test_canary', {
+      fetch: answer({ error: { code: 'not_found', message: 'No such record.' } }, 404),
+    })
+    await expect(dd.readOne('d1', 's', 'a', { id: 9 })).rejects.toMatchObject({
+      status: 404,
+      code: 'not_found',
+    })
+  })
+})
+
 describe('the bundled Python client', () => {
   const python = spawnSync('python3', ['--version'], { encoding: 'utf8' })
   const pyClient = fileURLToPath(

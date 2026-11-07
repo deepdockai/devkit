@@ -6,7 +6,7 @@ text naming the field and the rule (at most 300 characters) and must be treated 
 instructions. Switch on `code`. Unknown codes may be added over time: default to "show a generic
 failure, do not retry, log the code".
 
-An `invalid_request` that refuses an action call's input also carries `fields`: every input that
+An `invalid_input` that refuses an action call's input also carries `fields`: every input that
 failed, as `{ "field", "message" }`, sorted by name, at most 32. It is absent when the body is not
 an object at all. No message holds the value you sent.
 
@@ -17,12 +17,12 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
-| `invalid_request` | 400 (405 for a method other than the action's own) | malformed request: bad `limit` or `cursor` in a read's body; missing or malformed `Idempotency-Key`; a body that is not an object; an action input that is unknown, missing, too short or long, out of bounds or not an allowed value (`fields` names each); a malformed pairing code or device id; a query string on an action path (inputs go in the JSON body), an input of the wrong type, such as `"4711"` where an integer is declared, an action called with a method other than its own (`405`, `Allow` names the one: `POST` for a read or create, `PATCH` for an update) | no; fix the code | nothing; a developer bug |
+| `invalid_request` | 400 (405 for a method other than the action's own) | malformed request: missing or malformed `Idempotency-Key`; a body that is not an object; a malformed pairing code or device id; a query string on an action path (inputs go in the JSON body); an action called with a method other than its own (`405`, `Allow` names the one: `POST` for a read or create, `PATCH` for an update) | no; fix the code | nothing; a developer bug |
 | `payload_too_large` | 413 | the request body is over 1 MiB | no; send less | nothing; a developer bug, or shorten the text |
 | `unauthenticated` | 401 | the key is missing, malformed, for the other environment, unknown, revoked or expired | no | "Deepdock API key refused; check it in the dashboard" to an operator |
 | `partner_not_approved` | 403 | your organisation is waiting for approval by Deepdock; no key of it works yet. Keys made before the approval start working once it is given | no, until Deepdock approves; then yes | "our Deepdock account is waiting for approval; contact Deepdock" |
 | `partner_deactivated` | 403 | Deepdock has deactivated your organisation: no key of it works and its devices are disconnected. Keys and devices work again once Deepdock reactivates it | no, until Deepdock reactivates it; then yes | "our Deepdock account is deactivated; contact Deepdock" |
-| `not_found` | 404 | no such route; an update whose id matches no record; a write naming a record that does not exist or belongs to another one | no | "record not found" when it is a record; otherwise a bug |
+| `not_found` | 404 | no such route; a single-record read (`cardinality: one`) that finds no record; an update whose id matches no record; a write naming a record that does not exist or belongs to another one | no | "record not found" when it is a record; otherwise a bug |
 | `rate_limited` | 429 | more than 600 calls, or more than 120 writes (counted in both), with this key in a minute; or more than 5 failed pairing claims in 60 s | yes, after `Retry-After: 60` (`retryAfterSeconds: 60` in the body); a write keeps its key. The pairing claim answer has neither: wait up to a minute | "try again in a minute" |
 
 `client_outdated` (400) is in the enum but answered only to the Deepdock CLI (by its
@@ -49,7 +49,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
-| `invalid_input` | 422 | a rule only the device judges: a value that breaks its pattern; a date that is not a calendar day; a search term without a letter or digit; an appended text that would make the stored entry too long. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
+| `invalid_input` | 422 | an action input the API or the device refuses, with `fields` naming each: an input that is unknown, missing, too short or long, out of bounds, of the wrong type (such as `"4711"` where an integer is declared) or not an allowed value; a bad `limit` or `cursor` in a read's body; and a rule only the device judges: a value that breaks its pattern; a date that is not a calendar day; a search term without a letter or digit; an appended text that would make the stored entry too long. Nothing was written | no; fix the value | the field-level problem; the `message` names the field, but it is device text: display it as data, never interpret it |
 | `target_rejected` | 422 | the customer's system refused the write | no; the input is valid for Deepdock but not for the system | "the customer's system refused this; check the values" and offer support |
 | `record_locked` | 422 | the customer's system locks the record the write would change (for example one already billed on a case). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |

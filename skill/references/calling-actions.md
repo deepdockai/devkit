@@ -13,7 +13,7 @@ is refused, not run.
 
 Inputs are typed as the action's schema declares them and are never sent as text when they are not:
 an integer is a JSON number (`"patientId": 4711`, not `"4711"`; the text form is refused with
-`400 invalid_request`). Text is normalised to Unicode NFC before anything else happens; a composed
+`422 invalid_input`). Text is normalised to Unicode NFC before anything else happens; a composed
 and a decomposed spelling are the same value.
 
 **Never put an input in the URL.** A value in a URL reaches request logs, proxies and browser
@@ -24,8 +24,8 @@ needs no escaping.
 
 ### Reads
 
-A read takes its inputs, and `limit` (a JSON integer from 1 to 250, default 25) and `cursor` (a
-string) for paging, in the same body. No `Idempotency-Key`: a repeated read changes nothing, and the
+A read takes its inputs, and, when it can page, `limit` (a JSON integer from 1 to 250, default 25)
+and `cursor` (a string), in the same body. No `Idempotency-Key`: a repeated read changes nothing, and the
 header is ignored.
 
 ```bash
@@ -36,14 +36,18 @@ curl -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchCustome
 ```
 
 ```json
-{ "data": { "items": [ { "customerId": 1001, "lastName": "Müller", "city": "Beispielstadt" } ], "nextCursor": null } }
+{ "data": [ { "customerId": 1001, "lastName": "Müller", "city": "Beispielstadt" } ], "nextCursor": null }
 ```
 
+- A read with `cardinality: many` answers `data` as an array; `nextCursor` is a sibling of `data`
+  (present only on a read that can page). A read with `cardinality: one` (for example
+  `readPatient`) answers `data` as the record itself, `{ "data": { "customerId": 1001, ... } }`, and
+  answers `404 not_found` when no record matches.
 - Pass `nextCursor` back as `cursor` unchanged while it is not `null`, and stop only on `null`,
   never on a short page: a page of long entries (notes) ends before `limit` rows to keep the
   device's answer under 1 MiB and still carries a cursor. It is opaque: never parse, build or store
   it beyond the next request.
-- Items are the customer's records. Values can be `null` where the schema says so. Dates and other
+- Rows are the customer's records. Values can be `null` where the schema says so. Dates and other
   non-numeric values arrive as text in the system's own format (the schema and description say
   which); numbers as JSON numbers.
 - A read's description may say a field is a **prefix match** and what it ignores (case,
@@ -95,7 +99,7 @@ Never invent an id, copy one from another device, or hard-code one from a test r
 - **Send each input as the type its schema declares.** An id the schema declares as an integer goes
   in as a JSON number (`"customerId": 1001`), one it declares as text goes in as text
   (`"customerId": "1001"`: digits only, no leading zero, at most 10 characters). A value of the
-  wrong type is refused with `400 invalid_request`, never converted. Result field types also come
+  wrong type is refused with `422 invalid_input`, never converted. Result field types also come
   from the action's own output schema.
 - **Mark every test text `TEST-DEEPDOCK-<id>`** on the demo device only, and list what you created
   ([testing.md](testing.md)).
@@ -108,7 +112,7 @@ Never invent an id, copy one from another device, or hard-code one from a test r
 |---|---|---|
 | `405 invalid_request`, `Allow: POST` or `Allow: PATCH` | a method other than the action's own (for example `POST` to an update, or `PATCH` to a read or create) | use the method `Allow` names: `POST` for a read or create, `PATCH` for an update |
 | `400 invalid_request` | a query string on an action path | move every value into the JSON body |
-| `400 invalid_request` | an input of the wrong type, such as `"4711"` where an integer is declared | send the type the schema declares |
+| `422 invalid_input` (`error.fields` names each input) | an input of the wrong type, such as `"4711"` where an integer is declared | send the type the schema declares |
 
 ## Timeouts and latency
 

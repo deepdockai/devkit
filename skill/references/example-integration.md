@@ -122,7 +122,7 @@ curl -sS "$BASE/v1/devices/$DEVICE/systems" -H "$AUTH"
 # The action index (your assigned actions, with schemas)
 curl -sS "$BASE/v1/devices/$DEVICE/systems/example-erp/actions" -H "$AUTH"
 
-# A read is a POST too, with its inputs and limit/cursor in the body; paged: pass data.nextCursor back as cursor
+# A read is a POST too, with its inputs and limit/cursor in the body; paged: pass the answer's top-level nextCursor back as cursor
 curl -sS -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchNotes" \
   -H "$AUTH" -H 'Content-Type: application/json' -d '{"text":"TEST-DEEPDOCK-","limit":50}'
 

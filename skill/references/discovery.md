@@ -39,7 +39,7 @@ What to read off it:
   `cursor` (opaque). An optional input is not in `required` and its description says what an
   omitted value becomes. A write's `Idempotency-Key` header
   parameter carries its own pattern (8 to 128 characters of `A-Z a-z 0-9 _ -`).
-- **Responses**: a read's `200` is `{ data: { items: [...], nextCursor } }`; a create's `201` and a
+- **Responses**: a read's `200` is `{ data: [...], nextCursor }` for `cardinality: many` (`nextCursor` only when the read can page) and `{ data: { ...record } }` for `cardinality: one`, which answers `404 not_found` when nothing matches; a create's `201` and a
   replayed `200`; an update's `200`. Item and result fields are typed `string`, `integer` or `number`,
   often nullable (`["integer", "null"]`). The `Error` schema's `code` enum is the full list of codes.
 - **`servers`**: the base URL of the API.

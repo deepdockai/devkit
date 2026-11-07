@@ -38,23 +38,17 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["data"],
+                  "required": ["data", "nextCursor"],
                   "properties": {
                     "data": {
-                      "type": "object",
-                      "required": ["items", "nextCursor"],
-                      "properties": {
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/PartnerDevice"
-                          }
-                        },
-                        "nextCursor": {
-                          "description": "Pass as cursor for the next page; null on the last page",
-                          "type": ["string", "null"]
-                        }
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PartnerDevice"
                       }
+                    },
+                    "nextCursor": {
+                      "description": "Pass as cursor for the next page; null on the last page",
+                      "type": ["string", "null"]
                     }
                   }
                 }
@@ -1393,7 +1387,7 @@
                 }
               },
               "fields": {
-                "description": "With an invalid_request that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value",
+                "description": "With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value",
                 "type": "array",
                 "items": {
                   "type": "object",

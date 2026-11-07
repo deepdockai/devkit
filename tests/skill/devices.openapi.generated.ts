@@ -113,7 +113,7 @@ export interface components {
         uncertain?: boolean
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
-        /** @description With an invalid_request that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value */
+        /** @description With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value */
         fields?: {
           field: string
           message: string
@@ -242,11 +242,9 @@ export interface operations {
         }
         content: {
           'application/json': {
-            data: {
-              items: components['schemas']['PartnerDevice'][]
-              /** @description Pass as cursor for the next page; null on the last page */
-              nextCursor: string | null
-            }
+            data: components['schemas']['PartnerDevice'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
           }
         }
       }
