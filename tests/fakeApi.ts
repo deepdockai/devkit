@@ -231,8 +231,10 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         const size = Math.min(Number(query.get('limit') ?? 100), state.pageSize)
         const end = start + size
         send(200, {
-          data: rows.slice(start, end),
-          nextCursor: end < rows.length ? String(end) : null,
+          data: {
+            items: rows.slice(start, end),
+            nextCursor: end < rows.length ? String(end) : null,
+          },
         })
       }
       if (method === 'GET' && route === '/partner/devices') return paged(state.devices)

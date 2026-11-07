@@ -2,9 +2,8 @@
 
 ## Unreleased
 
-- Every `/v1` answer uses one `data` envelope. A list (a `many` action read, `GET /v1/devices`, `GET /v1/incidents`) answers `{ "data": [...], "nextCursor": ... }` (was `{ "data": { "items": [...], "nextCursor": ... } }`); `nextCursor` sits beside `data` and appears only on a list that pages. A single-record read (`cardinality: one`) answers `{ "data": { ...record } }` and a record that is not found answers `404 not_found`. Writes and error bodies are unchanged.
+- Every `/v1` answer uses one `data` envelope. A list (a `many` action read, `GET /v1/devices`) answers `{ "data": [...], "nextCursor": ... }` (was `{ "data": { "items": [...], "nextCursor": ... } }`); `nextCursor` sits beside `data` and appears only on a list that pages. A single-record read (`cardinality: one`) answers `{ "data": { ...record } }` and a record that is not found answers `404 not_found`. Writes and error bodies are unchanged.
 - Every refused action input (type, length, enum, bounds, a missing or unknown field, a bad `limit` or `cursor`) answers `422 invalid_input` with `error.fields`; `400 invalid_request` is for a malformed request only.
-- The CLI reads the new list shape; its output is unchanged.
 - The bundled TypeScript and Python clients read the new shape (`Page.items` keeps its name and holds `data`) and gain `readOne` / `read_one` for a single-record read. The skill and its references show the new answers.
 
 ## 1.1.2

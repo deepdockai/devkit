@@ -1,5 +1,6 @@
 import { CliError } from '../api/errors.ts'
 import type { Ctx } from '../context.ts'
+import { isRecord } from '../output/human.ts'
 
 /** The largest page the API serves (`limit` is 1 to 500). */
 const PAGE_LIMIT = 500
@@ -16,7 +17,7 @@ const unreadable = (): CliError =>
   })
 
 /**
- * Reads a paged list (`{ data: [...], nextCursor }`) to its end, following `nextCursor` so no row stays
+ * Reads a paged list (`{ items, nextCursor }`) to its end, following `nextCursor` so no row stays
  * invisible. Stops after {@link MAX_PAGES} pages with a note on stderr; the rows read so far are
  * still returned.
  */
@@ -31,10 +32,11 @@ export const readAllPages = async (ctx: Ctx, path: string, org?: string): Promis
     const response = org
       ? await ctx.call({ method: 'GET', path: url, org })
       : await ctx.callInOrg({ method: 'GET', path: url })
-    if (!Array.isArray(response.data)) throw unreadable()
-    const next = response.nextCursor
+    const data = response.data
+    if (!isRecord(data) || !Array.isArray(data.items)) throw unreadable()
+    const next = data.nextCursor
     if (next !== null && (typeof next !== 'string' || next === '')) throw unreadable()
-    items.push(...response.data)
+    items.push(...data.items)
     requestId ??= response.requestId
     if (next === null) return { items, requestId }
     cursor = next
