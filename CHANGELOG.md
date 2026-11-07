@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `deepdock devices` and `deepdock incidents list` read the organisation's lists as `{ "data": [...], "nextCursor": ... }`, the form `/v1` already uses (was `{ "data": { "items": [...], "nextCursor": ... } }`). They need the API from the next Deepdock release; an older API answers the old form, which this version does not read.
+
 ## 1.2.0
 
 - Every `/v1` answer uses one `data` envelope. A list (a `many` action read, `GET /v1/devices`) answers `{ "data": [...], "nextCursor": ... }` (was `{ "data": { "items": [...], "nextCursor": ... } }`); `nextCursor` sits beside `data` and appears only on a list that pages. A single-record read (`cardinality: one`) answers `{ "data": { ...record } }` and a record that is not found answers `404 not_found`. Writes and error bodies are unchanged.
