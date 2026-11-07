@@ -288,9 +288,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: limit is not a whole number from 1 to 500, or cursor is malformed (invalid_request)
        *
-       *     - invalid_request: limit is not a whole number from 1 to 500, or cursor is malformed
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -346,7 +346,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -382,7 +382,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -424,9 +424,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)
        *
-       *     - invalid_request: the body is not { code, label? }, or the code is malformed
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -483,7 +483,7 @@ export interface operations {
        * @description Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)
        *
        *     - pairing_code_invalid: the code is unknown, expired or already claimed
-       *     - device_not_found: the device was released between the claim and the read
+       *     - device_not_found: no device of this key has that id
        */
       404: {
         headers: {
@@ -535,9 +535,9 @@ export interface operations {
         }
       }
       /**
-       * @description Too many failed claims (rate_limited)
+       * @description Too many requests, or too many failed claims: wait a minute (rate_limited)
        *
-       *     - rate_limited: too many failed claims, or too many calls with this key; wait a minute
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -573,7 +573,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -613,9 +613,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: deviceId is not a UUID
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -689,7 +689,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -725,7 +725,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -765,9 +765,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: deviceId is not a UUID
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -841,7 +841,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -877,7 +877,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -920,9 +920,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: deviceId is not a UUID
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -979,8 +979,8 @@ export interface operations {
        * @description Device not found (device_not_found, action_not_found, system_not_on_device)
        *
        *     - device_not_found: no device of this key has that id
-       *     - action_not_found: no actions of this system are assigned to the key
-       *     - system_not_on_device: the device does not run that system
+       *     - action_not_found: the device has no such action, or none of the system's actions is assigned to the key
+       *     - system_not_on_device: the device does not run this system; systems lists the ones it does
        */
       404: {
         headers: {
@@ -998,7 +998,7 @@ export interface operations {
       /**
        * @description The device cannot take the call (device_learning_only)
        *
-       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry
+       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it to run actions, then retry
        */
       409: {
         headers: {
@@ -1016,7 +1016,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -1052,7 +1052,7 @@ export interface operations {
       /**
        * @description Cannot take the call now (temporarily_unavailable)
        *
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {
@@ -1094,9 +1094,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request (invalid_request)
+       * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: deviceId is not a UUID
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
        */
       400: {
         headers: {
@@ -1170,9 +1170,9 @@ export interface operations {
       /**
        * @description The device cannot take the call (device_outdated, device_learning_only, device_connected_twice)
        *
-       *     - device_outdated: the device runs a Deepdock client too old for this call; update it, then retry
-       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry
-       *     - device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); shut the copy down, calls work again about five minutes after only one is connected
+       *     - device_outdated: the device runs a Deepdock client too old for this call or for the action set Deepdock sends it; update the Deepdock client on the device (it updates itself when a newer version is released), then retry
+       *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it to run actions, then retry
+       *     - device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); nothing was run, so the Idempotency-Key is free; a person shuts the copy down, and calls work again about five minutes after only one is connected
        */
       409: {
         headers: {
@@ -1190,7 +1190,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -1226,7 +1226,7 @@ export interface operations {
       /**
        * @description The device sent an answer this API cannot read (device_answer_unreadable)
        *
-       *     - device_answer_unreadable: a retry does not help until the device's Deepdock client is updated; requestId names the request for support
+       *     - device_answer_unreadable: the device answered in a form this API cannot read; a retry does not help until the device's Deepdock client is updated; requestId names the request for support
        */
       502: {
         headers: {
@@ -1244,8 +1244,8 @@ export interface operations {
       /**
        * @description Device cannot take the call now (device_offline, temporarily_unavailable)
        *
-       *     - device_offline: the device is not connected, did not answer in time, or the call was cut off inside Deepdock; retry after the Retry-After seconds
-       *     - temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       *     - device_offline: the device is not connected, did not answer in time, is shutting down, or the call was cut off inside Deepdock; retry after the Retry-After seconds (a write with the same Idempotency-Key)
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
        */
       503: {
         headers: {

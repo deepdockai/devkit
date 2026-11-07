@@ -56,7 +56,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: limit is not a whole number from 1 to 500, or cursor is malformed",
+            "description": "Malformed request: limit is not a whole number from 1 to 500, or cursor is malformed (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -148,7 +148,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -204,7 +204,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -264,7 +264,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: the body is not { code, label? }, or the code is malformed",
+            "description": "Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -356,7 +356,7 @@
             }
           },
           "404": {
-            "description": "Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)\n\n- pairing_code_invalid: the code is unknown, expired or already claimed\n- device_not_found: the device was released between the claim and the read",
+            "description": "Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)\n\n- pairing_code_invalid: the code is unknown, expired or already claimed\n- device_not_found: no device of this key has that id",
             "x-error-codes": ["pairing_code_invalid", "device_not_found"],
             "content": {
               "application/json": {
@@ -440,7 +440,7 @@
             }
           },
           "429": {
-            "description": "Too many failed claims (rate_limited)\n\n- rate_limited: too many failed claims, or too many calls with this key; wait a minute",
+            "description": "Too many requests, or too many failed claims: wait a minute (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -496,7 +496,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -559,7 +559,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: deviceId is not a UUID",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -679,7 +679,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -735,7 +735,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -796,7 +796,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: deviceId is not a UUID",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -916,7 +916,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -972,7 +972,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -1051,7 +1051,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: deviceId is not a UUID",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -1143,7 +1143,7 @@
             }
           },
           "404": {
-            "description": "Device not found (device_not_found, action_not_found, system_not_on_device)\n\n- device_not_found: no device of this key has that id\n- action_not_found: no actions of this system are assigned to the key\n- system_not_on_device: the device does not run that system",
+            "description": "Device not found (device_not_found, action_not_found, system_not_on_device)\n\n- device_not_found: no device of this key has that id\n- action_not_found: the device has no such action, or none of the system's actions is assigned to the key\n- system_not_on_device: the device does not run this system; systems lists the ones it does",
             "x-error-codes": ["device_not_found", "action_not_found", "system_not_on_device"],
             "content": {
               "application/json": {
@@ -1175,7 +1175,7 @@
             }
           },
           "409": {
-            "description": "The device cannot take the call (device_learning_only)\n\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry",
+            "description": "The device cannot take the call (device_learning_only)\n\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it to run actions, then retry",
             "x-error-codes": ["device_learning_only"],
             "content": {
               "application/json": {
@@ -1203,7 +1203,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -1259,7 +1259,7 @@
             }
           },
           "503": {
-            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Cannot take the call now (temporarily_unavailable)\n\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["temporarily_unavailable"],
             "content": {
               "application/json": {
@@ -1329,7 +1329,7 @@
             }
           },
           "400": {
-            "description": "Malformed request (invalid_request)\n\n- invalid_request: deviceId is not a UUID",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -1449,7 +1449,7 @@
             }
           },
           "409": {
-            "description": "The device cannot take the call (device_outdated, device_learning_only, device_connected_twice)\n\n- device_outdated: the device runs a Deepdock client too old for this call; update it, then retry\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it, then retry\n- device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); shut the copy down, calls work again about five minutes after only one is connected",
+            "description": "The device cannot take the call (device_outdated, device_learning_only, device_connected_twice)\n\n- device_outdated: the device runs a Deepdock client too old for this call or for the action set Deepdock sends it; update the Deepdock client on the device (it updates itself when a newer version is released), then retry\n- device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it to run actions, then retry\n- device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); nothing was run, so the Idempotency-Key is free; a person shuts the copy down, and calls work again about five minutes after only one is connected",
             "x-error-codes": ["device_outdated", "device_learning_only", "device_connected_twice"],
             "content": {
               "application/json": {
@@ -1481,7 +1481,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute; wait for Retry-After seconds (retryAfterSeconds in the body) and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -1537,7 +1537,7 @@
             }
           },
           "502": {
-            "description": "The device sent an answer this API cannot read (device_answer_unreadable)\n\n- device_answer_unreadable: a retry does not help until the device's Deepdock client is updated; requestId names the request for support",
+            "description": "The device sent an answer this API cannot read (device_answer_unreadable)\n\n- device_answer_unreadable: the device answered in a form this API cannot read; a retry does not help until the device's Deepdock client is updated; requestId names the request for support",
             "x-error-codes": ["device_answer_unreadable"],
             "content": {
               "application/json": {
@@ -1565,7 +1565,7 @@
             }
           },
           "503": {
-            "description": "Device cannot take the call now (device_offline, temporarily_unavailable)\n\n- device_offline: the device is not connected, did not answer in time, or the call was cut off inside Deepdock; retry after the Retry-After seconds\n- temporarily_unavailable: the key or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
+            "description": "Device cannot take the call now (device_offline, temporarily_unavailable)\n\n- device_offline: the device is not connected, did not answer in time, is shutting down, or the call was cut off inside Deepdock; retry after the Retry-After seconds (a write with the same Idempotency-Key)\n- temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds",
             "x-error-codes": ["device_offline", "temporarily_unavailable"],
             "content": {
               "application/json": {
