@@ -1940,6 +1940,22 @@
                     }
                   ]
                 },
+                "versionIssue": {
+                  "anyOf": [
+                    {
+                      "const": "not_found"
+                    },
+                    {
+                      "const": "not_installed"
+                    },
+                    {
+                      "const": "unreadable"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
                 "writes": {
                   "anyOf": [
                     {
@@ -1974,6 +1990,7 @@
                 "status",
                 "system",
                 "version",
+                "versionIssue",
                 "writes"
               ]
             }
@@ -2154,6 +2171,9 @@
           },
           "version": {
             "type": "string"
+          },
+          "versionIssue": {
+            "enum": ["not_found", "not_installed", "unreadable"]
           }
         },
         "required": [
