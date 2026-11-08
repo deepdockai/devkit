@@ -122,7 +122,6 @@ export interface components {
           | 'device_offline'
           | 'device_outdated'
           | 'device_syncing'
-          | 'system_version_unverified'
           | 'device_learning_only'
           | 'device_connected_twice'
           | 'action_paused'
@@ -135,6 +134,7 @@ export interface components {
           | 'applied_unverified'
           | 'credentials_rejected'
           | 'certificate_changed'
+          | 'version_not_covered'
           | 'idempotency_conflict'
           | 'outcome_unknown'
           | 'device_answer_unreadable'
@@ -152,18 +152,11 @@ export interface components {
         uncertain?: boolean
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
-        /** @description With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value */
+        /** @description With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the refusal cannot name an input. A message never holds the value */
         fields?: {
           field: string
           message: string
         }[]
-        /** @description With system_version_unverified: the version the system last reported, or null when it reported none (an HTTP write needs the exact release) */
-        version?: string | null
-        /**
-         * @description With system_version_unverified: unverified_version, unparseable when the reported version is not dotted digits, or unreported when the system reported none (an HTTP write only)
-         * @enum {string}
-         */
-        reason?: 'unverified_version' | 'unparseable' | 'unreported'
       }
     }
     PairRequest: {
@@ -196,17 +189,7 @@ export interface components {
         system: string
         version: string | null
         versionIssue: 'not_found' | 'not_installed' | 'unreadable' | null
-        writes:
-          | {
-              /** @enum {unknown} */
-              reason: 'unparseable' | 'unreported' | 'unverified_version'
-              /** @constant */
-              state: 'unverified'
-            }
-          | {
-              /** @enum {unknown} */
-              state: 'partial' | 'unknown' | 'verified'
-            }
+        blockedActions?: string[]
       }[]
       updateAvailable?: string
     }
