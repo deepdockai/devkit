@@ -8,7 +8,7 @@
     "/v1/devices": {
       "get": {
         "operationId": "listDevices",
-        "summary": "The organisation's paired devices, newest claim first, one page at a time",
+        "summary": "The organisation's paired devices, most recently paired first, one page at a time",
         "parameters": [
           {
             "name": "limit",
@@ -148,7 +148,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -356,7 +356,7 @@
             }
           },
           "404": {
-            "description": "Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)\n\n- pairing_code_invalid: the code is unknown, expired or already claimed\n- device_not_found: no device of this key has that id",
+            "description": "Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)\n\n- pairing_code_invalid: the code is unknown, expired or already used\n- device_not_found: no device of this key has that id",
             "x-error-codes": ["pairing_code_invalid", "device_not_found"],
             "content": {
               "application/json": {
@@ -440,7 +440,7 @@
             }
           },
           "429": {
-            "description": "Too many requests, or too many failed claims: wait a minute (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -679,7 +679,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -916,7 +916,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -1203,7 +1203,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -1481,7 +1481,7 @@
             }
           },
           "429": {
-            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
+            "description": "Too many requests (rate_limited)\n\n- rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry",
             "x-error-codes": ["rate_limited"],
             "content": {
               "application/json": {
@@ -1702,7 +1702,7 @@
                 "type": "string"
               },
               "requestId": {
-                "description": "With a 500: names the request for support",
+                "description": "On every error body: names the request's log event for support; not promised unique",
                 "type": "string"
               },
               "created": {

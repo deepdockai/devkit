@@ -20,7 +20,7 @@ the API key the CLI wrote to the app's env file.
 | `systems list` | the systems and actions assigned to the organisation | member |
 | `systems openapi <system>` | the system's OpenAPI document on stdout; redirect it to a file | member |
 | `devices list` | paired devices with id, label, status, systems, last seen | member |
-| `devices pair <code> [--label <text>]` | claim a device by the code on its screen | member |
+| `devices pair <code> [--label <text>]` | pair a device by the code on its screen | member |
 | `devices rename <deviceId> <label>` | rename a device | member |
 | `devices release <deviceId>` | release a device (asks on a terminal; `--yes` otherwise) | admin |
 | `devices systems <deviceId>` | the device's live systems and action state, paused reasons included; `device_offline` is a normal answer | member |

@@ -9,7 +9,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** The organisation's paired devices, newest claim first, one page at a time */
+    /** The organisation's paired devices, most recently paired first, one page at a time */
     get: operations['listDevices']
     put?: never
     /** Pair a device by the code its screen shows */
@@ -142,7 +142,7 @@ export interface components {
           | 'temporarily_unavailable'
           | 'partner_deactivated'
         message: string
-        /** @description With a 500: names the request for support */
+        /** @description On every error body: names the request's log event for support; not promised unique */
         requestId?: string
         /** @description With applied_unverified or outcome_unknown on a system with no rollback: what the write created, as { chartId }, or null when the entry is not known. Absent otherwise */
         created?: {
@@ -349,7 +349,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -485,7 +485,7 @@ export interface operations {
       /**
        * @description Code unknown or expired, or device released meanwhile (pairing_code_invalid, device_not_found)
        *
-       *     - pairing_code_invalid: the code is unknown, expired or already claimed
+       *     - pairing_code_invalid: the code is unknown, expired or already used
        *     - device_not_found: no device of this key has that id
        */
       404: {
@@ -538,9 +538,9 @@ export interface operations {
         }
       }
       /**
-       * @description Too many requests, or too many failed claims: wait a minute (rate_limited)
+       * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -692,7 +692,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -844,7 +844,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -1019,7 +1019,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {
@@ -1193,7 +1193,7 @@ export interface operations {
       /**
        * @description Too many requests (rate_limited)
        *
-       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing claims; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
        */
       429: {
         headers: {

@@ -75,7 +75,7 @@ sent to a new site as is. The pairing code is what ties the device to your organ
    `ABCDEFGHJKMNPQRSTVWXYZ23456789`. Case and the dash do not matter.
 2. A code is valid for 10 minutes and is replaced shortly before it expires: read it off the screen
    when you pair.
-3. Claim it:
+3. Pair it:
 
 ```bash
 curl -X POST "$BASE/v1/devices" \
@@ -98,10 +98,10 @@ Pairing answers:
 |---|---|---|
 | `invalid_request` | 400 | the code is malformed; fix the input |
 | `pairing_code_invalid` | 404 | unknown, expired, replaced, already used, or the device is offline; ask for a fresh code |
-| `other_partner_build` | 409 | the device runs another partner's branded client; only that partner can claim it |
-| `rate_limited` | 429 | more than 5 failed claim attempts in 60 seconds with this key; wait up to a minute |
+| `other_partner_build` | 409 | the device runs another partner's branded client; only that partner can pair it |
+| `rate_limited` | 429 | more than 5 failed pairing attempts in 60 seconds with this key; wait up to a minute |
 
-Successful claims do not count against the limit; malformed codes are refused before counting.
+Successful pairings do not count against the limit; malformed codes are refused before counting.
 
 With the CLI: `deepdock devices pair <code> [--label <text>]`, `deepdock devices release <deviceId>`
 (admin).
