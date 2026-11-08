@@ -7,6 +7,7 @@
 - The command group `org` is now `orgs` (`deepdock orgs list`, `deepdock orgs select`); the old name is gone, with no alias.
 - A device is named `<deviceId>` in every usage string, help text, the README and the bundled skill (`devices rename|release|systems <deviceId>`, `actions list <deviceId> <system>`).
 - The README and the bundled skill advise reusing one HTTP connection for calls (keep-alive), because a fresh connection can hit a cold start.
+- The docs, the bundled skill and the device API pin say "pair" for taking a device into your organisation (was "claim"); the `rate_limited` and `pairing_code_invalid` texts follow, and `requestId` is described as present on every error body. Field names and error codes are unchanged (`claimedAt` stays).
 
 ## 1.2.0
 

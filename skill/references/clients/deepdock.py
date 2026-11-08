@@ -218,7 +218,7 @@ class Deepdock:
         return data
 
     def pair(self, code: str, label: Optional[str] = None) -> Dict[str, Any]:
-        """Claims a device by the pairing code it shows. Keep the returned `id`."""
+        """Pairs a device by the pairing code it shows. Keep the returned `id`."""
         body: Dict[str, str] = {"code": code}
         if label is not None:
             body["label"] = label

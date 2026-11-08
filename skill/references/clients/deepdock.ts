@@ -422,7 +422,7 @@ export class Deepdock {
     return (await this.send<DeviceSystem[]>(`/v1/devices/${encodeURIComponent(deviceId)}/systems`, { method: 'GET' })).data
   }
 
-  /** Claims a device by the pairing code it shows. Keep the returned `id`. */
+  /** Pairs a device by the pairing code it shows. Keep the returned `id`. */
   async pair(code: string, label?: string): Promise<Device> {
     const body: PairBody = label === undefined ? { code } : { code, label }
     return (
