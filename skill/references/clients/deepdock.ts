@@ -13,10 +13,6 @@ export class DeepdockError extends Error {
   readonly code: string
   readonly requestId?: string
   readonly systems?: string[]
-  /** system_version_unverified: the version the system last reported, `null` when it reported none. */
-  readonly version?: string | null
-  /** system_version_unverified: `unverified_version`, `unparseable` or `unreported`. */
-  readonly reason?: string
   /** applied_unverified, outcome_unknown on a system with no rollback: the entry, or `null` when not known. */
   readonly created?: { chartId?: string } | null
   /** outcome_unknown: `true` when the write may or may not have landed. */
@@ -26,8 +22,6 @@ export class DeepdockError extends Error {
 
   constructor(status: number, code: string, message: string, requestId?: string,
     systems?: string[],
-    version?: string | null,
-    reason?: string,
     created?: { chartId?: string } | null,
     uncertain?: boolean,
   ) {
@@ -37,8 +31,6 @@ export class DeepdockError extends Error {
     this.code = code
     this.requestId = requestId
     this.systems = systems
-    this.version = version
-    this.reason = reason
     this.created = created
     this.uncertain = uncertain
   }
@@ -69,16 +61,6 @@ export type SystemStatus = 'running' | 'stopped' | 'missing' | 'unknown' | 'vani
 /** The database access the device last reported; `null` while none is known. */
 export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 'not_set_up' | null
 
-/**
- * Whether writes on the system run. `unverified` makes writes answer system_version_unverified:
- * `unverified_version` clears once Deepdock verifies the version; `unparseable` does not clear by
- * waiting (contact Deepdock); `unreported` clears once the device reports the system's version (a
- * write verified for one exact release needs it).
- */
-export type SystemWrites =
-  | { state: 'verified' | 'unknown' | 'partial' }
-  | { state: 'unverified'; reason: 'unverified_version' | 'unparseable' | 'unreported' }
-
 /** Why a system's `version` is missing, when the device says. */
 export type VersionIssue = 'not_installed' | 'not_found' | 'unreadable'
 
@@ -106,7 +88,8 @@ export type Device = {
     accessLastCheckedAt: string | null
     lockedActions: string[] | null
     reportedAt: string
-    writes: SystemWrites
+    /** Actions the installed version is not yet approved for: they answer version_not_covered. Absent when none. */
+    blockedActions?: string[]
   }[]
 }
 
@@ -162,8 +145,8 @@ const unwrap = async <T>(res: Response): Promise<{ data: T; nextCursor: string |
     throw new DeepdockTransportError(`non-JSON answer with status ${res.status}`)
   }
   if (body !== null && typeof body === 'object' && 'error' in body) {
-    const { code, message, requestId, systems, version, reason, created, uncertain } = body.error
-    const error = new DeepdockError(res.status, code, message, requestId, systems, version, reason, created, uncertain)
+    const { code, message, requestId, systems, created, uncertain } = body.error
+    const error = new DeepdockError(res.status, code, message, requestId, systems, created, uncertain)
     error.retryAfter = res.headers.get('retry-after') ?? undefined
     throw error
   }
@@ -443,8 +426,8 @@ export class Deepdock {
  * Pending writes: one attempt against persisted state. Persist the row BEFORE the first send, so a
  * crash between send and answer cannot produce a second record under a new key. A job retries rows
  * left in `sent` with backoff (seconds, then minutes, for hours if the device stays offline).
- * For system_version_unverified and device_outdated, poll the device's `writes` / `outdated` before
- * retrying: they take longer than minutes.
+ * For device_outdated, poll the device's `outdated` before retrying: it takes longer than minutes.
+ * version_not_covered is not retried: Deepdock has to approve the installed version first.
  * ---------------------------------------------------------------------------------------------- */
 
 export type PendingStatus = 'pending' | 'sent' | 'done' | 'unknown' | 'refused'

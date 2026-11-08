@@ -29,12 +29,12 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'record_locked',
     'record_not_editable',
     'payload_too_large',
+    'version_not_covered',
   ],
   3: [
     'device_offline',
     'device_syncing',
     'device_outdated',
-    'system_version_unverified',
     'action_paused',
     'access_outdated',
     'access_missing',

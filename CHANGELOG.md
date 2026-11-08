@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Device API format 11: the error code `system_version_unverified` and the error fields `version` and `reason` are gone, and a system's `writes` state in `GET /v1/devices/{deviceId}` is replaced by `blockedActions` (the actions the customer's installed version is not yet approved for). A call on such an action answers the new `409 version_not_covered` (CLI exit 2): nothing ran, retrying gets the same answer, and it works once Deepdock approves that version or the customer runs an approved one. The bundled TypeScript and Python clients, the skill's error reference and the device types follow. This needs the API from the Deepdock release that carries these changes.
 - `deepdock devices` and `deepdock incidents list` read the organisation's lists as `{ "data": [...], "nextCursor": ... }`, the form `/v1` already uses (was `{ "data": { "items": [...], "nextCursor": ... } }`). They need the API from the next Deepdock release; an older API answers the old form, which this version does not read.
 - The CLI follows the API's British spelling and its renamed code: `GET /partner/organisations` (was `/partner/orgs`), the error code `organisation_required` (was `organization_required`) and `cli_outdated` (was `client_outdated`, still exit 4). The bundled device types and the skill's error reference include them. These need the API from the next Deepdock release.
 - The command group `org` is now `orgs` (`deepdock orgs list`, `deepdock orgs select`); the old name is gone, with no alias.

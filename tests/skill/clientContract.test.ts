@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { extractDevices } from '../../scripts/genDevices.ts'
 import {
   Deepdock,
+  DeepdockError,
   type Device,
   type DeviceSystem,
   type PairBody,
@@ -62,6 +63,40 @@ describe('the pinned device API', () => {
       const [method = '', path = ''] = call.split(' ')
       expect(pin.paths[path]?.[method.toLowerCase()], call).toBeDefined()
     }
+  })
+
+  it("reads blockedActions from a paired device's system", async () => {
+    const answer = async (_url: string | URL | Request): Promise<Response> =>
+      Response.json({
+        data: { id: 'd1', systems: [{ system: 'example-erp', blockedActions: ['createNote'] }] },
+      })
+    const client = new Deepdock('ddk_test_canary', { fetch: answer as typeof fetch })
+    const device: Device = await client.pair('ABC123')
+    expect(device.systems[0]?.blockedActions).toEqual(['createNote'])
+  })
+
+  it('raises version_not_covered as a DeepdockError and does not retry it', async () => {
+    let calls = 0
+    const refuse = async (_url: string | URL | Request): Promise<Response> => {
+      calls++
+      return Response.json(
+        {
+          error: {
+            code: 'version_not_covered',
+            message: 'example-erp 2.210 is not yet approved for createNote; nothing was run',
+          },
+        },
+        { status: 409 },
+      )
+    }
+    const client = new Deepdock('ddk_test_canary', { fetch: refuse as typeof fetch })
+    const thrown = await client.systems('d1').then(
+      () => undefined,
+      (e: unknown) => e,
+    )
+    expect(thrown).toBeInstanceOf(DeepdockError)
+    expect(thrown).toMatchObject({ code: 'version_not_covered', status: 409 })
+    expect(calls).toBe(1)
   })
 
   it('calls a read and a create with POST and an update with PATCH, the inputs in the JSON body and never in the URL', async () => {

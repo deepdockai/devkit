@@ -62,12 +62,13 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   // Not a wait: the practice lifts the restriction (a locked chart) in its own system.
   record_restricted: 2,
   payload_too_large: 2,
+  // Not a retry: Deepdock has to approve the customer's installed system version for the action first.
+  version_not_covered: 2,
   device_offline: 3,
   device_syncing: 3,
-  // A 409, but not a refusal: each resolves without the caller changing anything (the client
-  // updates; Deepdock verifies the system's version).
+  // A 409, but not a refusal: it resolves without the caller changing anything (the client
+  // updates).
   device_outdated: 3,
-  system_version_unverified: 3,
   action_paused: 3,
   access_outdated: 3,
   access_missing: 3,
