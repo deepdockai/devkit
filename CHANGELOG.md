@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0
 
 - `deepdock devices` and `deepdock incidents list` read the organisation's lists as `{ "data": [...], "nextCursor": ... }`, the form `/v1` already uses (was `{ "data": { "items": [...], "nextCursor": ... } }`). They need the API from the next Deepdock release; an older API answers the old form, which this version does not read.
 - The CLI follows the API's British spelling and its renamed code: `GET /partner/organisations` (was `/partner/orgs`), the error code `organisation_required` (was `organization_required`) and `cli_outdated` (was `client_outdated`, still exit 4). The bundled device types and the skill's error reference include them. These need the API from the next Deepdock release.
