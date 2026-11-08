@@ -115,6 +115,22 @@ describe('error codes', () => {
     }
   })
 
+  it('retries in the bundled clients only codes the API still has and the CLI exits 3 for', () => {
+    const read = (path: string): string => readFileSync(new URL(path, import.meta.url), 'utf8')
+    const tsClient = read('../../skill/references/clients/deepdock.ts')
+    const pyClient = read('../../skill/references/clients/deepdock.py')
+    const tsRetrySet = /const RETRY_SAME_KEY = new Set\(\[([^\]]*)\]/.exec(tsClient)?.[1] ?? ''
+    const pyRetrySet = /RETRY_SAME_KEY = \{([^}]*)\}/.exec(pyClient)?.[1] ?? ''
+    for (const set of [tsRetrySet, pyRetrySet]) {
+      const names = [...set.matchAll(/['"]([a-z_]+)['"]/g)].map((m) => m[1] as string)
+      expect(names).not.toEqual([])
+      for (const code of names) {
+        expect(API_ERROR_CODES, code).toContain(code)
+        expect(EXIT_CODES[code as keyof typeof EXIT_CODES], code).toBe(3)
+      }
+    }
+  })
+
   it('maps the codes the design table leaves out explicitly', () => {
     expect(EXIT_CODES.unauthenticated).toBe(5)
     expect(EXIT_CODES.organisation_required).toBe(1)

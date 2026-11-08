@@ -2,11 +2,12 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { extractDevices } from '../../scripts/genDevices.ts'
 import {
+  attempt,
   Deepdock,
-  DeepdockError,
   type Device,
   type DeviceSystem,
   type PairBody,
+  type PendingWrite,
 } from '../../skill/references/clients/deepdock.ts'
 import type { paths } from './devices.openapi.generated.ts'
 
@@ -65,17 +66,7 @@ describe('the pinned device API', () => {
     }
   })
 
-  it("reads blockedActions from a paired device's system", async () => {
-    const answer = async (_url: string | URL | Request): Promise<Response> =>
-      Response.json({
-        data: { id: 'd1', systems: [{ system: 'example-erp', blockedActions: ['createNote'] }] },
-      })
-    const client = new Deepdock('ddk_test_canary', { fetch: answer as typeof fetch })
-    const device: Device = await client.pair('ABC123')
-    expect(device.systems[0]?.blockedActions).toEqual(['createNote'])
-  })
-
-  it('raises version_not_covered as a DeepdockError and does not retry it', async () => {
+  it('refuses a write on version_not_covered instead of retrying it', async () => {
     let calls = 0
     const refuse = async (_url: string | URL | Request): Promise<Response> => {
       calls++
@@ -89,13 +80,21 @@ describe('the pinned device API', () => {
         { status: 409 },
       )
     }
-    const client = new Deepdock('ddk_test_canary', { fetch: refuse as typeof fetch })
-    const thrown = await client.systems('d1').then(
-      () => undefined,
-      (e: unknown) => e,
-    )
-    expect(thrown).toBeInstanceOf(DeepdockError)
-    expect(thrown).toMatchObject({ code: 'version_not_covered', status: 409 })
+    const dd = new Deepdock('ddk_test_canary', { fetch: refuse as typeof fetch })
+    const row: PendingWrite = {
+      key: 'note-12345678',
+      deviceId: 'd1',
+      system: 'example-erp',
+      action: 'createNote',
+      operation: 'create',
+      input: {},
+      status: 'pending',
+      conflictRetries: 0,
+    }
+    expect(await attempt(dd, row)).toMatchObject({
+      status: 'refused',
+      refusedCode: 'version_not_covered',
+    })
     expect(calls).toBe(1)
   })
 

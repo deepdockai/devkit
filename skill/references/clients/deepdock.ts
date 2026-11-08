@@ -44,7 +44,7 @@ export class DeepdockTransportError extends Error {
   }
 }
 
-type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; version?: string | null; reason?: string; created?: { chartId?: string } | null; uncertain?: boolean }
+type ErrorBody = { code: string; message: string; requestId?: string; systems?: string[]; created?: { chartId?: string } | null; uncertain?: boolean }
 type Envelope<T> = { data: T; nextCursor?: string | null } | { error: ErrorBody }
 
 /** One page of a `many` read: `items` is the answer's `data` array, `nextCursor` its top-level sibling. */
@@ -454,7 +454,6 @@ const RETRY_SAME_KEY = new Set([
   'device_offline',
   'device_syncing',
   'device_outdated',
-  'system_version_unverified',
   'target_busy',
   'temporarily_unavailable',
   'internal_error',
