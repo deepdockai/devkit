@@ -13,7 +13,16 @@
   "bin": {
     "deepdock": "dist/deepdock.js"
   },
-  "files": ["dist/deepdock.js", "skill", "README.md", "CHANGELOG.md", "LICENSE", "SECURITY.md"],
+  "files": [
+    "dist/deepdock.js",
+    "skill",
+    "!**/__pycache__",
+    "!**/*.pyc",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
   "engines": {
     "node": ">=22.13"
   },
