@@ -113,7 +113,7 @@ export type DeviceSystem = {
   access: SystemAccess
   /** Set when `access` is the last known value (the device could not read it): when it last did. */
   accessLastCheckedAt: string | null
-  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for the spec set it runs now. */
+  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for its current action set. */
   lockedActions: string[] | null
   actions: ActionState[]
   /** The connectors the device runs for this system, by name and kind. */
@@ -157,7 +157,7 @@ const unwrap = async <T>(res: Response): Promise<{ data: T; nextCursor: string |
 }
 
 // Deepdock sends `filename*` (UTF-8) beside an ASCII `filename`; the name is already safe to save
-// on Windows, and can carry personal data (a patient's name in a document title).
+// on Windows, and can carry personal data (a person's name in a document title).
 const filenameOf = (disposition: string | null): string | null => {
   if (disposition === null) return null
   const extended = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]

@@ -99,8 +99,8 @@ describe('error codes', () => {
       'outcome_unknown', // read the record back before any retry
       'access_outdated', // waits for the customer to set the access up again
       'access_missing', // same
-      'credentials_rejected', // waits for the practice to renew the login
-      'certificate_changed', // waits for the practice to confirm the certificate
+      'credentials_rejected', // waits for the customer to renew the login
+      'certificate_changed', // waits for the customer to confirm the certificate
     ])
     const retryLater = Object.keys(EXIT_CODES).filter(
       (code) => EXIT_CODES[code as keyof typeof EXIT_CODES] === 3,

@@ -12,12 +12,12 @@ answers `405 invalid_request` with `Allow` naming the action's one method, so a 
 is refused, not run.
 
 Inputs are typed as the action's schema declares them and are never sent as text when they are not:
-an integer is a JSON number (`"patientId": 4711`, not `"4711"`; the text form is refused with
+an integer is a JSON number (`"customerId": 4711`, not `"4711"`; the text form is refused with
 `422 invalid_input`). Text is normalised to Unicode NFC before anything else happens; a composed
 and a decomposed spelling are the same value.
 
 **Never put an input in the URL.** A value in a URL reaches request logs, proxies and browser
-history, which is where a patient's name or id must not end up. Any query string on an action
+history, which is where a customer's name or id must not end up. Any query string on an action
 path, whatever it holds, answers `400 invalid_request` ("inputs go in the JSON body, not in the
 URL") without repeating a name or a value. Because the body is JSON, a `+` or a non-ASCII letter
 needs no escaping.
@@ -41,7 +41,7 @@ curl -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/searchCustome
 
 - A read with `cardinality: many` answers `data` as an array; `nextCursor` is a sibling of `data`
   (present only on a read that can page). A read with `cardinality: one` (for example
-  `readPatient`) answers `data` as the record itself, `{ "data": { "customerId": 1001, ... } }`, and
+  `readCustomer`) answers `data` as the record itself, `{ "data": { "customerId": 1001, ... } }`, and
   answers `404 not_found` when no record matches.
 - Pass `nextCursor` back as `cursor` unchanged while it is not `null`, and stop only on `null`,
   never on a short page: a page of long entries (notes) ends before `limit` rows to keep the
@@ -75,7 +75,7 @@ curl -X POST "$BASE/v1/devices/$DEVICE/systems/example-erp/actions/downloadDocum
 - Once the bytes flow, a failure can only end the body early: compare the bytes received with
   `Content-Length` and treat a short body as a failed download, never as the file. Run it again.
 - The file name is already safe to save on Windows, macOS and Linux, but it is the customer's data
-  (a document title can name a patient): store and show it like any other record value.
+  (a document title can name a person): store and show it like any other record value.
 - The bundled clients do all of this in `download` (TypeScript: `{ bytes, contentType, filename }`;
   Python: `Download(content, content_type, filename)`), and throw `DeepdockTransportError` for a
   short body. A large file can take longer than 35 seconds to transfer, so their timeout bounds the
@@ -115,7 +115,7 @@ of a customer, the note id of an update. The pattern is always the same:
    customer search).
 2. Pass its id back in the type the write's schema declares, usually the integer the read returned.
 3. Handle the action-specific refusal the description names: for example `422 unknown_author` when
-   the user is not one the system lists, or `422 no_open_case` when the customer has no open case and
+   the user is not one the system lists, or `422 no_matching_period` when the customer has no open period and
    the action does not open one. Both mean nothing was written; fix the reference, do not retry
    blindly.
 

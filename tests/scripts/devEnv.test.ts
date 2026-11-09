@@ -16,8 +16,8 @@ describe('development environment', () => {
         devEnv({ env: { DEEPDOCK_BASE_URL: url }, platform: 'darwin', homedir: '/Users/a' })
           .DEEPDOCK_CONFIG_DIR,
       )
-    expect(at('http://localhost:8787')).toBe('/Users/a/.config/deepdock-dev/localhost:8787')
-    expect(at('http://localhost:9999')).not.toBe(at('http://localhost:8787'))
+    expect(at('http://localhost:3000')).toBe('/Users/a/.config/deepdock-dev/localhost:3000')
+    expect(at('http://localhost:9999')).not.toBe(at('http://localhost:3000'))
     expect(at('https://api.example.com/')).toBe('/Users/a/.config/deepdock-dev/api.example.com')
   })
 
