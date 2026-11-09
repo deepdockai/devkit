@@ -295,6 +295,39 @@ print(inspect.signature(mod.Deepdock.__init__).parameters["timeout"].default)
   )
 
   it.skipIf(python.status !== 0)(
+    'refuses a write on version_not_covered instead of retrying it',
+    () => {
+      const run = spawnSync(
+        'python3',
+        [
+          '-I',
+          '-c',
+          `import importlib.util, sys, types
+class Stub:
+    def __init__(self, **kw): self.headers = {}; self.n = 0
+    def request(self, method, path, **kw):
+        self.n += 1
+        class R:
+            status_code = 409; headers = {}
+            def json(self): return {"error": {"code": "version_not_covered", "message": "not approved"}}
+        return R()
+sys.modules["httpx"] = types.SimpleNamespace(Client=Stub, Headers=dict, HTTPError=Exception)
+spec = importlib.util.spec_from_file_location("deepdock", sys.argv[1])
+mod = importlib.util.module_from_spec(spec); sys.modules["deepdock"] = mod; spec.loader.exec_module(mod)
+stub = Stub(); dd = mod.Deepdock("ddk_test_canary", client=stub, sleep=lambda s: None)
+row = mod.attempt(dd, mod.PendingWrite("note-12345678", "d1", "s", "createNote", "create", {}))
+print(row.status, row.refused_code, stub.n)
+`,
+          pyClient,
+        ],
+        { encoding: 'utf8' },
+      )
+      expect(run.stderr).toBe('')
+      expect(run.stdout.trim()).toBe('refused version_not_covered 1')
+    },
+  )
+
+  it.skipIf(python.status !== 0)(
     'downloads a file action: bytes, type and UTF-8 name; a short body or a refusal raises',
     () => {
       const run = spawnSync(

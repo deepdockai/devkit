@@ -1677,7 +1677,6 @@
                   "device_offline",
                   "device_outdated",
                   "device_syncing",
-                  "system_version_unverified",
                   "device_learning_only",
                   "device_connected_twice",
                   "action_paused",
@@ -1690,6 +1689,7 @@
                   "applied_unverified",
                   "credentials_rejected",
                   "certificate_changed",
+                  "version_not_covered",
                   "idempotency_conflict",
                   "outcome_unknown",
                   "device_answer_unreadable",
@@ -1726,7 +1726,7 @@
                 }
               },
               "fields": {
-                "description": "With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the body is not an object at all. A message never holds the value",
+                "description": "With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the refusal cannot name an input. A message never holds the value",
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -1740,15 +1740,6 @@
                     }
                   }
                 }
-              },
-              "version": {
-                "description": "With system_version_unverified: the version the system last reported, or null when it reported none (an HTTP write needs the exact release)",
-                "type": ["string", "null"]
-              },
-              "reason": {
-                "description": "With system_version_unverified: unverified_version, unparseable when the reported version is not dotted digits, or unreported when the system reported none (an HTTP write only)",
-                "type": "string",
-                "enum": ["unverified_version", "unparseable", "unreported"]
               }
             }
           }
@@ -1956,30 +1947,12 @@
                     }
                   ]
                 },
-                "writes": {
-                  "anyOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "reason": {
-                          "enum": ["unparseable", "unreported", "unverified_version"]
-                        },
-                        "state": {
-                          "const": "unverified"
-                        }
-                      },
-                      "required": ["reason", "state"]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "state": {
-                          "enum": ["partial", "unknown", "verified"]
-                        }
-                      },
-                      "required": ["state"]
-                    }
-                  ]
+                "blockedActions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-zA-Z0-9]{2,48}$"
+                  }
                 }
               },
               "required": [
@@ -1990,8 +1963,7 @@
                 "status",
                 "system",
                 "version",
-                "versionIssue",
-                "writes"
+                "versionIssue"
               ]
             }
           },

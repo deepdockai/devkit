@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { extractDevices } from '../../scripts/genDevices.ts'
 import {
+  attempt,
   Deepdock,
   type Device,
   type DeviceSystem,
   type PairBody,
+  type PendingWrite,
 } from '../../skill/references/clients/deepdock.ts'
 import type { paths } from './devices.openapi.generated.ts'
 
@@ -62,6 +64,38 @@ describe('the pinned device API', () => {
       const [method = '', path = ''] = call.split(' ')
       expect(pin.paths[path]?.[method.toLowerCase()], call).toBeDefined()
     }
+  })
+
+  it('refuses a write on version_not_covered instead of retrying it', async () => {
+    let calls = 0
+    const refuse = async (_url: string | URL | Request): Promise<Response> => {
+      calls++
+      return Response.json(
+        {
+          error: {
+            code: 'version_not_covered',
+            message: 'example-erp 2.210 is not yet approved for createNote; nothing was run',
+          },
+        },
+        { status: 409 },
+      )
+    }
+    const dd = new Deepdock('ddk_test_canary', { fetch: refuse as typeof fetch })
+    const row: PendingWrite = {
+      key: 'note-12345678',
+      deviceId: 'd1',
+      system: 'example-erp',
+      action: 'createNote',
+      operation: 'create',
+      input: {},
+      status: 'pending',
+      conflictRetries: 0,
+    }
+    expect(await attempt(dd, row)).toMatchObject({
+      status: 'refused',
+      refusedCode: 'version_not_covered',
+    })
+    expect(calls).toBe(1)
   })
 
   it('calls a read and a create with POST and an update with PATCH, the inputs in the JSON body and never in the URL', async () => {

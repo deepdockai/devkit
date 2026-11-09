@@ -25,16 +25,13 @@ class DeepdockError(Exception):
     """Deepdock answered `{ "error": { "code", ... } }`. Switch on `code`, never on `message`."""
 
     def __init__(self, status: int, code: str, message: str, request_id: Optional[str] = None,
-                 systems: Optional[List[str]] = None, version: Optional[str] = None,
-                 reason: Optional[str] = None, created: Optional[Dict[str, Any]] = None,
+                 systems: Optional[List[str]] = None, created: Optional[Dict[str, Any]] = None,
                  uncertain: Optional[bool] = None):
         super().__init__(message)
         self.status = status
         self.code = code
         self.request_id = request_id
         self.systems = systems
-        self.version = version  # system_version_unverified: the version the system last reported, None when it reported none
-        self.reason = reason  # system_version_unverified: unverified_version, unparseable or unreported
         self.created = created  # applied_unverified, outcome_unknown with no rollback: {"chartId"} or None
         self.retry_after: Optional[str] = None  # the Retry-After header as sent (seconds), when the answer carried one
         self.uncertain = uncertain  # outcome_unknown: True when the write may or may not have landed
@@ -99,7 +96,7 @@ def _unwrap(r: httpx.Response) -> Tuple[Any, Optional[str]]:
     if isinstance(body, dict) and "error" in body:
         e = body["error"]
         err = DeepdockError(r.status_code, e["code"], e["message"], e.get("requestId"), e.get("systems"),
-                            e.get("version"), e.get("reason"), e.get("created"), e.get("uncertain"))
+                            e.get("created"), e.get("uncertain"))
         err.retry_after = r.headers.get("retry-after")
         raise err
     if not isinstance(body, dict) or "data" not in body:
@@ -233,13 +230,13 @@ class Deepdock:
 # Pending writes: one attempt against persisted state. Persist the row BEFORE the first send, so a
 # crash between send and answer cannot produce a second record under a new key. A job retries rows
 # left in "sent" with backoff (seconds, then minutes, for hours if the device stays offline).
-# For system_version_unverified and device_outdated, poll the device's `writes` / `outdated` before
-# retrying: they take longer than minutes.
+# For device_outdated, poll the device's `outdated` and `blockedActions` before retrying: it takes longer than minutes.
+# version_not_covered is not retried: Deepdock has to approve the installed version first.
 # --------------------------------------------------------------------------------------------------
 
 CONFLICT_RETRIES = 5  # a running write finishes within seconds; beyond this, treat it as unknown
 
-RETRY_SAME_KEY = {"device_offline", "device_syncing", "device_outdated", "system_version_unverified",
+RETRY_SAME_KEY = {"device_offline", "device_syncing", "device_outdated",
                   "target_busy", "temporarily_unavailable", "internal_error", "action_paused",
                   "system_unavailable"}
 
