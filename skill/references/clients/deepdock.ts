@@ -88,7 +88,7 @@ export type Device = {
     accessLastCheckedAt: string | null
     lockedActions: string[] | null
     reportedAt: string
-    /** Actions the installed version is not yet approved for: they answer version_not_covered. Absent when none. */
+    /** Actions this device's client cannot run yet: each answers device_outdated until it updates. Absent when none. */
     blockedActions?: string[]
   }[]
 }
@@ -426,7 +426,7 @@ export class Deepdock {
  * Pending writes: one attempt against persisted state. Persist the row BEFORE the first send, so a
  * crash between send and answer cannot produce a second record under a new key. A job retries rows
  * left in `sent` with backoff (seconds, then minutes, for hours if the device stays offline).
- * For device_outdated, poll the device's `outdated` before retrying: it takes longer than minutes.
+ * For device_outdated, poll the device's `outdated` and `blockedActions` before retrying: it takes longer than minutes.
  * version_not_covered is not retried: Deepdock has to approve the installed version first.
  * ---------------------------------------------------------------------------------------------- */
 
