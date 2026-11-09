@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1
+
+- The package no longer ships Python bytecode from the bundled client.
+- The docs and the bundled clients use neutral example names. No command, field or error code changed.
+
 ## 1.4.0
 
 - The current device API: the error code `system_version_unverified` and the error fields `version` and `reason` are gone, and a system's `writes` state in `GET /v1/devices/{deviceId}` is replaced by `blockedActions` (the actions this device's client cannot run yet; each answers `device_outdated` until the client updates). An action whose system runs a program version Deepdock has not yet approved for it answers the new `409 version_not_covered` (CLI exit 2): nothing ran, retrying gets the same answer, and it works once Deepdock approves that version or the customer runs an approved one. The bundled TypeScript and Python clients, the skill's error reference and the device types follow. This needs the API from the Deepdock release that carries these changes.
