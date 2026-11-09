@@ -63,7 +63,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | `device_offline` | 503 | the device is not connected, is shutting down, did not answer within 20 s, or the call was cut off inside Deepdock by a restart or deploy. **A write may still have landed** | yes, with backoff (seconds to minutes); a write only with the same key | "the customer PC is offline; we will retry" |
 | `device_syncing` | 503 | the device has not reported its Deepdock client yet (just paired, or its report did not come through); Deepdock asks it again. Nothing was written | yes, after `Retry-After` (5 s); a write with the same key | "the customer PC is connecting; retrying" |
 | `device_outdated` | 409 | the device's Deepdock client is too old for this call. It updates itself when a newer version is released for your organisation, once nobody is signed in on the PC. Nothing was written | after the update (`outdated` on `GET /v1/devices/{deviceId}` turns `false`); retrying before it gets the same answer. A write keeps its key | "the Deepdock client on the customer PC needs an update" |
-| `system_version_unverified` | 409 | a write on a system whose vendor version Deepdock has not verified yet. Nothing was sent to the device; reads still work. `error.version` is the version the system last reported (null when it reported none) and `error.reason` is `unverified_version`, `unparseable` when that version is not dotted digits, or `unreported` when the system reported no version: a write over the system's own HTTP interface is verified for one exact release and needs it | `unverified_version`: after Deepdock has verified that version (`writes` on the system in `GET /v1/devices/{deviceId}` turns `verified`); retrying before it gets the same answer. `unparseable`: retrying does not help, contact Deepdock; only a different reported version changes it. `unreported`: later, once the device reports the system's version. A write keeps its key | "the customer's system was updated to a version Deepdock has not yet verified; changes will work once it has" |
+| `version_not_covered` | 409 | the program version installed on the customer's PC is not yet approved for this action, so the device ran nothing and sent nothing to the system. The message names the system, its version and the action | after Deepdock has approved that version for the action; retrying before it gets the same answer. A write keeps its key | "the customer's system was updated to a version Deepdock has not yet approved for this; it will work once it has" |
 | `action_paused` | 503 | the action is paused on the device (`GET .../systems` shows `reason`); only Deepdock resumes it | later, when `GET .../systems` shows it active; do not loop | "this feature is paused while Deepdock checks the customer system" |
 | `system_unavailable` | 503 | the customer's program is stopped or missing on the device | later; often resolves when the customer restarts the program | "the customer's software is not running" |
 | `target_busy` | 503 | the customer's system is busy or unreachable | yes, with backoff | "the customer's system is busy; retrying" |
@@ -113,7 +113,7 @@ const REACTION: Record<string, Reaction> = {
   device_offline: 'retry-same-key',
   device_syncing: 'retry-same-key',
   device_outdated: 'retry-later',
-  system_version_unverified: 'retry-later',
+  version_not_covered: 'retry-later',
   action_paused: 'wait-paused',
   system_unavailable: 'retry-later',
   target_busy: 'retry-same-key',

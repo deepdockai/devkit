@@ -65,9 +65,9 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   device_offline: 3,
   device_syncing: 3,
   // A 409, but not a refusal: each resolves without the caller changing anything (the client
-  // updates; Deepdock verifies the system's version).
+  // updates; Deepdock approves the system's version for the action).
   device_outdated: 3,
-  system_version_unverified: 3,
+  version_not_covered: 3,
   action_paused: 3,
   access_outdated: 3,
   access_missing: 3,
