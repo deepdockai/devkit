@@ -113,7 +113,7 @@ export type DeviceSystem = {
   access: SystemAccess
   /** Set when `access` is the last known value (the device could not read it): when it last did. */
   accessLastCheckedAt: string | null
-  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for the spec set it runs now. */
+  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for its current action set. */
   lockedActions: string[] | null
   actions: ActionState[]
   /** The connectors the device runs for this system, by name and kind. */

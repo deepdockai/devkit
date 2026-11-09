@@ -53,7 +53,7 @@
 
 ## 1.0.25
 
-- Three new error codes for writes over a customer system's own HTTP interface: `applied_unverified` (409, exit 2: the write landed but its read-back did not finish; `error.created` names the entry as `{ chartId }`, or null), `credentials_rejected` and `certificate_changed` (503, exit 3: a person at the practice renews the login or confirms the certificate in the Deepdock client). An earlier CLI already exits with the same codes through its status fallback.
+- Three new error codes for writes over a customer system's own HTTP interface: `applied_unverified` (409, exit 2: the write landed but its read-back did not finish; `error.created` names the entry as `{ chartId }`, or null), `credentials_rejected` and `certificate_changed` (503, exit 3: a person at the customer renews the login or confirms the certificate in the Deepdock client). An earlier CLI already exits with the same codes through its status fallback.
 - `system_version_unverified` can carry `error.reason: unreported` with `error.version: null`, and a system's `writes` can read `unverified` with reason `unreported`: such a write is verified for one exact release, and the system reported none.
 - `error.uncertain` is documented on `outcome_unknown`. The skill's error reference describes all of it.
 
@@ -77,7 +77,7 @@
 ## 1.0.20
 
 - `409 check_failed` is renamed `409 readback_failed`, and a paused action's `reason` reads `readback_failed` instead of `check_failed`: Deepdock read the written record back, it did not match, so nothing was saved and the action is paused. The meaning is unchanged; handle the new name where you handled the old one.
-- `unknown_author`, `unknown_provider` and `no_open_case` leave the fixed list of error codes. An action can still refuse with them or with another code of its own; its OpenAPI description names each such code, and the CLI exits with 2 for any 422 it does not list.
+- `unknown_author`, `unknown_provider` and `no_matching_period` leave the fixed list of error codes. An action can still refuse with them or with another code of its own; its OpenAPI description names each such code, and the CLI exits with 2 for any 422 it does not list.
 
 ## 1.0.19
 
@@ -85,7 +85,7 @@
 
 ## 1.0.18
 
-- A read or write on a record the customer's system restricts (for example a locked chart) answers `422 record_restricted`: a read returns no data instead of an empty answer, and a write writes nothing. The skill's error reference lists it, and the CLI exits with 2 for it.
+- A read or write on a record the customer's system restricts (for example a locked record) answers `422 record_restricted`: a read returns no data instead of an empty answer, and a write writes nothing. The skill's error reference lists it, and the CLI exits with 2 for it.
 
 ## 1.0.17
 
@@ -105,7 +105,7 @@
 
 ## 1.0.13
 
-- A device carries `lastKnownAt`: the time of its last report while it is not connected, `null` while it is connected. Every system of a device carries `lockedActions`: the actions the device reports locked because its database account lacks a right they need, under the spec set it runs now, or `null` when there is no verdict or the verdict is for an older spec set. Both are in the device list and, for `lockedActions`, in `GET /v1/devices/{deviceId}/systems`. The agent skill's TypeScript client types them, and its concepts reference explains them.
+- A device carries `lastKnownAt`: the time of its last report while it is not connected, `null` while it is connected. Every system of a device carries `lockedActions`: the actions the device reports locked because its database account lacks a right they need, under its current action set, or `null` when there is no verdict or the verdict is for an older action set. Both are in the device list and, for `lockedActions`, in `GET /v1/devices/{deviceId}/systems`. The agent skill's TypeScript client types them, and its concepts reference explains them.
 
 ## 1.0.12
 

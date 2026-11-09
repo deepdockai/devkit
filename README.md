@@ -265,7 +265,7 @@ another's; only the CLI's own settings move (`DEEPDOCK_CONFIG_DIR`), nothing els
 
 ```bash
 bun run dev -- auth status                                      # the production API
-DEEPDOCK_BASE_URL=http://localhost:8787 bun run dev -- auth login --no-wait
+DEEPDOCK_BASE_URL=http://localhost:3000 bun run dev -- auth login --no-wait
 ```
 
 The script does not depend on the current directory: from elsewhere, call it by its path
