@@ -11,8 +11,8 @@ export type CliCode =
 export type ExitCode = 0 | 1 | 2 | 3 | 4 | 5
 
 // Codes only the dashboard tree (`/partner`) answers, which the CLI calls too. They are not in the
-// pinned `/v1` document, so they are listed by hand; the API keeps the same list as
-// `PARTNER_ERROR_CODES` in apps/api/src/lib/v1Errors.ts.
+// pinned `/v1` document, so they are listed by hand; the API keeps the same list under the
+// name `PARTNER_ERROR_CODES`.
 export const PARTNER_API_CODES = [
   'organisation_required',
   'forbidden',
@@ -46,7 +46,7 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   // Not a wait: the device sent an answer the API cannot read, which only an update of the
   // Deepdock client on that PC changes.
   device_answer_unreadable: 2,
-  // Not a wait: a person at the practice must shut down the copied PC; calls work again about five
+  // Not a wait: a person at the customer must shut down the copied PC; calls work again about five
   // minutes after only one is connected.
   device_connected_twice: 2,
   rate_limited: 2,
@@ -59,7 +59,7 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   already_member: 2,
   record_locked: 2,
   record_not_editable: 2,
-  // Not a wait: the practice lifts the restriction (a locked chart) in its own system.
+  // Not a wait: the customer lifts the restriction (a locked record) in its own system.
   record_restricted: 2,
   payload_too_large: 2,
   // Not a retry: Deepdock has to approve the customer's installed system version for the action first.
@@ -72,7 +72,7 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   action_paused: 3,
   access_outdated: 3,
   access_missing: 3,
-  // Like access_missing: a person at the practice renews the login or confirms the certificate.
+  // Like access_missing: a person at the customer renews the login or confirms the certificate.
   credentials_rejected: 3,
   certificate_changed: 3,
   system_unavailable: 3,

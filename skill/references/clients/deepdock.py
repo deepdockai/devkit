@@ -75,7 +75,7 @@ class Download:
 
 def _filename(disposition: Optional[str]) -> Optional[str]:
     # Deepdock sends filename* (UTF-8) beside an ASCII filename; the name is already safe to save on
-    # Windows, and can carry personal data (a patient's name in a document title).
+    # Windows, and can carry personal data (a person's name in a document title).
     if disposition is None:
         return None
     extended = re.search(r"filename\*=UTF-8''([^;]+)", disposition, re.IGNORECASE)

@@ -157,7 +157,7 @@ const unwrap = async <T>(res: Response): Promise<{ data: T; nextCursor: string |
 }
 
 // Deepdock sends `filename*` (UTF-8) beside an ASCII `filename`; the name is already safe to save
-// on Windows, and can carry personal data (a patient's name in a document title).
+// on Windows, and can carry personal data (a person's name in a document title).
 const filenameOf = (disposition: string | null): string | null => {
   if (disposition === null) return null
   const extended = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]
