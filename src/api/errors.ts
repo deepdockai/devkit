@@ -61,10 +61,12 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   record_not_editable: 2,
   // Not a wait: the customer lifts the restriction (a locked record) in its own system.
   record_restricted: 2,
+  too_many_rows: 2,
   payload_too_large: 2,
   // Not a retry: Deepdock has to approve the customer's installed system version for the action first.
   version_not_covered: 2,
   device_offline: 3,
+  device_timeout: 3,
   device_syncing: 3,
   // A 409, but not a refusal: it resolves without the caller changing anything (the client
   // updates).

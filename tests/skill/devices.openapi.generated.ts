@@ -62,7 +62,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** The systems a device runs and the state of each action */
+    /** The systems a device runs and the state of each action: active, paused or blocked, with the reason */
     get: operations['listDeviceSystems']
     put?: never
     post?: never
@@ -94,7 +94,7 @@ export interface components {
         [key: string]: unknown
       }
       /** @constant */
-      availability?: 'locked_pending_access'
+      availability?: 'blocked_pending_access'
       /** @constant */
       file?: true
     }
@@ -120,6 +120,7 @@ export interface components {
           | 'record_restricted'
           | 'record_not_editable'
           | 'device_offline'
+          | 'device_timeout'
           | 'device_outdated'
           | 'device_syncing'
           | 'device_learning_only'
@@ -131,6 +132,7 @@ export interface components {
           | 'target_busy'
           | 'target_rejected'
           | 'readback_failed'
+          | 'too_many_rows'
           | 'applied_unverified'
           | 'credentials_rejected'
           | 'certificate_changed'
@@ -220,6 +222,13 @@ export interface components {
           }
         | {
             action: string
+            /** @enum {unknown} */
+            reason: 'access_missing' | 'access_not_set_up' | 'access_reapproval' | 'client_update'
+            /** @constant */
+            state: 'blocked'
+          }
+        | {
+            action: string
             /** @constant */
             state: 'active'
           }
@@ -230,7 +239,6 @@ export interface components {
         name: string
       }[]
       label: string | null
-      lockedActions: string[] | null
       /** @enum {unknown} */
       status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
       system: string

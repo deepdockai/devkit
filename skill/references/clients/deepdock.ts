@@ -103,6 +103,11 @@ export type ActionState =
       reason: 'structure_changed' | 'readback_failed' | 'credentials_rejected' | 'certificate_changed'
       pausedAt: string
     }
+  | {
+      action: string
+      state: 'blocked'
+      reason: 'client_update' | 'access_missing' | 'access_not_set_up' | 'access_reapproval'
+    }
 
 export type DeviceSystem = {
   system: string
@@ -113,8 +118,6 @@ export type DeviceSystem = {
   access: SystemAccess
   /** Set when `access` is the last known value (the device could not read it): when it last did. */
   accessLastCheckedAt: string | null
-  /** Actions the device reports locked because its database account lacks a right they need; `null` when there is no verdict for its current action set. */
-  lockedActions: string[] | null
   actions: ActionState[]
   /** The connectors the device runs for this system, by name and kind. */
   connectors: { name: string; kind: 'database' | 'http' }[]
@@ -452,6 +455,7 @@ export const CONFLICT_RETRIES = 5
 
 const RETRY_SAME_KEY = new Set([
   'device_offline',
+  'device_timeout',
   'device_syncing',
   'device_outdated',
   'target_busy',

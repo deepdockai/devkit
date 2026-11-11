@@ -287,6 +287,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
                     reason: 'structure_changed',
                     since: '2026-10-20T08:12:00Z',
                   },
+                  { action: 'updateNote', state: 'blocked', reason: 'client_update' },
                 ],
               },
             ],
