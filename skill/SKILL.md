@@ -23,9 +23,9 @@ integration against a demo device. It is not for building or changing actions: D
 3. A device reports the **systems** it runs; each system has **actions**, deterministic operations
    that Deepdock builds and verifies before offering them.
 4. Every action takes a flat JSON body, never a value in the URL: `POST` for a read or create,
-   `PATCH` for an update. A **read** (the
-   action's `operation`) also takes `limit` and `cursor` in that body to page; a **write** (`create`
-   or `update`) needs an `Idempotency-Key` as well.
+   `PATCH` for an update, `DELETE` for a delete. A **read** (the
+   action's `operation`) also takes `limit` and `cursor` in that body to page; a **write** (`create`,
+   `update` or `delete`) needs an `Idempotency-Key` as well.
 5. Every write needs an `Idempotency-Key`: a new key per intended write, the same key on every retry,
    and a repeat answers the stored result with `Idempotent-Replayed: true`, writing nothing twice.
 6. A write either fully applies or not: Deepdock checks its result before confirming, and a write

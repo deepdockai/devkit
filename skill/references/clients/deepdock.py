@@ -199,12 +199,13 @@ class Deepdock:
 
     def write(self, device_id: str, system: str, action: str, operation: str, idempotency_key: str,
               body: Dict[str, InputValue]) -> WriteResult:
-        """Runs a write action: POST for operation "create", PATCH for "update" (from the action index; any
+        """Runs a write action: POST for operation "create", PATCH for "update", DELETE for "delete" (inputs still go in the JSON body; from the action index; any
         other method answers 405 with `Allow` naming the right one). `body` values are typed as the
         action's schema declares. Any other `operation` raises ValueError before anything is sent."""
-        if operation not in ("create", "update"):
-            raise ValueError(f"operation must be 'create' or 'update', got {operation!r}")
-        data, headers, _ = self._send("PATCH" if operation == "update" else "POST",
+        method = {"create": "POST", "update": "PATCH", "delete": "DELETE"}.get(operation)
+        if method is None:
+            raise ValueError(f"operation must be 'create', 'update' or 'delete', got {operation!r}")
+        data, headers, _ = self._send(method,
                                    self._action_path(device_id, system, action), json=body,
                                    headers={"Idempotency-Key": idempotency_key})
         return WriteResult(data=data, replayed=headers.get("Idempotent-Replayed") == "true")

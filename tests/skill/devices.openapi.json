@@ -1641,7 +1641,7 @@
             "additionalProperties": {}
           },
           "method": {
-            "enum": ["PATCH", "POST"]
+            "enum": ["DELETE", "PATCH", "POST"]
           },
           "name": {
             "type": "string"
@@ -1650,7 +1650,7 @@
             "type": "boolean"
           },
           "operation": {
-            "enum": ["create", "read", "update"]
+            "enum": ["create", "delete", "read", "update"]
           },
           "output": {
             "type": "object",

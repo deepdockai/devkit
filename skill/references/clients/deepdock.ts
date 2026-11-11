@@ -52,8 +52,13 @@ export type Page<Item> = { items: Item[]; nextCursor: string | null }
 export type WriteResult<T> = { data: T; replayed: boolean }
 /** A flat JSON value as the action's schema declares it: a number is a number, never its text. */
 export type InputValue = string | number | boolean
-/** What a write action does, from `operation` in the action index: a create is POST, an update PATCH. */
-export type WriteOperation = 'create' | 'update'
+/** What a write action does, from `operation` in the action index: a create is POST, an update PATCH, a delete DELETE. */
+export type WriteOperation = 'create' | 'update' | 'delete'
+const WRITE_METHOD: Record<WriteOperation, 'POST' | 'PATCH' | 'DELETE'> = {
+  create: 'POST',
+  update: 'PATCH',
+  delete: 'DELETE',
+}
 export type ActionInput = Record<string, InputValue>
 
 /** `missing`: never found on the PC; `vanished`: found once and not any more. */
@@ -382,7 +387,7 @@ export class Deepdock {
   }
 
   /**
-   * Runs a write action: POST for a `create`, PATCH for an `update`. Take `operation` from the
+   * Runs a write action: POST for a `create`, PATCH for an `update`, DELETE for a `delete` (the inputs still go in the JSON body). Take `operation` from the
    * action index; any other method answers 405 with `Allow` naming the right one. `input` values
    * are typed as the action's schema declares. `idempotencyKey` is new per intended write and the
    * same on every retry.
@@ -396,7 +401,7 @@ export class Deepdock {
     input: ActionInput,
   ): Promise<WriteResult<Result>> {
     const { data, headers } = await this.send<Result>(this.actionPath(deviceId, system, action), {
-      method: operation === 'update' ? 'PATCH' : 'POST',
+      method: WRITE_METHOD[operation],
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(input),
     })
