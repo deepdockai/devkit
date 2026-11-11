@@ -61,6 +61,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
 | `device_offline` | 503 | the device is not connected, is shutting down, did not answer within 20 s, or the call was cut off inside Deepdock by a restart or deploy. **A write may still have landed** | yes, with backoff (seconds to minutes); a write only with the same key | "the customer PC is offline; we will retry" |
+| `device_timeout` | 503 | the device ran out of its time budget before it began the call or before it committed. Nothing was written | yes, with backoff; a write with the same key | "the customer PC was too slow; retrying" |
 | `device_syncing` | 503 | the device has not reported its Deepdock client yet (just paired, or its report did not come through); Deepdock asks it again. Nothing was written | yes, after `Retry-After` (5 s); a write with the same key | "the customer PC is connecting; retrying" |
 | `device_outdated` | 409 | the device's Deepdock client is too old for this call. It updates itself when a newer version is released for your organisation, once nobody is signed in on the PC. Nothing was written | after the update (on `GET /v1/devices/{deviceId}`, `outdated` turns `false` and the action leaves the system's `blockedActions`); retrying before it gets the same answer. A write keeps its key | "the Deepdock client on the customer PC needs an update" |
 | `version_not_covered` | 409 | the customer's installed version of the system is not yet approved by Deepdock for this action. Nothing was run. The message names the system, its version and the action | **no.** Retrying gets the same answer. It changes when Deepdock approves that version for the action, or when the customer runs an approved version | "this feature is not yet available for the customer's version of the software; Deepdock has to approve it first" |
@@ -111,6 +112,7 @@ const REACTION: Record<string, Reaction> = {
   credentials_rejected: 'wait-setup',
   certificate_changed: 'wait-setup',
   device_offline: 'retry-same-key',
+  device_timeout: 'retry-same-key',
   device_syncing: 'retry-same-key',
   device_outdated: 'retry-later',
   version_not_covered: 'stop',

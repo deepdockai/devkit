@@ -236,7 +236,7 @@ class Deepdock:
 
 CONFLICT_RETRIES = 5  # a running write finishes within seconds; beyond this, treat it as unknown
 
-RETRY_SAME_KEY = {"device_offline", "device_syncing", "device_outdated",
+RETRY_SAME_KEY = {"device_offline", "device_timeout", "device_syncing", "device_outdated",
                   "target_busy", "temporarily_unavailable", "internal_error", "action_paused",
                   "system_unavailable"}
 

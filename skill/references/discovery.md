@@ -68,8 +68,10 @@ curl "$BASE/v1/devices/$DEVICE/systems" -H "Authorization: Bearer $DEEPDOCK_API_
 ```
 
 A live call to the device. A list; each entry has `system`, `label`, `version` (may be absent),
-`status`, `access` and `actions`, each with `action` and `state` (`active`, or `paused` with
-`reason` and `pausedAt`). Answers `503 device_offline` when the device is not
+`status`, `access` and `actions`, each with `action` and `state`: `active`, `paused` with
+`reason` and `pausedAt`, or `blocked` with `reason` (`client_update`, `access_missing`,
+`access_not_set_up` or `access_reapproval`). `actions` lists every action of yours on that system,
+including the blocked ones. Answers `503 device_offline` when the device is not
 connected: that is a normal state, not an error in your code. Do not poll it tightly; it reaches the
 customer's PC.
 

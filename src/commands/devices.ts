@@ -131,13 +131,20 @@ const renderSystems = (ctx: Ctx, data: unknown): string => {
   const text = genericView(data, ctx.out, DEVICE_SYSTEM_COLUMNS)
   if (text === '') return 'The device reports no systems.'
   const paused = countValue(data, 'paused')
-  if (paused === 0) return text
-  return [
-    text,
-    paused === 1 ? 'One action is paused.' : `${paused} actions are paused.`,
-    'Only Deepdock resumes it; `deepdock incidents list` shows the incident.',
-    'Your code gets 503 action_paused from it until then.',
-  ].join('\n')
+  const blocked = countValue(data, 'blocked')
+  const lines = [text]
+  if (paused > 0)
+    lines.push(
+      paused === 1 ? 'One action is paused.' : `${paused} actions are paused.`,
+      'Only Deepdock resumes it; `deepdock incidents list` shows the incident.',
+      'Your code gets 503 action_paused from it until then.',
+    )
+  if (blocked > 0)
+    lines.push(
+      blocked === 1 ? 'One action is blocked.' : `${blocked} actions are blocked.`,
+      'Its reason says what unblocks it: a client update or the customer setting up the access.',
+    )
+  return lines.join('\n')
 }
 
 const systemsOf = async (ctx: Ctx, id: string): Promise<Result> => {

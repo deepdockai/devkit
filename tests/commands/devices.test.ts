@@ -199,7 +199,7 @@ describe('devices pair, rename, release', () => {
 })
 
 describe('devices systems and actions', () => {
-  it('shows the keys the API sent and counts paused actions, exit 0', async () => {
+  it('shows the keys the API sent and counts paused and blocked actions, exit 0', async () => {
     const outcome = await run(['devices', 'systems', DEVICE_ID], { tty: true })
     expect(outcome.code).toBe(0)
     expect(outcome.stdout).toContain('system: example-erp')
@@ -207,6 +207,8 @@ describe('devices systems and actions', () => {
     expect(outcome.stdout).toMatch(/createNote\s+paused\s+structure changed/)
     expect(outcome.stdout).toContain('One action is paused.')
     expect(outcome.stdout).toContain('503 action_paused')
+    expect(outcome.stdout).toMatch(/updateNote\s+blocked\s+client update/)
+    expect(outcome.stdout).toContain('One action is blocked.')
   })
 
   it('renders a differently shaped answer from the allowed keys it has', async () => {

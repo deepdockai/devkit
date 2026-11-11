@@ -20,6 +20,7 @@ export const API_ERROR_CODES = [
   'record_restricted',
   'record_not_editable',
   'device_offline',
+  'device_timeout',
   'device_outdated',
   'device_syncing',
   'device_learning_only',

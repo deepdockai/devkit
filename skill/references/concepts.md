@@ -57,10 +57,15 @@ has a display `label` (may be `null`), a `version` the device reported (may be a
 | system `access` | `ok`, `outdated`, `missing`, `password_missing`, `not_set_up`, or `null` | the database access the device last reported (`null`: none known yet) | `outdated` refuses the actions that need the missing right with `access_outdated`, `missing` (the account cannot log in) and `password_missing` (the account exists but its stored password is not on the PC) refuse every action with `access_missing`; the customer repeats "Erneut einrichten" in the Deepdock client, the incident closes by itself once `access` is `ok`, nothing to resume |
 | system `accessLastCheckedAt` | ISO time or `null` | set when `access` is the last known value because the device could not read it (its database stopped or unreachable): when it last read it. `null` when the latest report read it | show the access as last known, with this time; nothing to do until the device reads it again |
 | system `versionIssue` | `not_installed`, `not_found`, `unreadable`, or `null` | why `version` is missing, when the device says: its database service is not on the PC, its program file was not found, or the file carries no readable version. `null` (absent on `GET .../systems`) with a version, and from a device that does not say | show the reason beside the missing version; there is nothing to do on your side |
-| system `lockedActions` | list of action names or `null` | the actions the device reports locked because its database account lacks a right they need, under its current action set. `null`: no verdict yet, or the verdict is for an older action set | do not offer a locked action as available; it answers `access_outdated` until the customer repeats "Erneut einrichten" |
+| system `lockedActions` (device list only) | list of action names or `null` | the actions blocked because the device's database account lacks a right they need, under its current action set; on `GET .../systems` they read `blocked` with `access_reapproval`. `null`: no verdict yet, or the verdict is for an older action set | do not offer a listed action as available; it answers `access_outdated` until the customer repeats "Erneut einrichten" |
 | system `blockedActions` | list of action names, or absent | the actions this device's Deepdock client cannot run yet, because they need something only a newer client can do. Absent: none | do not offer a listed action as available; a call answers `device_outdated` and nothing runs, until the client updates itself and the action leaves the list |
 | action state | `active` | the action can be called | normal |
 | action state | `paused` | the action is paused with a `reason` and `pausedAt` | calls answer `action_paused`; show the feature as paused, poll `GET .../systems` at a low rate |
+| action state | `blocked` | the action cannot run on this device until its `reason` is resolved; one reason per action, the first that applies in the order below | do not offer it as available |
+| block `reason` | `client_update` | the device's Deepdock client is too old for this action | calls answer `device_outdated`; the client updates itself |
+| block `reason` | `access_missing` | the database access is gone (the account cannot log in, or its password is missing) | calls answer `access_missing`; the customer sets up the access again ("Erneut einrichten") |
+| block `reason` | `access_not_set_up` | no database access is set up on this device | calls answer `action_not_configured`; the customer sets up the access ("Erneut einrichten") |
+| block `reason` | `access_reapproval` | the database access lacks a right this action needs | calls answer `access_outdated`; the customer repeats "Erneut einrichten" |
 | pause `reason` | `structure_changed` | the system changed in a way the action depends on (for example a vendor update); Deepdock reviews and resumes | wait; nothing to do on your side |
 | pause `reason` | `readback_failed` | a write's result did not match, so nothing was saved | wait; tell the user the change was not saved |
 | pause `reason` | `credentials_rejected` | the program no longer accepts the sign-in the device stored for it (for example a changed password) | tell the user to choose "Anmeldung erneuern" in the Deepdock client; the action resumes by itself once the new sign-in works, nothing to resume |
@@ -84,8 +89,8 @@ catalogue.
   `Idempotency-Key` header.
 - A write **either fully applies or not**: Deepdock checks the result before confirming, and if the check fails it saves nothing
   and pauses the action (`409 readback_failed`).
-- An action is **active** or **paused**. `GET /v1/devices/{deviceId}/systems` shows each action's
-  state with `reason` and `pausedAt`.
+- An action is **active**, **paused** or **blocked**. `GET /v1/devices/{deviceId}/systems` shows
+  each action's state: a paused one with `reason` and `pausedAt`, a blocked one with `reason`.
 
 ## Pause and incident
 

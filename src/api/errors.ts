@@ -65,6 +65,7 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   // Not a retry: Deepdock has to approve the customer's installed system version for the action first.
   version_not_covered: 2,
   device_offline: 3,
+  device_timeout: 3,
   device_syncing: 3,
   // A 409, but not a refusal: it resolves without the caller changing anything (the client
   // updates).
