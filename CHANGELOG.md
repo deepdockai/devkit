@@ -4,7 +4,7 @@
 
 - The current device API: in `GET /v1/devices/{deviceId}/systems` an action is `active`, `paused` or `blocked`, and a blocked one carries a `reason` (`client_update`, `access_missing`, `access_not_set_up`, `access_reapproval`). The list now holds every action of yours on that system, blocked ones included. A system there no longer carries `lockedActions` (the device list still does), and the action index's `availability` value is `blocked_pending_access` (was `locked_pending_access`). The bundled TypeScript client and the skill describe the new states.
 - `deepdock devices systems` counts blocked actions next to paused ones.
-- The error code list gains `device_timeout`.
+- The error code list gains `device_timeout` (exit 3, retry with the same key) and `too_many_rows` (exit 2: the write matched more records than it may change and was rolled back).
 
 ## 1.4.1
 

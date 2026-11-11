@@ -54,6 +54,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 | `record_locked` | 422 | the customer's system locks the record the write would change (for example one already finalised and closed). Nothing was written | no | "this record is locked in the customer's system" |
 | `record_not_editable` | 422 | the record is not locked but is stored in a form this action cannot edit (for example a note it cannot add to without rewriting it). Nothing was written | no | "this record cannot be edited through Deepdock" |
 | `record_restricted` | 422 | the customer's system restricts access to the record (for example a locked record): a read returned no data, so an empty answer would be wrong, and a write wrote nothing | no; the customer lifts the restriction in its system | "access to this record is restricted in the customer's system" |
+| `too_many_rows` | 409 | the inputs match more records than this write may change; it was rolled back and nothing changed | no; narrow the inputs to the record you mean | "that matches more than one record; please be more specific" |
 | Action-specific refusals | 422 | an action can refuse with a code of its own (for example `unknown_author` when the write names a user the system does not list, or `no_matching_period`); its OpenAPI description names each such code and when it fires. Nothing was written | no; fix the reference or input | the missing precondition in the user's words |
 
 ## Device and system availability
@@ -106,6 +107,7 @@ const REACTION: Record<string, Reaction> = {
   record_locked: 'stop',
   record_not_editable: 'stop',
   record_restricted: 'stop',
+  too_many_rows: 'fix-input',
   payload_too_large: 'fix-code',
   access_outdated: 'wait-setup',
   access_missing: 'wait-setup',

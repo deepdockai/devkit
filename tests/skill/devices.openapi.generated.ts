@@ -132,6 +132,7 @@ export interface components {
           | 'target_busy'
           | 'target_rejected'
           | 'readback_failed'
+          | 'too_many_rows'
           | 'applied_unverified'
           | 'credentials_rejected'
           | 'certificate_changed'
