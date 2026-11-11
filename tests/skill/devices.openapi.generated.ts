@@ -85,11 +85,11 @@ export interface components {
         [key: string]: unknown
       }
       /** @enum {unknown} */
-      method: 'PATCH' | 'POST'
+      method: 'DELETE' | 'PATCH' | 'POST'
       name: string
       nextCursor: boolean
       /** @enum {unknown} */
-      operation: 'create' | 'read' | 'update'
+      operation: 'create' | 'delete' | 'read' | 'update'
       output: {
         [key: string]: unknown
       }

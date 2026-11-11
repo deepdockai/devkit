@@ -145,7 +145,7 @@ curl -sS -X DELETE "$BASE/v1/devices/$DEVICE" -H "$AUTH"
 
 A port in another language keeps the clients' shape: one `send` that sets the bearer header,
 parses the envelope, throws a typed error with `code` on `{ error }` and a transport error on no
-answer or non-JSON; `read` as a POST with `limit` and `cursor` in the body; `write` (POST for a create, PATCH for an update) with `Idempotency-Key` and the
+answer or non-JSON; `read` as a POST with `limit` and `cursor` in the body; `write` (POST for a create, PATCH for an update, DELETE for a delete) with `Idempotency-Key` and the
 `Idempotent-Replayed` header; `attempt` over a persisted pending write.
 
 ## Mapping the user's intent to a call (checklist)
@@ -153,7 +153,7 @@ answer or non-JSON; `read` as a POST with `limit` and `cursor` in the body; `wri
 1. Which device? From your product's configuration for that customer site; never from the
    user's free text.
 2. Is the action active? `systems()` once per session; show paused features as paused.
-3. Which action and operation (create is POST, update is PATCH)? From the stored index for that system.
+3. Which action and operation (create is POST, update is PATCH, delete is DELETE)? From the stored index for that system.
 4. Does the write need a reference (author user, open case, record id)? Read it first.
 5. Build the input in the types the schema declares; validate against the schema (`pattern`, `minLength`, `maxLength`,
    `enum`) before sending so the user sees the rule where they typed.
