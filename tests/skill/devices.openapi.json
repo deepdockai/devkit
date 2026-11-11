@@ -56,7 +56,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: limit is not a whole number from 1 to 500, or cursor is malformed (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: a query parameter is given more than once (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -137,6 +137,34 @@
                           "properties": {
                             "code": {
                               "enum": ["partner_not_approved", "partner_deactivated"]
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Page window refused: limit is not a whole number from 1 to 500, or cursor is not valid (invalid_input)\n\n- invalid_input: an input is not its declared type or is outside its declared length, bounds or list, a required input is left out, a name is not an input of the action, or the page window is invalid; `error.fields` lists every input the cloud found, and an input only the device refuses has a message and no fields",
+            "x-error-codes": ["invalid_input"],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "enum": ["invalid_input"]
                             }
                           }
                         }
@@ -264,7 +292,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -559,7 +587,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -796,7 +824,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -1051,7 +1079,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
@@ -1329,7 +1357,7 @@
             }
           },
           "400": {
-            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)",
+            "description": "Malformed request: deviceId is not a UUID (invalid_request)\n\n- invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own",
             "x-error-codes": ["invalid_request"],
             "content": {
               "application/json": {
