@@ -436,7 +436,7 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)
+       * @description Malformed request: the body is not { code, label? }, names a key twice, or the code is malformed (invalid_request)
        *
        *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
