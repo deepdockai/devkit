@@ -282,9 +282,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request: limit is not a whole number from 1 to 500, or cursor is malformed (invalid_request)
+       * @description Malformed request: a query parameter is given more than once (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
@@ -333,6 +333,24 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'partner_not_approved' | 'partner_deactivated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Page window refused: limit is not a whole number from 1 to 500, or cursor is not valid (invalid_input)
+       *
+       *     - invalid_input: an input is not its declared type or is outside its declared length, bounds or list, a required input is left out, a name is not an input of the action, or the page window is invalid; `error.fields` lists every input the cloud found, and an input only the device refuses has a message and no fields
+       */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'invalid_input'
             }
           }
         }
@@ -418,9 +436,9 @@ export interface operations {
         }
       }
       /**
-       * @description Malformed request: the body is not { code, label? }, or the code is malformed (invalid_request)
+       * @description Malformed request: the body is not { code, label? }, names a key twice, or the code is malformed (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
@@ -609,7 +627,7 @@ export interface operations {
       /**
        * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
@@ -761,7 +779,7 @@ export interface operations {
       /**
        * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
@@ -916,7 +934,7 @@ export interface operations {
       /**
        * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
@@ -1090,7 +1108,7 @@ export interface operations {
       /**
        * @description Malformed request: deviceId is not a UUID (invalid_request)
        *
-       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or a value is in the URL (inputs go in the JSON body)
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
        */
       400: {
         headers: {
