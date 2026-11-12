@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+- The bundled skill covers pairing a test device and setting up its database access, by the client's window or from an administrator shell on the partner's own test PC (`--admin pairing-code`, `--admin consent`, `--admin setup`, with their exit codes). The recipe gains a step that sets up the access and polls until the system's `access` is `ok`, and the skill names each client button in German and English ("Zugang einrichten" Set up access, "Erneut einrichten" Set up again, "Zugang erneut einrichten" Set up access again, "Anmeldung erneuern" Renew sign-in). No command, field or error code changed.
+
 ## 1.6.0
 
 - The current device API: an action's `operation` in the action index can be `delete`, run with `DELETE` (the inputs go in the JSON body, as for `PATCH`; a write still needs an `Idempotency-Key`). The bundled TypeScript and Python clients and the skill accept it; before, the Python client refused `delete`.
