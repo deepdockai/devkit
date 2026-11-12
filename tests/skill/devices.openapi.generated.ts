@@ -1182,7 +1182,7 @@ export interface operations {
       /**
        * @description The device cannot take the call (device_outdated, device_learning_only, device_connected_twice)
        *
-       *     - device_outdated: the device runs a Deepdock client too old for this call or for the action set Deepdock sends it; update the Deepdock client on the device (it updates itself when a newer version is released), then retry
+       *     - device_outdated: the device runs a Deepdock client too old for this call; update the Deepdock client on the device (it updates itself when a newer version is released), then retry
        *     - device_learning_only: this PC runs the Deepdock client for learning only; install the Deepdock service on it to run actions, then retry
        *     - device_connected_twice: two PCs are connected with this device identity (a copied PC or VM snapshot); nothing was run, so the Idempotency-Key is free; a person shuts the copy down, and calls work again about five minutes after only one is connected
        */
