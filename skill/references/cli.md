@@ -19,8 +19,8 @@ the API key the CLI wrote to the app's env file.
 | `orgs select [slug]` | sets the default organisation; without a slug, a pick-list on a terminal | member |
 | `systems list` | the systems and actions assigned to the organisation | member |
 | `systems openapi <system>` | the system's OpenAPI document on stdout; redirect it to a file | member |
-| `devices list` | paired devices with id, label, status, systems, last seen | member |
-| `devices pair <code> [--label <text>]` | pair a device by the code on its screen | member |
+| `devices list` | paired devices with id, label, status, last seen, and each system with its access | member |
+| `devices pair <code> [--label <text>]` | pair a device by the code on its screen, or the code `--admin pairing-code` prints on it (see [auth-and-keys.md](auth-and-keys.md#pairing-from-a-shell)) | member |
 | `devices rename <deviceId> <label>` | rename a device | member |
 | `devices release <deviceId>` | release a device (asks on a terminal; `--yes` otherwise) | admin |
 | `devices systems <deviceId>` | the device's live systems and action state, paused reasons included; `device_offline` is a normal answer | member |
@@ -84,7 +84,7 @@ A failure is one document on stderr: the API's error object unchanged plus what 
 | 0 | done | |
 | 1 | something on the command line to fix | `invalid_usage` (a bad flag, an unknown slug, a question with no terminal and no `--yes`, an env file git does not ignore), `org_required` |
 | 2 | the API refused the request; do not repeat it unchanged | `invalid_request`, `not_found`, `device_not_found`, `pairing_code_invalid`, `other_partner_build`, `rate_limited`, `forbidden`, `conflict` and the other refusals (not `access_outdated` and `access_missing`, see exit 3) |
-| 3 | retry later (`access_outdated` and `access_missing`: after the customer repeats "Erneut einrichten" in the Deepdock client) | `device_offline`, `device_timeout`, `device_syncing`, `device_outdated`, `action_paused`, `access_outdated`, `access_missing`, `credentials_rejected`, `certificate_changed`, `system_unavailable`, `target_busy`, `temporarily_unavailable`, `internal_error`, `outcome_unknown`, `connection_lost` |
+| 3 | retry later (`access_outdated` and `access_missing`: after the customer sets up the access again in the Deepdock client ("Zugang erneut einrichten", Set up access again)) | `device_offline`, `device_timeout`, `device_syncing`, `device_outdated`, `action_paused`, `access_outdated`, `access_missing`, `credentials_rejected`, `certificate_changed`, `system_unavailable`, `target_busy`, `temporarily_unavailable`, `internal_error`, `outcome_unknown`, `connection_lost` |
 | 4 | the CLI is too old for the API: run `npx @deepdockai/cli@latest` | `cli_outdated` |
 | 5 | sign-in needed: run `deepdock auth login` | `sign_in_needed`, `approval_denied`, `approval_expired` |
 

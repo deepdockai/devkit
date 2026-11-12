@@ -105,3 +105,42 @@ Successful pairings do not count against the limit; malformed codes are refused 
 
 With the CLI: `deepdock devices pair <code> [--label <text>]`, `deepdock devices release <deviceId>`
 (admin).
+
+### Pairing from a shell
+
+Only on the partner's own test PC, with an elevated administrator shell (an SSH session of an
+administrator usually is; exit 2 below says yours is not). The program is Deepdock's unbranded build
+`%ProgramFiles%\com.deepdock.client\Deepdock-Client.exe`; a branded build is
+`%ProgramFiles%\com.deepdock.client.<slug>\<Name>-Client.exe`. A customer's PC goes the screen path:
+a person there reads the access notice with the customer.
+
+1. `& "$env:ProgramFiles\com.deepdock.client\Deepdock-Client.exe" --admin pairing-code | Out-String; $LASTEXITCODE`.
+   The program opens no console of its own: pipe it as shown (then read `$LASTEXITCODE`), or
+   `$p = Start-Process <exe> -ArgumentList '--admin','pairing-code' -Wait -PassThru -NoNewWindow; $p.ExitCode`;
+   otherwise its output and exit code are lost. It prints `Pairing code: K7Q-4MX`; take the part
+   after the colon. Exit codes: 0 code printed; 2 your shell is not elevated; 3 refused (right
+   after an install: no code yet, retry in a minute); 4 the client's service is not running;
+   5 already paired.
+2. `deepdock devices pair <code> --label "<label>" --org <slug> --json` straight away. The code is
+   short-lived (about 10 minutes, replaced before it expires, so claim it at once) and the first
+   claim wins. On `pairing_code_invalid`, run step 1 again for a fresh code.
+
+**Set up the access** the same way, after pairing:
+
+1. `--admin consent <system> --json` until it exits 0. It prints
+   `{ system, hash, notice, noticeEn? }`. Exit 7 with `No target is held for <system>.`: the PC
+   has not received its targets yet, so wait a minute; if it persists, check the system name
+   against `deepdock systems list`. Exit 7 with `The stored targets cannot be read`: stop and
+   tell the human.
+2. Show the human the `notice` (or `noticeEn`) and say that the database may restart (always for
+   MEDICAL OFFICE; for SQL Server when your account is no SQL administrator). **Ask the human to
+   close the program on every workstation first** and wait for their yes.
+3. `--admin setup <system> <hash>`. Exit 6: the access changed since step 1, run consent again.
+   Exit 3: refused, the message names why. Then poll as in the recipe: every 10 seconds for at most
+   1 minute from the exit 0, until the system's `access` is `ok` (`deepdock devices list --json`),
+   and ask the human what the client window shows on timeout. Then
+   `deepdock actions list <device> <system> --json`.
+
+A system that needs a login (an HTTP system such as T2med) still needs the client's window for that
+login: the credential is never accepted on a command line.
+

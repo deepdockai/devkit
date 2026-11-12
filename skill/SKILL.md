@@ -43,29 +43,59 @@ and what your code does with the result.
    exits; show the human the link and wait for them to click Approve in the dashboard, then run
    `deepdock auth login --wait <request>`. You never see the resulting sign-in. Then pass
    `--org <slug>` on every command (`deepdock orgs list --json` shows the slugs).
-2. **See what you have.** `deepdock systems list --json` (the systems and actions assigned to your
-   organisation) and `deepdock devices list --json` (your paired devices). If the human has a demo
-   device that is not yet paired, they read the code off its screen and you run
-   `deepdock devices pair <code> --label "Demo"`.
-3. **Fetch the schemas.** `deepdock systems openapi <system> --org <slug> > openapi/<system>.json`
+2. **See what you have, pair the test device.** `deepdock systems list --json` (the systems and
+   actions assigned to your organisation) and `deepdock devices list --json` (your paired devices).
+   To pair a new device, the human names it as their own test PC. Then either:
+   - **Screen:** ask the human to open the Deepdock client on that PC. Under "Client einrichten"
+     (Set up the client) it shows "Ihr Verbindungscode" (Your connection code), six characters such
+     as `K7Q-4MX`. Ask them for the code.
+   - **Shell:** only if you have an administrator shell on that test PC, read the code there with
+     `--admin pairing-code`
+     ([references/auth-and-keys.md](references/auth-and-keys.md#pairing-from-a-shell)). Never on a
+     customer's PC: there the screen path is the only one.
+
+   Then run `deepdock devices pair <code> --label "Demo" --org <slug> --json` straight away (the
+   code lives about 10 minutes and is replaced before it expires; the first claim wins) and keep the
+   device `id`. On `pairing_code_invalid`, get a fresh code.
+3. **Set up its access, then check it.** A paired device runs nothing until its database access is
+   set up. This is a one-time step on the PC, with a Windows administrator's approval, and it can
+   restart the program's database.
+   - **Screen:** tell the human: "In the Deepdock client, click **Zugang einrichten** (Set up
+     access). Read the notice, close the program on every workstation, tick that it is closed,
+     click **Weiter** (Continue) and confirm the Windows administrator prompt."
+   - **Shell** (test PC only): `--admin consent <system> --json`, show the human the notice and say
+     that the database may restart, ask that the program is closed on every workstation and wait
+     for their yes, then `--admin setup <system> <hash>`
+     ([references/auth-and-keys.md](references/auth-and-keys.md#pairing-from-a-shell)).
+
+   Check: from the moment the human confirms the setup is done (after the Windows administrator
+   prompt), or `--admin setup` exits 0, poll `deepdock devices list --json` (or
+   `GET /v1/devices/{id}`) every 10 seconds, for at most 1 minute, until the system's `access` is
+   `ok`. On timeout, ask the human what the client window shows. Then read the action states once
+   with `deepdock devices systems <deviceId> --json`. For `not_set_up`, `outdated`, `missing` and
+   `password_missing`, tell the human the matching button
+   ([references/concepts.md](references/concepts.md#every-status-value-and-what-it-means-for-you)).
+   Check `access` again after the client updates itself or new actions are assigned: `outdated`
+   means the human sets up again.
+4. **Fetch the schemas.** `deepdock systems openapi <system> --org <slug> > openapi/<system>.json`
    and read it; `deepdock actions list <deviceId> <system> --json` shows the same fields per device.
    Check the document into the repository and refresh it with the same command. Write code only for
    actions that appear both in the document and in `systems list`.
-4. **Write the client.** A thin client in the project's own language: bearer header, envelope
+5. **Write the client.** A thin client in the project's own language: bearer header, envelope
    unwrap, idempotency header with replay detection, and an error-code switch. Read
    [references/calling-actions.md](references/calling-actions.md) and
    [references/example-integration.md](references/example-integration.md) first.
-5. **Get a key into the app.** `deepdock keys create "<project> dev" --expires 30d --write-env
+6. **Get a key into the app.** `deepdock keys create "<project> dev" --expires 30d --write-env
    .env.local --org <slug> --json`, then `--wait <request>` once a human has clicked Approve in the
    dashboard. The CLI receives the key once, writes `DEEPDOCK_API_KEY=<key>` into that file (it
    must be ignored by git) and keeps no copy. It is displayed to you or to the human by nobody.
    You work only with the key's id, prefix and the file name. Never ask for, read, print or paste
    a key value. If the CLI runs with `DEEPDOCK_BASE_URL` set (a non-production API), it writes the
    same `DEEPDOCK_BASE_URL=<url>` line into that file too ([auth-and-keys.md](references/auth-and-keys.md)).
-6. **Test it.** Run your own code against the demo device the human named, with the key from
+7. **Test it.** Run your own code against the demo device the human named, with the key from
    `.env.local`, and read back with the read action. The CLI runs no action. Read
    [references/testing.md](references/testing.md) before any write.
-7. **Ship.** The human creates the production key the same way, from their own CLI, into the
+8. **Ship.** The human creates the production key the same way, from their own CLI, into the
    production secret store. Tell the human to revoke the development key.
 
 ## Rules that are not in the OpenAPI document
