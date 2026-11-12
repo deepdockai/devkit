@@ -10,6 +10,7 @@ gets written to. These rules are not optional.
   data on it.
 - **Never run a write against a device the human has not named as the test device.** If no device
   has been named, ask. Do not pick the first device from `devices list`; it may be a live customer.
+- Pairing and access setup from a shell are for this device only ([auth-and-keys.md](auth-and-keys.md#pairing-from-a-shell)).
 - Pin the demo device's UUID in an environment variable (`DEEPDOCK_TEST_DEVICE`) and refuse to run
   tests without it.
 
