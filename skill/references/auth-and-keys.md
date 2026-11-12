@@ -132,15 +132,14 @@ a person there reads the access notice with the customer.
    has not received its targets yet, so wait a minute; if it persists, check the system name
    against `deepdock systems list`. Exit 7 with `The stored targets cannot be read`: stop and
    tell the human.
-2. Show the human the `notice` (or `noticeEn`) and say that the database may restart (always for
-   MEDICAL OFFICE; for SQL Server when your account is no SQL administrator). **Ask the human to
-   close the program on every workstation first** and wait for their yes.
+2. Show the human the `notice` (or `noticeEn`) and say that the database may restart. **Ask the
+   human to close the program on every workstation first** and wait for their yes.
 3. `--admin setup <system> <hash>`. Exit 6: the access changed since step 1, run consent again.
    Exit 3: refused, the message names why. Then poll as in the recipe: every 10 seconds for at most
    1 minute from the exit 0, until the system's `access` is `ok` (`deepdock devices list --json`),
    and ask the human what the client window shows on timeout. Then
    `deepdock actions list <device> <system> --json`.
 
-A system that needs a login (an HTTP system such as T2med) still needs the client's window for that
+A system that signs in over HTTP still needs the client's window for that
 login: the credential is never accepted on a command line.
 
