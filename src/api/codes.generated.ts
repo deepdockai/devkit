@@ -33,6 +33,7 @@ export const API_ERROR_CODES = [
   'target_rejected',
   'readback_failed',
   'too_many_rows',
+  'document_unreadable',
   'applied_unverified',
   'credentials_rejected',
   'certificate_changed',
