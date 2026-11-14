@@ -97,6 +97,13 @@ export interface components {
       availability?: 'blocked_pending_access'
       /** @constant */
       file?: true
+      upload?: {
+        field: string
+        maxBytes: number
+        mediaTypes?: string[]
+        /** @constant */
+        optional?: true
+      }
     }
     Error: {
       error: {
@@ -133,6 +140,7 @@ export interface components {
           | 'target_rejected'
           | 'readback_failed'
           | 'too_many_rows'
+          | 'document_unreadable'
           | 'applied_unverified'
           | 'credentials_rejected'
           | 'certificate_changed'
@@ -531,7 +539,7 @@ export interface operations {
       /**
        * @description Request body too large (payload_too_large)
        *
-       *     - payload_too_large: the request body is over 1 MiB
+       *     - payload_too_large: the request body is over its limit: 1 MiB, or the action's file limit
        */
       413: {
         headers: {

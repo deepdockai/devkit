@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0
+
+- The current device API: the error code list gains `document_unreadable` (422, exit 2: a download's stored document is in an archive the device cannot read; a retry will not help). The action index's entry for an action that takes a file now carries `upload` (`field`, `maxBytes`, optional `mediaTypes` and `optional`). The 413 description names the action's file limit next to the 1 MiB body limit.
+
 ## 1.6.2
 
 - The skill's access-setup reference describes the setup without naming specific systems. No command, field or error code changed.

@@ -440,7 +440,7 @@
             }
           },
           "413": {
-            "description": "Request body too large (payload_too_large)\n\n- payload_too_large: the request body is over 1 MiB",
+            "description": "Request body too large (payload_too_large)\n\n- payload_too_large: the request body is over its limit: 1 MiB, or the action's file limit",
             "x-error-codes": ["payload_too_large"],
             "content": {
               "application/json": {
@@ -1661,6 +1661,27 @@
           },
           "file": {
             "const": true
+          },
+          "upload": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string"
+              },
+              "maxBytes": {
+                "type": "integer"
+              },
+              "mediaTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "optional": {
+                "const": true
+              }
+            },
+            "required": ["field", "maxBytes"]
           }
         },
         "required": [
@@ -1716,6 +1737,7 @@
                   "target_rejected",
                   "readback_failed",
                   "too_many_rows",
+                  "document_unreadable",
                   "applied_unverified",
                   "credentials_rejected",
                   "certificate_changed",
