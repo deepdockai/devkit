@@ -177,7 +177,7 @@ export interface components {
     PartnerDevice: {
       claimedAt: string | null
       clientVersion: string | null
-      hostname: string | null
+      hostname: string
       /**
        * Format: uuid
        * @description a UUID
@@ -186,7 +186,7 @@ export interface components {
       label: string | null
       lastKnownAt: string | null
       lastSeenAt: string | null
-      os: string | null
+      os: string
       outdated: boolean
       /** @enum {unknown} */
       status: 'connected' | 'inactive' | 'offline'

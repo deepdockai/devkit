@@ -72,8 +72,8 @@ export type VersionIssue = 'not_installed' | 'not_found' | 'unreadable'
 export type Device = {
   id: string
   label: string | null
-  hostname: string | null
-  os: string | null
+  hostname: string
+  os: string
   clientVersion: string | null
   status: 'connected' | 'offline' | 'inactive'
   lastSeenAt: string | null
