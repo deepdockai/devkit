@@ -62,6 +62,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 
 | Code | Status | Meaning | Retry | Show |
 |---|---|---|---|---|
+| `upload_incomplete` | 400 | an upload broke off before the device had the whole file. This call wrote nothing | yes, at once: send it again with the same file and the same `Idempotency-Key` | "the upload was interrupted; we will send it again" |
 | `device_offline` | 503 | the device is not connected, is shutting down, did not answer within 20 s, or the call was cut off inside Deepdock by a restart or deploy. **A write may still have landed** | yes, with backoff (seconds to minutes); a write only with the same key | "the customer PC is offline; we will retry" |
 | `device_timeout` | 503 | the device ran out of its time budget before it began the call or before it committed. Nothing was written | yes, with backoff; a write with the same key | "the customer PC was too slow; retrying" |
 | `device_syncing` | 503 | the device has not reported its Deepdock client yet (just paired, or its report did not come through); Deepdock asks it again. Nothing was written | yes, after `Retry-After` (5 s); a write with the same key | "the customer PC is connecting; retrying" |
@@ -115,6 +116,7 @@ const REACTION: Record<string, Reaction> = {
   access_missing: 'wait-setup',
   credentials_rejected: 'wait-setup',
   certificate_changed: 'wait-setup',
+  upload_incomplete: 'retry-same-key',
   device_offline: 'retry-same-key',
   device_timeout: 'retry-same-key',
   device_syncing: 'retry-same-key',

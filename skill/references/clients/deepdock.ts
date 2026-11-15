@@ -463,6 +463,7 @@ const RETRY_SAME_KEY = new Set([
   'device_timeout',
   'device_syncing',
   'device_outdated',
+  'upload_incomplete',
   'target_busy',
   'temporarily_unavailable',
   'internal_error',

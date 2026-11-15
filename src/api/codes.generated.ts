@@ -44,6 +44,7 @@ export const API_ERROR_CODES = [
   'internal_error',
   'temporarily_unavailable',
   'partner_deactivated',
+  'upload_incomplete',
 ] as const
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number]

@@ -1747,7 +1747,8 @@
                   "device_answer_unreadable",
                   "internal_error",
                   "temporarily_unavailable",
-                  "partner_deactivated"
+                  "partner_deactivated",
+                  "upload_incomplete"
                 ]
               },
               "message": {

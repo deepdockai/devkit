@@ -35,6 +35,7 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'device_offline',
     'device_syncing',
     'device_outdated',
+    'upload_incomplete',
     'action_paused',
     'access_outdated',
     'access_missing',
