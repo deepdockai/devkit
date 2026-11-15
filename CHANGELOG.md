@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.1
+
+- The current device API: a device's `hostname` and `os` are always strings now (never `null`), in the pinned device API, the bundled TypeScript client's `Device` type and the keys reference. A device registered before both were required reads `unknown`.
+
 ## 1.8.0
 
 - The current device API: the error code list gains `upload_incomplete` (400, exit 3: an upload broke off before the device had the whole file; this call wrote nothing, so send it again with the same file and the same `Idempotency-Key`).

@@ -1837,14 +1837,7 @@
             ]
           },
           "hostname": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string"
           },
           "id": {
             "anyOf": [
@@ -1899,14 +1892,7 @@
             ]
           },
           "os": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "string"
           },
           "outdated": {
             "type": "boolean"
