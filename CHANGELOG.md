@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0
+
+- The current device API: the error code list gains `upload_incomplete` (400, exit 3: an upload broke off before the device had the whole file; this call wrote nothing, so send it again with the same file and the same `Idempotency-Key`).
+
 ## 1.7.0
 
 - The current device API: the error code list gains `document_unreadable` (422, exit 2: a download's stored document is in an archive the device cannot read; a retry will not help). The action index's entry for an action that takes a file now carries `upload` (`field`, `maxBytes`, optional `mediaTypes` and `optional`). The 413 description names the action's file limit next to the 1 MiB body limit.

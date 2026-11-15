@@ -66,6 +66,9 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   payload_too_large: 2,
   // Not a retry: Deepdock has to approve the customer's installed system version for the action first.
   version_not_covered: 2,
+  // The file broke off before the device had it whole; this call wrote nothing, so a resend with the
+  // same file and key is safe.
+  upload_incomplete: 3,
   device_offline: 3,
   device_timeout: 3,
   device_syncing: 3,

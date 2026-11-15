@@ -151,6 +151,7 @@ export interface components {
           | 'internal_error'
           | 'temporarily_unavailable'
           | 'partner_deactivated'
+          | 'upload_incomplete'
         message: string
         /** @description On every error body: names the request's log event for support; not promised unique */
         requestId?: string
