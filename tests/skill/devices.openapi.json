@@ -1659,6 +1659,18 @@
           "availability": {
             "const": "blocked_pending_access"
           },
+          "execution": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "enum": ["device_outdated", "internal_error"]
+              },
+              "status": {
+                "const": "stopped"
+              }
+            },
+            "required": ["reason", "status"]
+          },
           "file": {
             "const": true
           },
@@ -1937,6 +1949,76 @@
                     }
                   ]
                 },
+                "actions": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-zA-Z0-9]{2,48}$"
+                          },
+                          "available": {
+                            "const": false
+                          },
+                          "reason": {
+                            "enum": [
+                              "access_missing",
+                              "access_outdated",
+                              "action_not_configured",
+                              "action_paused",
+                              "certificate_changed",
+                              "credentials_rejected",
+                              "device_connected_twice",
+                              "device_learning_only",
+                              "device_offline",
+                              "device_outdated",
+                              "device_syncing",
+                              "internal_error",
+                              "system_unavailable",
+                              "version_not_covered"
+                            ]
+                          }
+                        },
+                        "required": ["action", "available", "reason"]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-zA-Z0-9]{2,48}$"
+                          },
+                          "available": {
+                            "type": "null"
+                          },
+                          "reason": {
+                            "type": "null"
+                          }
+                        },
+                        "required": ["action", "available", "reason"]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-zA-Z0-9]{2,48}$"
+                          },
+                          "available": {
+                            "const": true
+                          },
+                          "reason": {
+                            "type": "null"
+                          }
+                        },
+                        "required": ["action", "available", "reason"]
+                      }
+                    ]
+                  }
+                },
                 "lockedActions": {
                   "anyOf": [
                     {
@@ -1992,11 +2074,24 @@
                     "type": "string",
                     "pattern": "^[a-z][a-zA-Z0-9]{2,48}$"
                   }
+                },
+                "execution": {
+                  "type": "object",
+                  "properties": {
+                    "reason": {
+                      "enum": ["device_outdated", "internal_error"]
+                    },
+                    "status": {
+                      "const": "stopped"
+                    }
+                  },
+                  "required": ["reason", "status"]
                 }
               },
               "required": [
                 "access",
                 "accessLastCheckedAt",
+                "actions",
                 "lockedActions",
                 "reportedAt",
                 "status",
@@ -2186,6 +2281,18 @@
           },
           "system": {
             "type": "string"
+          },
+          "execution": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "enum": ["device_outdated", "internal_error"]
+              },
+              "status": {
+                "const": "stopped"
+              }
+            },
+            "required": ["reason", "status"]
           },
           "version": {
             "type": "string"

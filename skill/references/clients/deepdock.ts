@@ -69,6 +69,35 @@ export type SystemAccess = 'ok' | 'outdated' | 'missing' | 'password_missing' | 
 /** Why a system's `version` is missing, when the device says. */
 export type VersionIssue = 'not_installed' | 'not_found' | 'unreadable'
 
+/** Present while the device cannot use the target Deepdock sent for the system: every action of it answers with `reason` (`409 device_outdated` or `500 internal_error`). */
+export type ExecutionStop = { status: 'stopped'; reason: 'device_outdated' | 'internal_error' }
+
+/** The error code a call would answer with now, when a check refuses it; where several apply, the first in this order. */
+export type UnavailableReason =
+  | 'device_learning_only'
+  | 'device_syncing'
+  | 'device_outdated'
+  | 'internal_error'
+  | 'device_connected_twice'
+  | 'device_offline'
+  | 'action_paused'
+  | 'credentials_rejected'
+  | 'certificate_changed'
+  | 'system_unavailable'
+  | 'access_missing'
+  | 'access_outdated'
+  | 'version_not_covered'
+  | 'action_not_configured'
+
+/**
+ * Whether a fresh call would be admitted now: a snapshot, not a promise. `available: null` is unknown, not unavailable:
+ * call the action or read it again later. Test `available === false` for the refused ones; `!available` also matches `null`.
+ */
+export type ActionAvailability =
+  | { action: string; available: true; reason: null }
+  | { action: string; available: false; reason: UnavailableReason }
+  | { action: string; available: null; reason: null }
+
 export type Device = {
   id: string
   label: string | null
@@ -95,6 +124,9 @@ export type Device = {
     reportedAt: string
     /** Actions this device's client cannot run yet: each answers device_outdated until it updates. Absent when none. */
     blockedActions?: string[]
+    execution?: ExecutionStop
+    /** Every action of yours on this system Deepdock can serve, refused and unknown ones included, in action index order. */
+    actions: ActionAvailability[]
   }[]
 }
 
@@ -126,6 +158,7 @@ export type DeviceSystem = {
   actions: ActionState[]
   /** The connectors the device runs for this system, by name and kind. */
   connectors: { name: string; kind: 'database' | 'http' }[]
+  execution?: ExecutionStop
 }
 
 export type DeepdockOptions = {

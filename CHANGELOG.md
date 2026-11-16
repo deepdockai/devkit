@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.0
+
+- The current device API: every system in `GET /v1/devices` and `GET /v1/devices/{deviceId}` carries `actions`, one entry per action of yours on that system that Deepdock can serve: `{ action, available, reason }`, where `available` is `true` (admitted now), `false` (`reason` is the error code a call answers with now) or `null` (unknown, not unavailable: call it). A stopped system carries `execution` (`{ "status": "stopped", "reason": "device_outdated" | "internal_error" }`) in the device listing, in `GET /v1/devices/{deviceId}/systems` and on each of its actions in the action index. The pinned device API, the bundled TypeScript client's `Device` and `DeviceSystem` types (new `ActionAvailability`, `UnavailableReason` and `ExecutionStop`) and the concepts reference describe both.
+
 ## 1.8.1
 
 - The current device API: a device's `hostname` and `os` are always strings now (never `null`), in the pinned device API, the bundled TypeScript client's `Device` type and the keys reference. A device registered before both were required reads `unknown`.
