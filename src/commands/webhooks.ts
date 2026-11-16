@@ -82,6 +82,8 @@ const deliverSecret = async (
   const response = await ctx.callInOrg({ method: 'GET', path: route(webhookId, '/secret') })
   const secret = await parseAnswer('webhookSecret', response.data)
   try {
+    // Again right before the write: git's answer can change while the human or the API took their time.
+    await checkDestination(ctx.rt, path)
     await writeEnvValue(path, WEBHOOK_SECRET_VARIABLE, secret.secret)
   } catch (error) {
     throw new CliError({
