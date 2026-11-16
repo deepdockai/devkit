@@ -95,6 +95,12 @@ export interface components {
       }
       /** @constant */
       availability?: 'blocked_pending_access'
+      execution?: {
+        /** @enum {unknown} */
+        reason: 'device_outdated' | 'internal_error'
+        /** @constant */
+        status: 'stopped'
+      }
       /** @constant */
       file?: true
       upload?: {
@@ -193,6 +199,40 @@ export interface components {
       systems: {
         access: 'missing' | 'not_set_up' | 'ok' | 'outdated' | 'password_missing' | null
         accessLastCheckedAt: string | null
+        actions: (
+          | {
+              action: string
+              /** @constant */
+              available: false
+              /** @enum {unknown} */
+              reason:
+                | 'access_missing'
+                | 'access_outdated'
+                | 'action_not_configured'
+                | 'action_paused'
+                | 'certificate_changed'
+                | 'credentials_rejected'
+                | 'device_connected_twice'
+                | 'device_learning_only'
+                | 'device_offline'
+                | 'device_outdated'
+                | 'device_syncing'
+                | 'internal_error'
+                | 'system_unavailable'
+                | 'version_not_covered'
+            }
+          | {
+              action: string
+              available: null
+              reason: null
+            }
+          | {
+              action: string
+              /** @constant */
+              available: true
+              reason: null
+            }
+        )[]
         lockedActions: string[] | null
         reportedAt: string
         /** @enum {unknown} */
@@ -201,6 +241,12 @@ export interface components {
         version: string | null
         versionIssue: 'not_found' | 'not_installed' | 'unreadable' | null
         blockedActions?: string[]
+        execution?: {
+          /** @enum {unknown} */
+          reason: 'device_outdated' | 'internal_error'
+          /** @constant */
+          status: 'stopped'
+        }
       }[]
       updateAvailable?: string
     }
@@ -251,6 +297,12 @@ export interface components {
       /** @enum {unknown} */
       status: 'missing' | 'running' | 'stopped' | 'unknown' | 'vanished'
       system: string
+      execution?: {
+        /** @enum {unknown} */
+        reason: 'device_outdated' | 'internal_error'
+        /** @constant */
+        status: 'stopped'
+      }
       version?: string
       /** @enum {unknown} */
       versionIssue?: 'not_found' | 'not_installed' | 'unreadable'
