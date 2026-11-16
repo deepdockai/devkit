@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0
+
+- The current device API, three changes in the pinned device API, the bundled TypeScript client and the references:
+  - A paused action's `reason` can be `http_signin_changed` (the program's sign-in answered in a way the device's recorded sign-in does not describe; only Deepdock lifts it). The bundled client's `ActionState` type and the concepts reference gain it.
+  - The documented UUID pattern of the `id` fields (`PartnerDevice.id`, `ReleasedDevice.id`) accepts upper-case hex digits as well. The values the API accepts and answers are unchanged.
+  - `error.fields` of an `invalid_input` can name one element of a list input (`list[index].field`, or `list[index]` when no element field is named, with a zero-based index) when a write refuses that element with a refusal the action declares, or with `not_found` or `too_many_rows`. The errors reference describes it.
+
 ## 1.10.0
 
 - The current device API: pairing a device answers `409 device_update_required` (exit 2) when its Deepdock client is too old for a system of your organisation, or has not reported its client yet. `error.reason` is `lacks` (update the client on the device, then pair again) or `unreported` (retry in a minute). The pinned device API, the error code list and the errors reference describe it.

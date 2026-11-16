@@ -1792,7 +1792,7 @@
                 }
               },
               "fields": {
-                "description": "With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the refusal cannot name an input. A message never holds the value",
+                "description": "With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. With a refusal the action declares, or not_found or too_many_rows, that a write raises for one element of a list input: that element, as list[index].field when the refusing step names an element field, else list[index], with a zero-based index. Absent when the refusal cannot name an input or an element. A message never holds the value",
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -1858,7 +1858,7 @@
                 "type": "string",
                 "description": "a UUID",
                 "format": "uuid",
-                "pattern": "^[\\da-f]{8}-[\\da-f]{4}-[1-8][\\da-f]{3}-[89ab][\\da-f]{3}-[\\da-f]{12}$"
+                "pattern": "^[\\dA-Fa-f]{8}-[\\dA-Fa-f]{4}-[1-8][\\dA-Fa-f]{3}-[89ABab][\\dA-Fa-f]{3}-[\\dA-Fa-f]{12}$"
               },
               {
                 "const": "00000000-0000-0000-0000-000000000000",
@@ -2129,7 +2129,7 @@
                 "type": "string",
                 "description": "a UUID",
                 "format": "uuid",
-                "pattern": "^[\\da-f]{8}-[\\da-f]{4}-[1-8][\\da-f]{3}-[89ab][\\da-f]{3}-[\\da-f]{12}$"
+                "pattern": "^[\\dA-Fa-f]{8}-[\\dA-Fa-f]{4}-[1-8][\\dA-Fa-f]{3}-[89ABab][\\dA-Fa-f]{3}-[\\dA-Fa-f]{12}$"
               },
               {
                 "const": "00000000-0000-0000-0000-000000000000",
@@ -2205,6 +2205,7 @@
                       "enum": [
                         "certificate_changed",
                         "credentials_rejected",
+                        "http_signin_changed",
                         "readback_failed",
                         "structure_changed"
                       ]
