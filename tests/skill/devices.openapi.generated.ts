@@ -125,6 +125,7 @@ export interface components {
           | 'system_not_on_device'
           | 'pairing_code_invalid'
           | 'other_partner_build'
+          | 'device_update_required'
           | 'rate_limited'
           | 'action_not_found'
           | 'invalid_input'
@@ -572,9 +573,10 @@ export interface operations {
         }
       }
       /**
-       * @description The device runs another partner's client (other_partner_build)
+       * @description The device runs another partner's client, or its client is too old for a system of your organisation (other_partner_build, device_update_required)
        *
        *     - other_partner_build: the device runs another partner's client; install your own build on it
+       *     - device_update_required: the device's Deepdock client is too old for a system of your organisation (error.reason is `lacks`), or has not reported its client yet (`unreported`, retry in a minute); update the client on the device
        */
       409: {
         headers: {
@@ -584,7 +586,7 @@ export interface operations {
           'application/json': components['schemas']['Error'] & {
             error?: {
               /** @enum {unknown} */
-              code?: 'other_partner_build'
+              code?: 'other_partner_build' | 'device_update_required'
             }
           }
         }
