@@ -271,6 +271,7 @@ export interface components {
             reason:
               | 'certificate_changed'
               | 'credentials_rejected'
+              | 'http_signin_changed'
               | 'readback_failed'
               | 'structure_changed'
             /** @constant */
