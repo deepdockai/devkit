@@ -12,6 +12,7 @@ export const API_ERROR_CODES = [
   'system_not_on_device',
   'pairing_code_invalid',
   'other_partner_build',
+  'device_update_required',
   'rate_limited',
   'action_not_found',
   'invalid_input',

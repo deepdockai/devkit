@@ -20,6 +20,7 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'invalid_input',
     'pairing_code_invalid',
     'other_partner_build',
+    'device_update_required',
     'rate_limited',
     'target_rejected',
     'readback_failed',

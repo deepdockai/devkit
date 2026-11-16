@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.0
+
+- The current device API: pairing a device answers `409 device_update_required` (exit 2) when its Deepdock client is too old for a system of your organisation, or has not reported its client yet. `error.reason` is `lacks` (update the client on the device, then pair again) or `unreported` (retry in a minute). The pinned device API, the error code list and the errors reference describe it.
+
 ## 1.9.0
 
 - The current device API: every system in `GET /v1/devices` and `GET /v1/devices/{deviceId}` carries `actions`, one entry per action of yours on that system that Deepdock can serve: `{ action, available, reason }`, where `available` is `true` (admitted now), `false` (`reason` is the error code a call answers with now) or `null` (unknown, not unavailable: call it). A stopped system carries `execution` (`{ "status": "stopped", "reason": "device_outdated" | "internal_error" }`) in the device listing, in `GET /v1/devices/{deviceId}/systems` and on each of its actions in the action index. The pinned device API, the bundled TypeScript client's `Device` and `DeviceSystem` types (new `ActionAvailability`, `UnavailableReason` and `ExecutionStop`) and the concepts reference describe both.

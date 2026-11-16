@@ -40,6 +40,10 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   invalid_input: 2,
   pairing_code_invalid: 2,
   other_partner_build: 2,
+  // Not a retry for `lacks`: a person has to update the Deepdock client on the PC first. A device
+  // that has not reported its client yet (`unreported`) answers the same code and a retry a minute
+  // later reaches it.
+  device_update_required: 2,
   // Not a wait: the PC runs the learning-only client, and only installing the Deepdock service on it
   // changes that.
   device_learning_only: 2,

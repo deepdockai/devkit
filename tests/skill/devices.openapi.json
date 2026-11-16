@@ -412,8 +412,8 @@
             }
           },
           "409": {
-            "description": "The device runs another partner's client (other_partner_build)\n\n- other_partner_build: the device runs another partner's client; install your own build on it",
-            "x-error-codes": ["other_partner_build"],
+            "description": "The device runs another partner's client, or its client is too old for a system of your organisation (other_partner_build, device_update_required)\n\n- other_partner_build: the device runs another partner's client; install your own build on it\n- device_update_required: the device's Deepdock client is too old for a system of your organisation (error.reason is `lacks`), or has not reported its client yet (`unreported`, retry in a minute); update the client on the device",
+            "x-error-codes": ["other_partner_build", "device_update_required"],
             "content": {
               "application/json": {
                 "schema": {
@@ -428,7 +428,7 @@
                           "type": "object",
                           "properties": {
                             "code": {
-                              "enum": ["other_partner_build"]
+                              "enum": ["other_partner_build", "device_update_required"]
                             }
                           }
                         }
@@ -1728,6 +1728,7 @@
                   "system_not_on_device",
                   "pairing_code_invalid",
                   "other_partner_build",
+                  "device_update_required",
                   "rate_limited",
                   "action_not_found",
                   "invalid_input",

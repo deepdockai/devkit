@@ -99,6 +99,7 @@ Pairing answers:
 | `invalid_request` | 400 | the code is malformed; fix the input |
 | `pairing_code_invalid` | 404 | unknown, expired, replaced, already used, or the device is offline; ask for a fresh code |
 | `other_partner_build` | 409 | the device runs another partner's branded client; only that partner can pair it |
+| `device_update_required` | 409 | the device's Deepdock client is too old for a system of your organisation (`error.reason` `lacks`), or has not reported its client yet (`unreported`, retry in a minute); update the client on the device, then pair again |
 | `rate_limited` | 429 | more than 5 failed pairing attempts in 60 seconds with this key; wait up to a minute |
 
 Successful pairings do not count against the limit; malformed codes are refused before counting.
