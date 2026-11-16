@@ -86,10 +86,7 @@ const buildProgram = (rt: Runtime, state: State): Command => {
     .addHelpCommand(false)
     .option('--org <slug>', 'the organisation to act in')
     .option('--json', 'JSON output (the default when stdout is not a terminal)')
-    .option(
-      '--yes',
-      'answer the confirmation question of release, revoke, delete and rotate-secret with yes',
-    )
+    .option('--yes', 'answer a confirmation question with yes')
 
   const run: Run = async (cmd: Parameters<Run>[0], handler: Parameters<Run>[1]): Promise<void> => {
     const ctx = createContext(rt, readGlobals(cmd.optsWithGlobals()))

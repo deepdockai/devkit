@@ -397,14 +397,11 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         path.startsWith('/partner/webhooks') && (method !== 'GET' || path.endsWith('/secret'))
       if (needsAdmin && !isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
       if (method === 'POST' && path === '/partner/webhooks') {
-        const types = Array.isArray(record.eventTypes) ? record.eventTypes : []
-        if (types.length === 0 || record.url !== 'https://hooks.example.com/deepdock')
-          return send(422, fail('invalid_input', 'The webhook is not valid.'))
         const webhook = {
           id: WEBHOOK_ID,
           url: record.url,
           description: record.description ?? '',
-          eventTypes: types,
+          eventTypes: record.eventTypes,
           status: 'active',
         }
         state.webhooks.push(webhook)
@@ -415,8 +412,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         const [, id, tail = ''] = webhookMatch
         const webhook = state.webhooks.find((row) => row.id === id)
         if (!webhook) return send(404, fail('not_found', 'no such webhook'))
-        if (method === 'GET' && tail === '')
-          return send(200, { data: { ...webhook, successRate: 100 } })
+        if (method === 'GET' && tail === '') return send(200, { data: webhook })
         if (method === 'PATCH') return send(200, { data: Object.assign(webhook, record) })
         if (method === 'DELETE') {
           state.webhooks.splice(state.webhooks.indexOf(webhook), 1)

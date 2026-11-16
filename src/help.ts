@@ -19,7 +19,7 @@ Commands
 Global flags
   --org <slug>      The organisation to act in (default: DEEPDOCK_ORG, then \`deepdock orgs select\`)
   --json            JSON output (the default when stdout is not a terminal)
-  --yes             Answer the confirmation question of release, revoke, delete and rotate-secret with yes
+  --yes             Answer a confirmation question with yes
   -h, --help        Help for a command
   -v, --version     Print the version
 

@@ -1,5 +1,6 @@
 import type { Command } from '@commander-js/extra-typings'
 import { CliError, usageError } from '../api/errors.ts'
+import type { ApiResponse } from '../api/client.ts'
 import { parseAnswer } from '../api/schemas.ts'
 import { webhookIdArg } from '../args.ts'
 import { configPath } from '../config/store.ts'
@@ -10,6 +11,7 @@ import {
   field,
   genericTable,
   genericView,
+  type Columns,
   isRecord,
   stripControl,
   WEBHOOK_COLUMNS,
@@ -28,9 +30,17 @@ import {
 
 type EventFlags = { event: string[]; allEvents?: true }
 
+const WRITE_ENV = `write ${WEBHOOK_SECRET_VARIABLE}=<secret> into this env file`
+
 const collect = (value: string, previous: string[]): string[] => [...previous, value]
 
 const route = (webhookId: string, tail = ''): string => `/partner/webhooks/${webhookId}${tail}`
+
+const answer = (response: ApiResponse, text: string): Result => ({
+  data: response.data,
+  meta: { requestId: response.requestId },
+  text,
+})
 
 /** The event types a command sends, or undefined when it names none; never an empty list. */
 const eventTypesOf = async (ctx: Ctx, flags: EventFlags): Promise<string[] | undefined> => {
@@ -58,17 +68,21 @@ const secretFile = async (ctx: Ctx, file: string): Promise<string> => {
   return destination.path
 }
 
-type Delivered = { data: Record<string, unknown>; written: { file: string; name: string } }
+type Written = { file: string; name: string }
 
 /**
  * Reads the endpoint's signing secret and writes it to `path`; it is in no stream and no store.
  * A failed write leaves the secret where it was: an admin can read it again.
  */
-const deliverSecret = async (ctx: Ctx, webhookId: string, path: string): Promise<Delivered> => {
+const deliverSecret = async (
+  ctx: Ctx,
+  webhookId: string,
+  path: string,
+): Promise<{ data: Record<string, unknown>; written: Written }> => {
   const response = await ctx.callInOrg({ method: 'GET', path: route(webhookId, '/secret') })
-  const answer = await parseAnswer('webhookSecret', response.data)
+  const secret = await parseAnswer('webhookSecret', response.data)
   try {
-    await writeEnvValue(path, WEBHOOK_SECRET_VARIABLE, answer.secret)
+    await writeEnvValue(path, WEBHOOK_SECRET_VARIABLE, secret.secret)
   } catch (error) {
     throw new CliError({
       code: error instanceof CliError ? error.code : 'internal_error',
@@ -80,20 +94,15 @@ const deliverSecret = async (ctx: Ctx, webhookId: string, path: string): Promise
     // Built from named fields: the API's answer carries the secret.
     data: {
       id: webhookId,
-      secretCreatedAt: answer.createdAt,
-      previousSecretExpiresAt: answer.previousExpiresAt,
+      secretCreatedAt: secret.createdAt,
+      previousSecretExpiresAt: secret.previousExpiresAt,
     },
     written: { file: displayPath(ctx.rt, path), name: WEBHOOK_SECRET_VARIABLE },
   }
 }
 
-const writtenLine = (delivered: Delivered): string =>
-  `The signing secret was shown to nobody and this CLI keeps no copy; your code reads ${delivered.written.name} from ${delivered.written.file}.`
-
-const meta = (requestId?: string, written?: Delivered['written']): Result['meta'] => ({
-  ...(requestId ? { requestId } : {}),
-  ...(written ? { written } : {}),
-})
+const writtenLine = ({ file, name }: Written): string =>
+  `The signing secret was shown to nobody and this CLI keeps no copy; your code reads ${name} from ${file}.`
 
 const confirmed = async (ctx: Ctx, verb: 'delete' | 'rotate', question: string): Promise<void> => {
   if (ctx.opts.yes) return
@@ -109,26 +118,15 @@ const confirmed = async (ctx: Ctx, verb: 'delete' | 'rotate', question: string):
   }
 }
 
-const list = async (ctx: Ctx): Promise<Result> => {
-  const response = await ctx.callInOrg({ method: 'GET', path: '/partner/webhooks' })
+const listOf = async (ctx: Ctx, path: string, columns: Columns, empty: string): Promise<Result> => {
+  const response = await ctx.callInOrg({ method: 'GET', path })
   const items = Array.isArray(response.data) ? response.data : []
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text:
-      items.length === 0
-        ? 'No webhooks. Create one with `deepdock webhooks create <url> --all-events`.'
-        : genericTable(items, ctx.out, WEBHOOK_LIST_COLUMNS),
-  }
+  return answer(response, items.length === 0 ? empty : genericTable(items, ctx.out, columns))
 }
 
 const get = async (ctx: Ctx, id: string): Promise<Result> => {
   const response = await ctx.callInOrg({ method: 'GET', path: route(webhookIdArg(id)) })
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text: genericView(response.data, ctx.out, WEBHOOK_COLUMNS),
-  }
+  return answer(response, genericView(response.data, ctx.out, WEBHOOK_COLUMNS))
 }
 
 type CreateOptions = EventFlags & { description?: string; writeEnv?: string }
@@ -145,24 +143,19 @@ const create = async (ctx: Ctx, url: string, options: CreateOptions): Promise<Re
   const created = await ctx.callInOrg({
     method: 'POST',
     path: '/partner/webhooks',
-    body: {
-      url,
-      eventTypes,
-      ...(options.description === undefined ? {} : { description: options.description }),
-    },
+    body: { url, eventTypes, description: options.description },
   })
   const id = isRecord(created.data) ? field(created.data, 'id') : ''
-  const lines = [`${paint(ctx.out, 'success', 'Created')} webhook ${id} for ${stripControl(url)}.`]
   const delivered = path === undefined ? undefined : await deliverSecret(ctx, id, path)
-  lines.push(
-    delivered
-      ? writtenLine(delivered)
-      : `Its signing secret is not written anywhere yet: \`deepdock webhooks secret ${id} --write-env <file>\`.`,
-  )
   return {
     data: created.data,
-    meta: meta(created.requestId, delivered?.written),
-    text: lines.join('\n'),
+    meta: { requestId: created.requestId, written: delivered?.written },
+    text: [
+      `${paint(ctx.out, 'success', 'Created')} webhook ${id} for ${stripControl(url)}.`,
+      delivered
+        ? writtenLine(delivered.written)
+        : `Its signing secret is not written anywhere yet: \`deepdock webhooks secret ${id} --write-env <file>\`.`,
+    ].join('\n'),
   }
 }
 
@@ -171,20 +164,12 @@ type UpdateOptions = EventFlags & { url?: string; description?: string }
 const update = async (ctx: Ctx, id: string, options: UpdateOptions): Promise<Result> => {
   const webhookId = webhookIdArg(id)
   const eventTypes = await eventTypesOf(ctx, options)
-  const body = {
-    ...(options.url === undefined ? {} : { url: options.url }),
-    ...(options.description === undefined ? {} : { description: options.description }),
-    ...(eventTypes === undefined ? {} : { eventTypes }),
-  }
-  if (Object.keys(body).length === 0) {
+  const body = { url: options.url, description: options.description, eventTypes }
+  if (Object.values(body).every((value) => value === undefined)) {
     throw usageError('Nothing to change.', 'Pass --url, --description, --event or --all-events.')
   }
   const response = await ctx.callInOrg({ method: 'PATCH', path: route(webhookId), body })
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text: `${paint(ctx.out, 'success', 'Updated')} webhook ${webhookId}.`,
-  }
+  return answer(response, `${paint(ctx.out, 'success', 'Updated')} webhook ${webhookId}.`)
 }
 
 const remove = async (ctx: Ctx, id: string): Promise<Result> => {
@@ -195,88 +180,63 @@ const remove = async (ctx: Ctx, id: string): Promise<Result> => {
     `Delete webhook ${webhookId}?\nIts stored deliveries are deleted with it.`,
   )
   const response = await ctx.callInOrg({ method: 'DELETE', path: route(webhookId) })
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text: `${paint(ctx.out, 'success', 'Deleted')} webhook ${webhookId}.`,
-  }
+  return answer(response, `${paint(ctx.out, 'success', 'Deleted')} webhook ${webhookId}.`)
 }
 
 const setActive = async (ctx: Ctx, id: string, change: 'disable' | 'enable'): Promise<Result> => {
   const webhookId = webhookIdArg(id)
   const response = await ctx.callInOrg({ method: 'POST', path: route(webhookId, `/${change}`) })
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text: `${paint(ctx.out, 'success', change === 'enable' ? 'Enabled' : 'Disabled')} webhook ${webhookId}.`,
-  }
+  const done = change === 'enable' ? 'Enabled' : 'Disabled'
+  return answer(response, `${paint(ctx.out, 'success', done)} webhook ${webhookId}.`)
 }
 
-const secret = async (ctx: Ctx, id: string, file: string): Promise<Result> => {
-  const webhookId = webhookIdArg(id)
-  const delivered = await deliverSecret(ctx, webhookId, await secretFile(ctx, file))
-  return {
-    data: delivered.data,
-    meta: meta(undefined, delivered.written),
-    text: `${paint(ctx.out, 'success', 'Wrote')} the signing secret of webhook ${webhookId} to ${delivered.written.file}.\n${writtenLine(delivered)}`,
-  }
-}
-
-const rotateSecret = async (ctx: Ctx, id: string, file: string): Promise<Result> => {
+const writeSecret = async (
+  ctx: Ctx,
+  id: string,
+  file: string,
+  rotate: boolean,
+): Promise<Result> => {
   const webhookId = webhookIdArg(id)
   const path = await secretFile(ctx, file)
-  await confirmed(
-    ctx,
-    'rotate',
-    `Rotate the signing secret of webhook ${webhookId}?\nThe old secret keeps signing for 24 hours next to the new one; update your receiver within that time.`,
-  )
-  await ctx.callInOrg({ method: 'POST', path: route(webhookId, '/secret/rotate') })
+  if (rotate) {
+    await confirmed(
+      ctx,
+      'rotate',
+      `Rotate the signing secret of webhook ${webhookId}?\nThe old secret keeps signing for 24 hours next to the new one; update your receiver within that time.`,
+    )
+    await ctx.callInOrg({ method: 'POST', path: route(webhookId, '/secret/rotate') })
+  }
   const delivered = await deliverSecret(ctx, webhookId, path)
+  const done = rotate ? 'Rotated the signing secret of' : 'Wrote the signing secret of'
   return {
     data: delivered.data,
-    meta: meta(undefined, delivered.written),
-    text: `${paint(ctx.out, 'success', 'Rotated')} the signing secret of webhook ${webhookId}.\n${writtenLine(delivered)}`,
+    meta: { written: delivered.written },
+    text: `${paint(ctx.out, 'success', done)} webhook ${webhookId}.\n${writtenLine(delivered.written)}`,
   }
 }
 
 const sendTest = async (ctx: Ctx, id: string, type: string): Promise<Result> => {
   const webhookId = webhookIdArg(id)
-  let response: Awaited<ReturnType<Ctx['callInOrg']>>
-  try {
-    response = await ctx.callInOrg({
-      method: 'POST',
-      path: route(webhookId, '/test'),
-      body: { type },
+  const response = await ctx
+    .callInOrg({ method: 'POST', path: route(webhookId, '/test'), body: { type } })
+    .catch((error: unknown) => {
+      if (error instanceof CliError && error.code === 'webhook_disabled') {
+        error.hint = `Run \`deepdock webhooks enable ${webhookId}\`, then send the example again.`
+      }
+      throw error
     })
-  } catch (error) {
-    if (error instanceof CliError && error.code === 'webhook_disabled') {
-      error.hint = `Run \`deepdock webhooks enable ${webhookId}\`, then send the example again.`
-    }
-    throw error
-  }
   const attempt =
     isRecord(response.data) && isRecord(response.data.attempt) ? response.data.attempt : {}
   const outcome = field(attempt, 'outcome')
   const status = field(attempt, 'statusCode')
-  const lines = [
-    `Sent a test ${stripControl(type)} to webhook ${webhookId}: ${paint(ctx.out, outcome === 'succeeded' ? 'success' : 'warn', words(outcome))} (${status ? `HTTP ${status}` : 'no HTTP answer'}, ${field(attempt, 'durationMs')} ms).`,
-    `Response body: ${stripControl(field(attempt, 'responseBody')) || '(empty)'}`,
-    'The example is stored nowhere: it appears in no delivery list.',
-  ]
-  return { data: response.data, meta: meta(response.requestId), text: lines.join('\n') }
-}
-
-const events = async (ctx: Ctx): Promise<Result> => {
-  const response = await ctx.callInOrg({ method: 'GET', path: '/partner/webhook-event-types' })
-  const items = Array.isArray(response.data) ? response.data : []
-  return {
-    data: response.data,
-    meta: meta(response.requestId),
-    text:
-      items.length === 0
-        ? 'No event types exist for your organisation yet.'
-        : genericTable(items, ctx.out, EVENT_TYPE_COLUMNS),
-  }
+  return answer(
+    response,
+    [
+      `Sent a test ${stripControl(type)} to webhook ${webhookId}: ${paint(ctx.out, outcome === 'succeeded' ? 'success' : 'warn', words(outcome))} (${status ? `HTTP ${status}` : 'no HTTP answer'}, ${field(attempt, 'durationMs')} ms).`,
+      `Response body: ${stripControl(field(attempt, 'responseBody')) || '(empty)'}`,
+      'The example is stored nowhere: it appears in no delivery list.',
+    ].join('\n'),
+  )
 }
 
 export const registerWebhooks = (program: Command, run: Run): void => {
@@ -287,7 +247,16 @@ export const registerWebhooks = (program: Command, run: Run): void => {
   webhooks
     .command('list')
     .description('List the webhooks of the organisation')
-    .action((_options, cmd) => run(cmd, list))
+    .action((_options, cmd) =>
+      run(cmd, (ctx) =>
+        listOf(
+          ctx,
+          '/partner/webhooks',
+          WEBHOOK_LIST_COLUMNS,
+          'No webhooks. Create one with `deepdock webhooks create <url> --all-events`.',
+        ),
+      ),
+    )
 
   webhooks
     .command('get')
@@ -302,7 +271,7 @@ export const registerWebhooks = (program: Command, run: Run): void => {
     .option('--description <text>', 'what the webhook is for, at most 200 characters')
     .option('--event <type>', 'an event type to send; repeat the flag for several', collect, [])
     .option('--all-events', 'every event type that exists now (not types added later)')
-    .option('--write-env <file>', 'write DEEPDOCK_WEBHOOK_SECRET=<secret> into this env file')
+    .option('--write-env <file>', WRITE_ENV)
     .action((url, options, cmd) => run(cmd, (ctx) => create(ctx, url, options)))
 
   webhooks
@@ -321,37 +290,30 @@ export const registerWebhooks = (program: Command, run: Run): void => {
     .argument('<id>', 'the webhook id')
     .action((id, _options, cmd) => run(cmd, (ctx) => remove(ctx, id)))
 
-  webhooks
-    .command('disable')
-    .description('Stop sending to a webhook; its waiting deliveries are paused (admin)')
-    .argument('<id>', 'the webhook id')
-    .action((id, _options, cmd) => run(cmd, (ctx) => setActive(ctx, id, 'disable')))
-
-  webhooks
-    .command('enable')
-    .description('Send to a disabled webhook again; its paused deliveries resume (admin)')
-    .argument('<id>', 'the webhook id')
-    .action((id, _options, cmd) => run(cmd, (ctx) => setActive(ctx, id, 'enable')))
+  for (const [change, description] of [
+    ['disable', 'Stop sending to a webhook; its waiting deliveries are paused (admin)'],
+    ['enable', 'Send to a disabled webhook again; its paused deliveries resume (admin)'],
+  ] as const) {
+    webhooks
+      .command(change)
+      .description(description)
+      .argument('<id>', 'the webhook id')
+      .action((id, _options, cmd) => run(cmd, (ctx) => setActive(ctx, id, change)))
+  }
 
   webhooks
     .command('secret')
     .description('Write the signing secret of a webhook into an env file (admin)')
     .argument('<id>', 'the webhook id')
-    .requiredOption(
-      '--write-env <file>',
-      'write DEEPDOCK_WEBHOOK_SECRET=<secret> into this env file',
-    )
-    .action((id, options, cmd) => run(cmd, (ctx) => secret(ctx, id, options.writeEnv)))
+    .requiredOption('--write-env <file>', WRITE_ENV)
+    .action((id, options, cmd) => run(cmd, (ctx) => writeSecret(ctx, id, options.writeEnv, false)))
 
   webhooks
     .command('rotate-secret')
     .description('Make a new signing secret and write it into an env file (admin)')
     .argument('<id>', 'the webhook id')
-    .requiredOption(
-      '--write-env <file>',
-      'write DEEPDOCK_WEBHOOK_SECRET=<secret> into this env file',
-    )
-    .action((id, options, cmd) => run(cmd, (ctx) => rotateSecret(ctx, id, options.writeEnv)))
+    .requiredOption('--write-env <file>', WRITE_ENV)
+    .action((id, options, cmd) => run(cmd, (ctx) => writeSecret(ctx, id, options.writeEnv, true)))
 
   webhooks
     .command('test')
@@ -363,5 +325,14 @@ export const registerWebhooks = (program: Command, run: Run): void => {
   webhooks
     .command('events')
     .description('List the event types you can send to a webhook')
-    .action((_options, cmd) => run(cmd, events))
+    .action((_options, cmd) =>
+      run(cmd, (ctx) =>
+        listOf(
+          ctx,
+          '/partner/webhook-event-types',
+          EVENT_TYPE_COLUMNS,
+          'No event types exist for your organisation yet.',
+        ),
+      ),
+    )
 }

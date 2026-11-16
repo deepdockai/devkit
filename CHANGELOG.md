@@ -2,7 +2,7 @@
 
 ## 1.11.0
 
-- `deepdock webhooks`: manage the endpoints that receive a message when a device sees a change: `list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test` and `events`. An endpoint always lists its event types: `--event <type>` (repeatable) or `--all-events`, which sends every type that exists now. The signing secret is never printed: `create --write-env`, `secret` and `rotate-secret` write `DEEPDOCK_WEBHOOK_SECRET` into an env file under the rules of an API key. `test` sends one example and shows the outcome, HTTP status, duration and the receiver's answer.
+- `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
 - New error code `webhook_disabled` (exit 2): a test on a disabled endpoint; `webhooks enable` first.
 
 ## 1.10.0

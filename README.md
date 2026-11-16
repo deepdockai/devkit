@@ -114,8 +114,7 @@ deepdock skill
 | `webhooks test <id> --event <type>`                               | send one example message now; shows the outcome, HTTP status, duration and the first part of the receiver's answer; nothing is stored (admin)                           |
 | `skill [--agent claude\|codex\|cursor\|all]`                      | install the agent skill into the current directory                                                                                                                      |
 
-Global flags: `--org <slug>` and `--json` on every command, `--yes` to confirm `devices release`,
-`keys revoke`, `webhooks delete` and `webhooks rotate-secret` without a question, `-h, --help` everywhere and `-v, --version` at the root.
+Global flags: `--org <slug>` and `--json` on every command, `--yes` to answer a confirmation question, `-h, --help` everywhere and `-v, --version` at the root.
 `deepdock <command> --help` has the details, `deepdock help exit-codes` the exit codes.
 
 Two things are never guessed. A device is always named by its full id: no default device, no
@@ -228,10 +227,7 @@ macOS and Linux need nothing special. On Windows:
   `.env.local`, `.env.local.deepdock-tmp-<random>`); a `.gitignore` line `.env*` or
   `*.deepdock-tmp*` covers it; where git answers and the name is not ignored, the CLI refuses before anything is
   created.
-- **A webhook's signing secret goes straight to your env file, too.** `webhooks create --write-env`,
-  `webhooks secret` and `webhooks rotate-secret` write `DEEPDOCK_WEBHOOK_SECRET=<secret>` under the
-  same rules as a key: ignored by git, no symbolic link, mode 600, never in a stream, the settings
-  file or a log. A secret that could not be written stays readable: run `webhooks secret` again.
+- **A webhook's signing secret is never shown either.** `webhooks create --write-env`, `webhooks secret` and `webhooks rotate-secret` write `DEEPDOCK_WEBHOOK_SECRET` under the rules of an API key; a secret that could not be written stays readable with `webhooks secret`.
 - **The approval link is not a credential.** It names the request; the result is collected with
   a secret the CLI generated and keeps.
 - **Keys expire and can be revoked.** A key reaches every device of the organisation until it

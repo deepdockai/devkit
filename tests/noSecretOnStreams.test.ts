@@ -9,6 +9,7 @@ import {
   type Outcome,
   readConfigText,
   type Sandbox,
+  signInWith,
 } from './harness.ts'
 
 let api: FakeApi
@@ -181,10 +182,7 @@ describe('no secret on any stream', () => {
   })
 
   it('writes a webhook secret only into the --write-env file and nowhere in the work tree or the store', async () => {
-    await execute(box, ['auth', 'login', '--json'], { baseUrl: api.url })
-    await execute(box, ['auth', 'login', '--wait', '3c9d0e1a-5b6c-4d7e-8f90-a1b2c3d4e5f6'], {
-      baseUrl: api.url,
-    })
+    await signInWith(box, api.url)
     await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
     const created = await execute(
       box,
