@@ -40,6 +40,10 @@ export type FakeState = {
   /** The first `count` polls (either kind) answer this error before the scripted statuses. */
   pollFailures?: { count: number; status: number; code: string; retryAfter?: string }
   keysHandedOut: number
+  /** A webhook's signing secret: the canary that no stream may carry. */
+  webhookSecret: string
+  eventTypes: { type: string; system: string; object: string }[]
+  webhooks: Record<string, unknown>[]
 }
 
 export type FakeApi = {
@@ -51,6 +55,7 @@ export type FakeApi = {
 
 export const DEVICE_ID = '450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f'
 export const OTHER_DEVICE_ID = '9d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6'
+export const WEBHOOK_ID = '5b0c8a2e-91d4-4f3a-a6c7-3e8d1f2b4a90'
 export const KEY_ID = 'k_6a2b9c1d-3e4f-4a5b-8c6d-7e8f9a0b1c2d'
 
 export const defaultState = (): FakeState => ({
@@ -74,6 +79,12 @@ export const defaultState = (): FakeState => ({
   revokedCliKeys: [],
   keyRequestExpiresInMs: 10 * 60 * 1000,
   keysHandedOut: 0,
+  webhookSecret: ['whsec', 'CANARY+secret/0123456789abcdefghijkl'].join('_'),
+  eventTypes: [
+    { type: 'customer.created', system: 'example-erp', object: 'customer' },
+    { type: 'customer.updated', system: 'example-erp', object: 'customer' },
+  ],
+  webhooks: [],
 })
 
 const respond = (
@@ -377,6 +388,75 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         const id = decodeURIComponent(keyMatch[1] ?? '')
         state.revokedKeys.push(id)
         return send(200, { data: { id, revokedAt: '2026-10-21T15:20:44Z' } })
+      }
+      if (method === 'GET' && path === '/partner/webhook-event-types')
+        return send(200, { data: state.eventTypes, nextCursor: null })
+      if (method === 'GET' && path === '/partner/webhooks')
+        return send(200, { data: state.webhooks, nextCursor: null })
+      const needsAdmin =
+        path.startsWith('/partner/webhooks') && (method !== 'GET' || path.endsWith('/secret'))
+      if (needsAdmin && !isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
+      if (method === 'POST' && path === '/partner/webhooks') {
+        const types = Array.isArray(record.eventTypes) ? record.eventTypes : []
+        if (types.length === 0 || record.url !== 'https://hooks.example.com/deepdock')
+          return send(422, fail('invalid_input', 'The webhook is not valid.'))
+        const webhook = {
+          id: WEBHOOK_ID,
+          url: record.url,
+          description: record.description ?? '',
+          eventTypes: types,
+          status: 'active',
+        }
+        state.webhooks.push(webhook)
+        return send(201, { data: webhook })
+      }
+      const webhookMatch = /^\/partner\/webhooks\/([^/]+)(\/[a-z/]+)?$/.exec(path)
+      if (webhookMatch) {
+        const [, id, tail = ''] = webhookMatch
+        const webhook = state.webhooks.find((row) => row.id === id)
+        if (!webhook) return send(404, fail('not_found', 'no such webhook'))
+        if (method === 'GET' && tail === '')
+          return send(200, { data: { ...webhook, successRate: 100 } })
+        if (method === 'PATCH') return send(200, { data: Object.assign(webhook, record) })
+        if (method === 'DELETE') {
+          state.webhooks.splice(state.webhooks.indexOf(webhook), 1)
+          return send(200, { data: { id, deleted: true } })
+        }
+        if (method === 'POST' && (tail === '/disable' || tail === '/enable')) {
+          webhook.status = tail === '/enable' ? 'active' : 'disabled'
+          return send(200, { data: webhook })
+        }
+        if (method === 'GET' && tail === '/secret')
+          return send(200, {
+            data: {
+              secret: state.webhookSecret,
+              createdAt: '2026-11-16T10:00:00Z',
+              previousExpiresAt: null,
+            },
+          })
+        if (method === 'POST' && tail === '/secret/rotate')
+          return send(200, {
+            data: { createdAt: '2026-11-16T11:00:00Z', previousExpiresAt: '2026-11-17T11:00:00Z' },
+          })
+        if (method === 'POST' && tail === '/test') {
+          if (webhook.status === 'disabled')
+            return send(409, fail('webhook_disabled', 'this endpoint is paused'))
+          return send(200, {
+            data: {
+              test: true,
+              stored: false,
+              message: { id: 'msg_test', type: record.type },
+              attempt: {
+                number: 1,
+                at: '2026-11-16T10:05:00Z',
+                outcome: 'http_error',
+                statusCode: 500,
+                durationMs: 42,
+                responseBody: 'receiver says no',
+              },
+            },
+          })
+        }
       }
       return send(404, fail('not_found', `No route ${method} ${path}.`))
     })

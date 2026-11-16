@@ -1,14 +1,24 @@
 import { usageError } from './api/errors.ts'
 
-const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const SYSTEM_NAME = /^[A-Za-z0-9._-]{1,64}$/
 const KEY_ID = /^[A-Za-z0-9_-]{1,100}$/
 
 export const deviceIdArg = (value: string): string => {
-  if (!DEVICE_ID.test(value)) {
+  if (!UUID.test(value)) {
     throw usageError(
       `"${value}" is not a full device id.`,
       'Copy the whole id from `deepdock devices list`; short ids and labels are not accepted.',
+    )
+  }
+  return value
+}
+
+export const webhookIdArg = (value: string): string => {
+  if (!UUID.test(value)) {
+    throw usageError(
+      `"${value}" is not a full webhook id.`,
+      'List them with `deepdock webhooks list`.',
     )
   }
   return value

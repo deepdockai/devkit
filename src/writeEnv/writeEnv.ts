@@ -9,6 +9,7 @@ import type { Runtime } from '../runtime.ts'
 
 export const API_KEY_VARIABLE = 'DEEPDOCK_API_KEY'
 export const BASE_URL_VARIABLE = 'DEEPDOCK_BASE_URL'
+export const WEBHOOK_SECRET_VARIABLE = 'DEEPDOCK_WEBHOOK_SECRET'
 
 /**
  * Windows has no POSIX modes: both files keep their folder's permissions, so each run that writes
@@ -224,7 +225,8 @@ const atomicWrite = async (path: string, content: string): Promise<void> => {
   }
 }
 
-const KEY_SHAPE = /^[A-Za-z0-9_-]{16,}$/
+// `+/=` are base64: a webhook signing secret is `whsec_` and base64, an API key never has them.
+const KEY_SHAPE = /^[A-Za-z0-9_+/=-]{16,}$/
 
 /** The API a key belongs to: `always` writes its line, otherwise only an existing line is updated. */
 export type BaseUrlLine = { url: string; always: boolean }

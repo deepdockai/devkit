@@ -58,6 +58,32 @@ export const KEY_COLUMNS: Columns = [
   'revokedAt',
   'lastUsedAt',
 ]
+export const WEBHOOK_LIST_COLUMNS: Columns = [
+  'id',
+  'url',
+  'status',
+  'disabledReason',
+  'successRate',
+  'lastDeliveryAt',
+]
+export const WEBHOOK_COLUMNS: Columns = [
+  'id',
+  'url',
+  'description',
+  'status',
+  'disabledReason',
+  'eventTypes',
+  'successRate',
+  'averageResponseMs',
+  'lastStatusCode',
+  'lastDeliveryAt',
+  'failingSince',
+  'disabledAt',
+  'secretCreatedAt',
+  'previousSecretExpiresAt',
+  'createdAt',
+]
+export const EVENT_TYPE_COLUMNS: Columns = ['type', 'system', 'object', 'label', 'description']
 export const ACTION_COLUMNS: Columns = ['name', 'kind', 'fields', 'description', 'state', 'status']
 export const DEVICE_SYSTEM_COLUMNS: Columns = [
   'systems',
@@ -111,7 +137,15 @@ const scalar = (value: unknown): string => {
 }
 
 const GOOD = new Set(['connected', 'active', 'running', 'ok'])
-const WARN = new Set(['offline', 'paused', 'outdated', 'unavailable', 'degraded'])
+const WARN = new Set([
+  'offline',
+  'paused',
+  'outdated',
+  'unavailable',
+  'degraded',
+  'failing',
+  'disabled',
+])
 const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
 
 /** Colour for a value whose word carries the meaning; the word stays, so colour is never alone. */

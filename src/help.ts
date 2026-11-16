@@ -13,12 +13,13 @@ Commands
   actions     List a device's actions and their fields
   keys        Create, list and revoke your organisation's API keys
   incidents   Incidents that paused an action on one of your devices
+  webhooks    Webhook endpoints: where Deepdock sends a message when a device sees a change
   skill       Install the Deepdock skill for your coding agent
 
 Global flags
   --org <slug>      The organisation to act in (default: DEEPDOCK_ORG, then \`deepdock orgs select\`)
   --json            JSON output (the default when stdout is not a terminal)
-  --yes             Answer the confirmation question of release and revoke with yes
+  --yes             Answer the confirmation question of release, revoke, delete and rotate-secret with yes
   -h, --help        Help for a command
   -v, --version     Print the version
 
@@ -120,6 +121,10 @@ const EXAMPLES: Readonly<Record<string, readonly string[]>> = {
   'devices release': ['deepdock devices release 450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f --yes'],
   'actions list': ['deepdock actions list 450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f example-erp'],
   'keys revoke': ['deepdock keys revoke <id> --yes'],
+  'webhooks create': [
+    'deepdock webhooks create https://example.com/hooks/deepdock --all-events --write-env .env.local',
+  ],
+  'webhooks test': ['deepdock webhooks test <id> --event <type>'],
   skill: ['deepdock skill --agent claude'],
 }
 
