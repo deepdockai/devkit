@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.0
+
+- `deepdock webhooks`: manage the endpoints that receive a message when a device sees a change: `list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test` and `events`. An endpoint always lists its event types: `--event <type>` (repeatable) or `--all-events`, which sends every type that exists now. The signing secret is never printed: `create --write-env`, `secret` and `rotate-secret` write `DEEPDOCK_WEBHOOK_SECRET` into an env file under the rules of an API key. `test` sends one example and shows the outcome, HTTP status, duration and the receiver's answer.
+- New error code `webhook_disabled` (exit 2): a test on a disabled endpoint; `webhooks enable` first.
+
 ## 1.10.0
 
 - The current device API: pairing a device answers `409 device_update_required` (exit 2) when its Deepdock client is too old for a system of your organisation, or has not reported its client yet. `error.reason` is `lacks` (update the client on the device, then pair again) or `unreported` (retry in a minute). The pinned device API, the error code list and the errors reference describe it.

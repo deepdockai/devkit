@@ -86,6 +86,7 @@ deepdock devices   list | pair <code> | rename <deviceId> <label> | release <dev
 deepdock actions   list <deviceId> <system>
 deepdock keys      list | create <name> | revoke <id>
 deepdock incidents list
+deepdock webhooks  list | get <id> | create <url> | update <id> | delete <id> | disable <id> | enable <id> | secret <id> | rotate-secret <id> | test <id> | events
 deepdock skill
 ```
 
@@ -104,10 +105,17 @@ deepdock skill
 | `actions list <deviceId> <system>`                                | every action a device offers, with its operation and fields                                                                                                             |
 | `keys list`, `keys create <name>`, `keys revoke <id>`             | the organisation's API keys (create and revoke: admin)                                                                                                                  |
 | `incidents list`                                                  | open incidents, and those closed within the last 30 days                                                                                                                |
+| `webhooks list`, `webhooks get <id>`, `webhooks events`           | your webhook endpoints; one endpoint with its seven-day statistics; the event types that exist                                                                          |
+| `webhooks create <url> (--event <type>... \| --all-events)`       | create an endpoint (admin); `--description <text>`, `--write-env <file>` for its signing secret. `--all-events` is every type that exists now, not types added later    |
+| `webhooks update <id>`, `webhooks delete <id>`                    | change an endpoint's `--url`, `--description` or event types; delete it with its stored deliveries (admin; delete asks, `--yes` otherwise)                              |
+| `webhooks disable <id>`, `webhooks enable <id>`                   | stop sending to an endpoint; send again, and resume what waited (admin)                                                                                                 |
+| `webhooks secret <id> --write-env <file>`                         | write an endpoint's signing secret into an env file (admin)                                                                                                             |
+| `webhooks rotate-secret <id> --write-env <file>`                  | make a new signing secret; the old one signs for 24 more hours (admin; asks, `--yes` otherwise)                                                                         |
+| `webhooks test <id> --event <type>`                               | send one example message now; shows the outcome, HTTP status, duration and the first part of the receiver's answer; nothing is stored (admin)                           |
 | `skill [--agent claude\|codex\|cursor\|all]`                      | install the agent skill into the current directory                                                                                                                      |
 
-Global flags: `--org <slug>` and `--json` on every command, `--yes` to confirm `devices release`
-and `keys revoke` without a question, `-h, --help` everywhere and `-v, --version` at the root.
+Global flags: `--org <slug>` and `--json` on every command, `--yes` to confirm `devices release`,
+`keys revoke`, `webhooks delete` and `webhooks rotate-secret` without a question, `-h, --help` everywhere and `-v, --version` at the root.
 `deepdock <command> --help` has the details, `deepdock help exit-codes` the exit codes.
 
 Two things are never guessed. A device is always named by its full id: no default device, no
@@ -150,7 +158,7 @@ On a terminal you get tables and plain sentences. When stdout is not a terminal,
 `systems openapi` is the one exception off a terminal: it prints the OpenAPI document itself, so
 `deepdock systems openapi <system> > openapi.json` saves a document a generator can read (`--json`
 gives the envelope). For list and show commands `data` is the API's answer unchanged, so what the CLI shows is what
-your code will receive; `auth`, `orgs select` and `keys create` build it from named fields. A
+your code will receive; `auth`, `orgs select`, `keys create`, `webhooks secret` and `webhooks rotate-secret` build it from named fields. A
 failure is one document on stderr, `{ "error": { "code", "message" }, "meta": { "hint" } }`,
 with the API's error object unchanged. Switch on `code` or on the exit code, never on `message`.
 
@@ -220,6 +228,10 @@ macOS and Linux need nothing special. On Windows:
   `.env.local`, `.env.local.deepdock-tmp-<random>`); a `.gitignore` line `.env*` or
   `*.deepdock-tmp*` covers it; where git answers and the name is not ignored, the CLI refuses before anything is
   created.
+- **A webhook's signing secret goes straight to your env file, too.** `webhooks create --write-env`,
+  `webhooks secret` and `webhooks rotate-secret` write `DEEPDOCK_WEBHOOK_SECRET=<secret>` under the
+  same rules as a key: ignored by git, no symbolic link, mode 600, never in a stream, the settings
+  file or a log. A secret that could not be written stays readable: run `webhooks secret` again.
 - **The approval link is not a credential.** It names the request; the result is collected with
   a secret the CLI generated and keeps.
 - **Keys expire and can be revoked.** A key reaches every device of the organisation until it

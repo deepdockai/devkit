@@ -27,7 +27,7 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 
 `cli_outdated` (400) is in the enum but answered only to the Deepdock CLI (by its
 `X-Deepdock-Cli` version), so your own `/v1` code never receives it. The dashboard tree's own codes
-(`organisation_required`, `forbidden`, `conflict`, `already_member`) are not in the `/v1` enum.
+(`organisation_required`, `forbidden`, `conflict`, `already_member`, `webhook_disabled`) are not in the `/v1` enum.
 
 ## Device, system and action resolution
 
