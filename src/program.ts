@@ -8,6 +8,7 @@ import { registerKeys } from './commands/keys.ts'
 import { registerOrg } from './commands/org.ts'
 import { registerSkill } from './commands/skill.ts'
 import { registerSystems } from './commands/systems.ts'
+import { registerWebhooks } from './commands/webhooks.ts'
 import { type Ctx, createContext, type GlobalOptions, type Result } from './context.ts'
 import { commandPath, EXIT_CODES_HELP, formatHelp, ROOT_HELP } from './help.ts'
 import type { Meta } from './output/envelope.ts'
@@ -85,7 +86,7 @@ const buildProgram = (rt: Runtime, state: State): Command => {
     .addHelpCommand(false)
     .option('--org <slug>', 'the organisation to act in')
     .option('--json', 'JSON output (the default when stdout is not a terminal)')
-    .option('--yes', 'answer the confirmation question of release and revoke with yes')
+    .option('--yes', 'answer a confirmation question with yes')
 
   const run: Run = async (cmd: Parameters<Run>[0], handler: Parameters<Run>[1]): Promise<void> => {
     const ctx = createContext(rt, readGlobals(cmd.optsWithGlobals()))
@@ -118,6 +119,7 @@ const buildProgram = (rt: Runtime, state: State): Command => {
   registerActions(program, run)
   registerKeys(program, run)
   registerIncidents(program, run)
+  registerWebhooks(program, run)
   registerSkill(program, run)
 
   program
@@ -201,7 +203,7 @@ const humanError = (rt: Runtime, error: CliError): string => {
   const style = makeStyler(rt, rt.stderr)
   const message = stripControl(error.message).replace(/\.$/, '')
   const body =
-    error.code === 'invalid_input'
+    error.code === 'invalid_input' && error.refusedBy !== 'api'
       ? `The device refused the input: "${message}" [${error.code}].`
       : `${message} [${error.code}].`
   const lines = [`${style('red', 'Error:')} ${body}`]

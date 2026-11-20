@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { DEVICE_ID, type FakeApi, KEY_ID, startFakeApi } from './fakeApi.ts'
+import { DEVICE_ID, type FakeApi, KEY_ID, startFakeApi, WEBHOOK_ID } from './fakeApi.ts'
 import {
   execute,
   initRepo,
@@ -9,6 +9,7 @@ import {
   type Outcome,
   readConfigText,
   type Sandbox,
+  signInWith,
 } from './harness.ts'
 
 let api: FakeApi
@@ -104,6 +105,30 @@ describe('no secret on any stream', () => {
     const lastRequest = JSON.parse(seen.at(-1)?.stdout || '{}').data?.pending?.request
     await run(['keys', 'create', '--wait', lastRequest ?? 'none'], {}, 3)
 
+    const webhookSecret = api.state.webhookSecret
+    const hook = 'https://hooks.example.com/deepdock'
+    const hookFile = ['--write-env', '.env.webhooks']
+    for (const options of both) {
+      await run(['webhooks', 'create', hook, '--all-events', ...hookFile], options)
+      await run(['webhooks', 'list'], options)
+      await run(['webhooks', 'get', WEBHOOK_ID], options)
+      await run(['webhooks', 'events'], options)
+      await run(['webhooks', 'update', WEBHOOK_ID, '--event', 'customer.created'], options)
+      await run(['webhooks', 'disable', WEBHOOK_ID], options)
+      await run(['webhooks', 'enable', WEBHOOK_ID], options)
+      await run(['webhooks', 'test', WEBHOOK_ID, '--event', 'customer.created'], options)
+      await run(['webhooks', 'secret', WEBHOOK_ID, ...hookFile], options)
+      await run(['webhooks', 'rotate-secret', WEBHOOK_ID, ...hookFile, '--yes'], options)
+      await run(['webhooks', 'delete', WEBHOOK_ID, '--yes'], options)
+    }
+    expect(readFileSync(join(box.work, '.env.webhooks'), 'utf8')).toContain(
+      `DEEPDOCK_WEBHOOK_SECRET=${webhookSecret}`,
+    )
+    await run(['webhooks', 'create', hook, '--all-events', '--org', 'beispiel-handel'], {}, 2)
+    api.state.webhookSecret = 'invalid webhook secret with spaces'
+    await run(['webhooks', 'create', hook, '--all-events', ...hookFile], {}, 3)
+    await run(['webhooks', 'secret', WEBHOOK_ID, ...hookFile], {}, 3)
+
     await run(['auth', 'logout'], { tty: true })
     await run(['auth', 'logout', '--json'])
 
@@ -112,6 +137,8 @@ describe('no secret on any stream', () => {
       'poll-login-secret',
       'poll-key-secret',
       'invalid key value with spaces',
+      webhookSecret,
+      'invalid webhook secret with spaces',
     ]
     const valid = ['ddk', 'test', 'CANARYkey0123456789abcdefghij0123456789abcd'].join('_')
     for (const outcome of seen) {
@@ -120,9 +147,10 @@ describe('no secret on any stream', () => {
         expect(outcome.stderr).not.toContain(secret)
       }
     }
-    expect(seen.length).toBeGreaterThan(30)
+    expect(seen.length).toBeGreaterThan(60)
     // The config file never held the key value; it is checked after logout and, below, mid-flow.
     expect(readConfigText(box)).not.toContain(valid)
+    expect(readConfigText(box)).not.toContain(webhookSecret)
     expect(readConfigText(box)).not.toContain(api.state.signInSecret)
   })
 
@@ -151,5 +179,28 @@ describe('no secret on any stream', () => {
     expect(started.stdout + started.stderr + finished.stdout + finished.stderr).not.toContain(
       api.state.keyValue,
     )
+  })
+
+  it('writes a webhook secret only into the --write-env file and nowhere in the work tree or the store', async () => {
+    await signInWith(box, api.url)
+    await execute(box, ['orgs', 'select', 'muster-it'], { baseUrl: api.url })
+    const created = await execute(
+      box,
+      [
+        'webhooks',
+        'create',
+        'https://hooks.example.com/deepdock',
+        '--all-events',
+        '--write-env',
+        '.env.local',
+      ],
+      { baseUrl: api.url },
+    )
+    expect(created.code).toBe(0)
+
+    const holders = [...filesBelow(box.work), ...filesBelow(box.home)].filter((file) =>
+      readFileSync(file, 'utf8').includes(api.state.webhookSecret),
+    )
+    expect(holders).toEqual([join(box.work, '.env.local')])
   })
 })

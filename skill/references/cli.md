@@ -29,6 +29,14 @@ the API key the CLI wrote to the app's env file.
 | `keys create <name> --expires <7d\|30d\|90d> --write-env <file>` | create an API key: opens a link, a human approves "Create an API key in <Org>?", the CLI receives the key once and writes `DEEPDOCK_API_KEY=<key>` into the file. It keeps no copy and shows the value to nobody. Answers id, name, prefix, expiry and where it was written | admin |
 | `keys revoke <id>` | revoke a key (asks on a terminal; `--yes` otherwise); removes the env entry if this CLI wrote it | admin |
 | `incidents list` | incidents of the last 30 days | member |
+| `webhooks list` / `webhooks get <id>` / `webhooks events` | the organisation's webhook endpoints; one endpoint with its 7-day statistics; the event types of the triggers assigned to the organisation. Until Deepdock assigns a first trigger, every `webhooks` command fails with `not_found` (exit 2, "Webhooks are not available for this organisation yet"): ask Deepdock | member |
+| `webhooks create <url> (--event <type>... \| --all-events) [--description <text>] [--write-env <file>]` | create an endpoint. `--all-events` sends every assigned type that exists now as an explicit list; a type added later reaches the endpoint only after `webhooks update`. An endpoint always has at least one type, and every type must be one of `webhooks events`: another is refused with `invalid_input` (exit 2) naming it. The signing secret is written as `DEEPDOCK_WEBHOOK_SECRET=<secret>` into the `--write-env` file and shown to nobody; without the flag, fetch it with `webhooks secret` | admin |
+| `webhooks update <id> [--url <url>] [--description <text>] [--event <type>... \| --all-events]` | change what is given; the event types given replace the old ones | admin |
+| `webhooks delete <id>` | delete an endpoint and its stored deliveries (asks on a terminal; `--yes` otherwise) | admin |
+| `webhooks disable <id>` / `webhooks enable <id>` | stop sending; send again and resume what waited | admin |
+| `webhooks secret <id> --write-env <file>` | write the signing secret into the file | admin |
+| `webhooks rotate-secret <id> --write-env <file>` | make a new signing secret and write it; the old one signs for 24 more hours (asks on a terminal; `--yes` otherwise) | admin |
+| `webhooks test <id> --event <type>` | send one example now; answers `data.attempt` (`outcome`, `statusCode`, `durationMs`, `responseBody`, the receiver's first KiB). Nothing is stored. Exit 0 means the example was sent, `outcome` says what the receiver did; `webhook_disabled` (exit 2) on a disabled endpoint | admin |
 | `skill [--agent claude\|codex\|cursor\|all]` | writes this skill into the current repository | anyone |
 
 Every command that acts in an organisation uses `--org <slug>` after the command, else
@@ -69,7 +77,8 @@ stdout:
 `data` is what the API answered, so what you see is what your code will receive. `meta` holds the
 organisation the command acted in, the request id, and, where it applies, `written` (`{ file,
 name }` from `keys create`) and `pending` (from `--no-wait`). `keys create` builds its `data` from
-id, name, prefix, createdAt and expiresAt; the key value is in neither stream.
+id, name, prefix, createdAt and expiresAt; the key value is in neither stream. `webhooks secret` and
+`webhooks rotate-secret` build theirs from id, secretCreatedAt and previousSecretExpiresAt; the secret is in neither stream.
 
 A failure is one document on stderr: the API's error object unchanged plus what to do:
 
@@ -92,7 +101,7 @@ Branch on the exit code or on `error.code`, never on `message`.
 
 ## What the CLI never does
 
-- It never prints a key value, neither the sign-in nor an API key, under any flag.
+- It never prints a key value or a webhook signing secret, neither the sign-in nor an API key, under any flag.
 - It never runs an action and never holds an API key: `actions list` shows what a device offers;
   your code runs the actions.
 - It never names a device by label or picks one for you: a device is its full id, every time.

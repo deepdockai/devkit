@@ -27,6 +27,7 @@ const DESIGN_TABLE: Record<number, string[]> = {
     'idempotency_conflict',
     'conflict',
     'already_member',
+    'webhook_disabled',
     'record_locked',
     'record_not_editable',
     'payload_too_large',

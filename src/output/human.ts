@@ -58,6 +58,32 @@ export const KEY_COLUMNS: Columns = [
   'revokedAt',
   'lastUsedAt',
 ]
+export const WEBHOOK_LIST_COLUMNS: Columns = [
+  'id',
+  'url',
+  'status',
+  'disabledReason',
+  'successRate',
+  'lastDeliveryAt',
+]
+export const WEBHOOK_COLUMNS: Columns = [
+  'id',
+  'url',
+  'description',
+  'status',
+  'disabledReason',
+  'eventTypes',
+  'successRate',
+  'averageResponseMs',
+  'lastStatusCode',
+  'lastDeliveryAt',
+  'failingSince',
+  'disabledAt',
+  'secretCreatedAt',
+  'previousSecretExpiresAt',
+  'createdAt',
+]
+export const EVENT_TYPE_COLUMNS: Columns = ['type', 'system', 'object', 'label', 'description']
 export const ACTION_COLUMNS: Columns = ['name', 'kind', 'fields', 'description', 'state', 'status']
 export const DEVICE_SYSTEM_COLUMNS: Columns = [
   'systems',
@@ -111,17 +137,25 @@ const scalar = (value: unknown): string => {
 }
 
 const GOOD = new Set(['connected', 'active', 'running', 'ok'])
-const WARN = new Set(['offline', 'paused', 'outdated', 'unavailable', 'degraded'])
+const WARN = new Set([
+  'offline',
+  'paused',
+  'outdated',
+  'unavailable',
+  'degraded',
+  'failing',
+  'disabled',
+])
 const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
 
 /** Colour for a value whose word carries the meaning; the word stays, so colour is never alone. */
 const cellFor = (key: string, value: unknown): Cell => {
   const text = scalar(value)
   if (text === '') return text
-  if (key === 'reason' || key === 'pausedReason') return words(text)
+  if (key === 'reason' || key.endsWith('Reason')) return words(text)
   if (key === 'revokedAt') return { text, style: 'red' }
   if (key === 'name' || key === 'action') return { text, style: 'bold' }
-  if (key.endsWith('At') || key === 'since') return { text, style: 'dim' }
+  if (key.endsWith('At') || key.endsWith('Since') || key === 'since') return { text, style: 'dim' }
   if (key === 'status' || key === 'state') {
     if (GOOD.has(text)) return { text, style: 'green' }
     if (WARN.has(text)) return { text, style: 'yellow' }

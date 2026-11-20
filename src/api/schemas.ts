@@ -40,6 +40,12 @@ const build = async () => {
         },
       }),
     ),
+    webhookSecret: type({
+      secret: 'string',
+      createdAt: 'string',
+      previousExpiresAt: 'string | null',
+    }),
+    eventTypes: type({ type: 'string' }).array(),
     cliKeys: type({
       id: 'string',
       hostname: 'string',

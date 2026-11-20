@@ -18,6 +18,7 @@ export const PARTNER_API_CODES = [
   'forbidden',
   'conflict',
   'already_member',
+  'webhook_disabled',
 ] as const
 type PartnerApiCode = (typeof PARTNER_API_CODES)[number]
 
@@ -61,6 +62,8 @@ export const EXIT_CODES: Record<ApiErrorCode | PartnerApiCode | CliCode, ExitCod
   idempotency_conflict: 2,
   conflict: 2,
   already_member: 2,
+  // Not a retry: a person has to enable the endpoint first (`deepdock webhooks enable <id>`).
+  webhook_disabled: 2,
   record_locked: 2,
   record_not_editable: 2,
   // Not a wait: the customer lifts the restriction (a locked record) in its own system.
@@ -120,6 +123,8 @@ export type CliErrorInit = {
   hint?: string
   retryAfterMs?: number
   organisations?: string[]
+  /** `api` when Deepdock's API refused the input itself (a webhook), not a device. */
+  refusedBy?: 'api'
 }
 
 export class CliError extends Error {
@@ -130,6 +135,7 @@ export class CliError extends Error {
   hint: string | undefined
   readonly retryAfterMs: number | undefined
   readonly organisations: string[] | undefined
+  readonly refusedBy: 'api' | undefined
 
   constructor(init: CliErrorInit) {
     super(init.message)
@@ -141,6 +147,7 @@ export class CliError extends Error {
     this.hint = init.hint
     this.retryAfterMs = init.retryAfterMs
     this.organisations = init.organisations
+    this.refusedBy = init.refusedBy
   }
 
   get exitCode(): ExitCode {

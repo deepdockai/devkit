@@ -9,6 +9,7 @@ import type { Runtime } from '../runtime.ts'
 
 export const API_KEY_VARIABLE = 'DEEPDOCK_API_KEY'
 export const BASE_URL_VARIABLE = 'DEEPDOCK_BASE_URL'
+export const WEBHOOK_SECRET_VARIABLE = 'DEEPDOCK_WEBHOOK_SECRET'
 
 /**
  * Windows has no POSIX modes: both files keep their folder's permissions, so each run that writes
@@ -225,6 +226,7 @@ const atomicWrite = async (path: string, content: string): Promise<void> => {
 }
 
 const KEY_SHAPE = /^[A-Za-z0-9_-]{16,}$/
+const WEBHOOK_SECRET_SHAPE = /^whsec_[A-Za-z0-9+/]{16,}={0,2}$/
 
 /** The API a key belongs to: `always` writes its line, otherwise only an existing line is updated. */
 export type BaseUrlLine = { url: string; always: boolean }
@@ -241,9 +243,9 @@ export const writeEnvValue = async (
   value: string,
   baseUrl?: BaseUrlLine,
 ): Promise<boolean> => {
-  if (!KEY_SHAPE.test(value)) {
+  if (!(variable === WEBHOOK_SECRET_VARIABLE ? WEBHOOK_SECRET_SHAPE : KEY_SHAPE).test(value)) {
     throw internal(
-      'The API answered a key in a shape this CLI will not write.',
+      'The API answered a value in a shape this CLI will not write.',
       'Nothing was written.',
     )
   }
