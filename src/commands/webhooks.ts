@@ -52,19 +52,27 @@ const unavailable = (error: CliError): CliError =>
 
 const NOT_AN_EVENT_TYPE = /^eventTypes\[(\d+)\]$/
 
-/** The refusal of an event type the organisation cannot use, naming the type; undefined for any other 422. */
+/** The refusal of an event type the organisation cannot use, naming the type and keeping every other finding; undefined for any other 422. */
 const unusableEventTypes = (error: CliError, sent: unknown): CliError | undefined => {
-  const fields = Array.isArray(error.raw.fields) ? error.raw.fields : []
+  const fields: unknown[] = Array.isArray(error.raw.fields) ? error.raw.fields : []
   const types = isRecord(sent) && Array.isArray(sent.eventTypes) ? sent.eventTypes : []
-  const named = fields.flatMap((entry: unknown) => {
-    const index = isRecord(entry) ? NOT_AN_EVENT_TYPE.exec(String(entry.field))?.[1] : undefined
+  const named: string[] = []
+  const others: string[] = []
+  for (const entry of fields) {
+    if (!isRecord(entry)) continue
+    const index = NOT_AN_EVENT_TYPE.exec(String(entry.field))?.[1]
     const type = index === undefined ? undefined : types[Number(index)]
-    return typeof type === 'string' && isRecord(entry) && entry.message === 'is not an event type'
-      ? [stripControl(type)]
-      : []
-  })
+    if (typeof type === 'string' && entry.message === 'is not an event type') {
+      named.push(stripControl(type))
+    } else {
+      others.push(stripControl(`${String(entry.field)} ${String(entry.message)}`))
+    }
+  }
   if (named.length === 0) return undefined
-  const message = `Not an event type of this organisation: ${named.join(', ')}. It does not exist, or its trigger is not assigned to this organisation.`
+  const message = [
+    `Not an event type of this organisation: ${named.join(', ')}. It does not exist, or its trigger is not assigned to this organisation.`,
+    ...others,
+  ].join('; ')
   return new CliError({
     code: error.code,
     message,
@@ -90,7 +98,10 @@ const webhookCall = async (
   } catch (error) {
     if (!(error instanceof CliError)) throw error
     if (error.code === 'invalid_input') {
-      throw unusableEventTypes(error, req.body) ?? new CliError({ ...error, refusedBy: 'api' })
+      throw (
+        unusableEventTypes(error, req.body) ??
+        new CliError({ ...error, message: error.message, refusedBy: 'api' })
+      )
     }
     if (error.status !== 404 || error.code !== 'not_found') throw error
     if (req.path === EVENT_TYPES_PATH || req.path === WEBHOOKS_PATH) throw unavailable(error)

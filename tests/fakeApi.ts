@@ -403,15 +403,22 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         return send(200, { data: state.eventTypes, nextCursor: null })
       if (method === 'GET' && path === '/partner/webhooks')
         return send(200, { data: state.webhooks, nextCursor: null })
-      // The API's `webhookFindings`: a type outside the assigned catalogue is `eventTypes[<index>]`.
-      const unassigned = (): { field: string; message: string }[] => {
+      // The API's `webhookFindings`: the URL rule, and a type outside the assigned catalogue is `eventTypes[<index>]`.
+      const findings = (): { field: string; message: string }[] => {
         const assigned = new Set(state.eventTypes.map((entry) => entry.type))
         const types: unknown[] = Array.isArray(record.eventTypes) ? record.eventTypes : []
-        return types.flatMap((type, index) =>
-          typeof type === 'string' && assigned.has(type)
-            ? []
-            : [{ field: `eventTypes[${index}]`, message: 'is not an event type' }],
-        )
+        const url =
+          typeof record.url === 'string' && !record.url.startsWith('https://')
+            ? [{ field: 'url', message: 'must start with https://' }]
+            : []
+        return [
+          ...url,
+          ...types.flatMap((type, index) =>
+            typeof type === 'string' && assigned.has(type)
+              ? []
+              : [{ field: `eventTypes[${index}]`, message: 'is not an event type' }],
+          ),
+        ]
       }
       const refusal = (fields: { field: string; message: string }[]): unknown => ({
         error: {
@@ -423,7 +430,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         },
       })
       if (method === 'POST' && path === '/partner/webhooks') {
-        if (unassigned().length > 0) return send(422, refusal(unassigned()))
+        if (findings().length > 0) return send(422, refusal(findings()))
         const webhook = {
           id: WEBHOOK_ID,
           url: record.url,
@@ -441,7 +448,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         if (!webhook) return send(404, fail('not_found', 'no such webhook'))
         if (method === 'GET' && tail === '') return send(200, { data: webhook })
         if (method === 'PATCH') {
-          if (unassigned().length > 0) return send(422, refusal(unassigned()))
+          if (findings().length > 0) return send(422, refusal(findings()))
           return send(200, { data: Object.assign(webhook, record) })
         }
         if (method === 'DELETE') {

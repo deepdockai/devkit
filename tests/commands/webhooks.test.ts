@@ -376,6 +376,29 @@ describe('an event type of an unassigned trigger', () => {
     expect(errorDocOf(outcome.stderr).error.message).toContain('invoice.created')
   })
 
+  it('keeps the other findings of the API next to the named type', async () => {
+    const outcome = await run([
+      'webhooks',
+      'create',
+      'http://hooks.example.com/x',
+      '--event',
+      'invoice.created',
+    ])
+    const message = String(errorDocOf(outcome.stderr).error.message)
+    expect(message).toContain('invoice.created')
+    expect(message).toContain('url must start with https://')
+  })
+
+  it('keeps the sentence of the API for a refusal that names no event type', async () => {
+    const outcome = await run(
+      ['webhooks', 'create', 'http://hooks.example.com/x', '--event', 'customer.created'],
+      { tty: true },
+    )
+    expect(outcome.code).toBe(2)
+    expect(outcome.stderr).toContain('input url must start with https://')
+    expect(outcome.stderr).not.toContain('device')
+  })
+
   it('does not say a device refused it', async () => {
     const outcome = await run(['webhooks', 'create', URL, '--event', 'invoice.created'], {
       tty: true,
