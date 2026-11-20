@@ -203,7 +203,7 @@ const humanError = (rt: Runtime, error: CliError): string => {
   const style = makeStyler(rt, rt.stderr)
   const message = stripControl(error.message).replace(/\.$/, '')
   const body =
-    error.code === 'invalid_input'
+    error.code === 'invalid_input' && error.refusedBy !== 'api'
       ? `The device refused the input: "${message}" [${error.code}].`
       : `${message} [${error.code}].`
   const lines = [`${style('red', 'Error:')} ${body}`]

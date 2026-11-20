@@ -123,6 +123,8 @@ export type CliErrorInit = {
   hint?: string
   retryAfterMs?: number
   organisations?: string[]
+  /** `api` when Deepdock's API refused the input itself (a webhook), not a device. */
+  refusedBy?: 'api'
 }
 
 export class CliError extends Error {
@@ -133,6 +135,7 @@ export class CliError extends Error {
   hint: string | undefined
   readonly retryAfterMs: number | undefined
   readonly organisations: string[] | undefined
+  readonly refusedBy: 'api' | undefined
 
   constructor(init: CliErrorInit) {
     super(init.message)
@@ -144,6 +147,7 @@ export class CliError extends Error {
     this.hint = init.hint
     this.retryAfterMs = init.retryAfterMs
     this.organisations = init.organisations
+    this.refusedBy = init.refusedBy
   }
 
   get exitCode(): ExitCode {

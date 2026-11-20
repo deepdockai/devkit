@@ -42,6 +42,7 @@ export type FakeState = {
   keysHandedOut: number
   /** A webhook's signing secret: the canary that no stream may carry. */
   webhookSecret: string
+  /** The event types of the triggers assigned to the organisation; none: every webhook route answers 404. */
   eventTypes: { type: string; system: string; object: string }[]
   webhooks: Record<string, unknown>[]
 }
@@ -389,14 +390,40 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         state.revokedKeys.push(id)
         return send(200, { data: { id, revokedAt: '2026-10-21T15:20:44Z' } })
       }
+      const isWebhookRoute =
+        path === '/partner/webhook-event-types' || path.startsWith('/partner/webhooks')
+      const needsAdmin =
+        path.startsWith('/partner/webhooks') && (method !== 'GET' || path.endsWith('/secret'))
+      // The role comes first, then availability, as the API orders them: a member still gets the
+      // role's 403 on an admin route, and 404 only where the role allows the call.
+      if (needsAdmin && !isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
+      if (isWebhookRoute && state.eventTypes.length === 0)
+        return send(404, fail('not_found', 'no such route'))
       if (method === 'GET' && path === '/partner/webhook-event-types')
         return send(200, { data: state.eventTypes, nextCursor: null })
       if (method === 'GET' && path === '/partner/webhooks')
         return send(200, { data: state.webhooks, nextCursor: null })
-      const needsAdmin =
-        path.startsWith('/partner/webhooks') && (method !== 'GET' || path.endsWith('/secret'))
-      if (needsAdmin && !isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
+      // The API's `webhookFindings`: a type outside the assigned catalogue is `eventTypes[<index>]`.
+      const unassigned = (): { field: string; message: string }[] => {
+        const assigned = new Set(state.eventTypes.map((entry) => entry.type))
+        const types: unknown[] = Array.isArray(record.eventTypes) ? record.eventTypes : []
+        return types.flatMap((type, index) =>
+          typeof type === 'string' && assigned.has(type)
+            ? []
+            : [{ field: `eventTypes[${index}]`, message: 'is not an event type' }],
+        )
+      }
+      const refusal = (fields: { field: string; message: string }[]): unknown => ({
+        error: {
+          ...fail(
+            'invalid_input',
+            `input ${fields.map((f) => `${f.field} ${f.message}`).join('; ')}`,
+          ).error,
+          fields,
+        },
+      })
       if (method === 'POST' && path === '/partner/webhooks') {
+        if (unassigned().length > 0) return send(422, refusal(unassigned()))
         const webhook = {
           id: WEBHOOK_ID,
           url: record.url,
@@ -413,7 +440,10 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         const webhook = state.webhooks.find((row) => row.id === id)
         if (!webhook) return send(404, fail('not_found', 'no such webhook'))
         if (method === 'GET' && tail === '') return send(200, { data: webhook })
-        if (method === 'PATCH') return send(200, { data: Object.assign(webhook, record) })
+        if (method === 'PATCH') {
+          if (unassigned().length > 0) return send(422, refusal(unassigned()))
+          return send(200, { data: Object.assign(webhook, record) })
+        }
         if (method === 'DELETE') {
           state.webhooks.splice(state.webhooks.indexOf(webhook), 1)
           return send(200, { data: { id, deleted: true } })

@@ -1,6 +1,6 @@
 import type { Command } from '@commander-js/extra-typings'
 import { CliError, usageError } from '../api/errors.ts'
-import type { ApiResponse } from '../api/client.ts'
+import type { ApiRequest, ApiResponse } from '../api/client.ts'
 import { parseAnswer } from '../api/schemas.ts'
 import { webhookIdArg } from '../args.ts'
 import { configPath } from '../config/store.ts'
@@ -34,7 +34,75 @@ const WRITE_ENV = `write ${WEBHOOK_SECRET_VARIABLE}=<secret> into this env file`
 
 const collect = (value: string, previous: string[]): string[] => [...previous, value]
 
-const route = (webhookId: string, tail = ''): string => `/partner/webhooks/${webhookId}${tail}`
+const EVENT_TYPES_PATH = '/partner/webhook-event-types'
+const WEBHOOKS_PATH = '/partner/webhooks'
+
+const UNAVAILABLE_MESSAGE =
+  'Webhooks are not available for this organisation yet: Deepdock has not assigned it a trigger.'
+
+const unavailable = (error: CliError): CliError =>
+  new CliError({
+    code: 'not_found',
+    message: UNAVAILABLE_MESSAGE,
+    hint: 'Ask Deepdock to assign the triggers you need; these commands work from the first one.',
+    raw: { ...error.raw, message: UNAVAILABLE_MESSAGE },
+    requestId: error.requestId,
+    status: error.status,
+  })
+
+const NOT_AN_EVENT_TYPE = /^eventTypes\[(\d+)\]$/
+
+/** The refusal of an event type the organisation cannot use, naming the type; undefined for any other 422. */
+const unusableEventTypes = (error: CliError, sent: unknown): CliError | undefined => {
+  const fields = Array.isArray(error.raw.fields) ? error.raw.fields : []
+  const types = isRecord(sent) && Array.isArray(sent.eventTypes) ? sent.eventTypes : []
+  const named = fields.flatMap((entry: unknown) => {
+    const index = isRecord(entry) ? NOT_AN_EVENT_TYPE.exec(String(entry.field))?.[1] : undefined
+    const type = index === undefined ? undefined : types[Number(index)]
+    return typeof type === 'string' && isRecord(entry) && entry.message === 'is not an event type'
+      ? [stripControl(type)]
+      : []
+  })
+  if (named.length === 0) return undefined
+  const message = `Not an event type of this organisation: ${named.join(', ')}. It does not exist, or its trigger is not assigned to this organisation.`
+  return new CliError({
+    code: error.code,
+    message,
+    hint: 'Run `deepdock webhooks events` for the types you can use; ask Deepdock to assign a trigger.',
+    raw: { ...error.raw, message },
+    requestId: error.requestId,
+    status: error.status,
+    refusedBy: 'api',
+  })
+}
+
+/**
+ * Every call of a webhook command: the API answers 404 on all webhook routes until a trigger is
+ * assigned to the organisation, which is told apart from "no such webhook" by asking the event
+ * types, a route every role may read; and a 422 for an unusable event type is named.
+ */
+const webhookCall = async (
+  ctx: Ctx,
+  req: Omit<ApiRequest, 'secret' | 'org'>,
+): Promise<ApiResponse> => {
+  try {
+    return await ctx.callInOrg(req)
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error
+    if (error.code === 'invalid_input') {
+      throw unusableEventTypes(error, req.body) ?? new CliError({ ...error, refusedBy: 'api' })
+    }
+    if (error.status !== 404 || error.code !== 'not_found') throw error
+    if (req.path === EVENT_TYPES_PATH || req.path === WEBHOOKS_PATH) throw unavailable(error)
+    const probe = await ctx.callInOrg({ method: 'GET', path: EVENT_TYPES_PATH }).then(
+      () => false,
+      (failure: unknown) => failure instanceof CliError && failure.status === 404,
+    )
+    throw probe ? unavailable(error) : error
+  }
+}
+
+const route = (webhookId: string, tail = ''): string => `${WEBHOOKS_PATH}/${webhookId}${tail}`
 
 const answer = (response: ApiResponse, text: string): Result => ({
   data: response.data,
@@ -48,15 +116,8 @@ const eventTypesOf = async (ctx: Ctx, flags: EventFlags): Promise<string[] | und
     throw usageError('Use --event or --all-events, not both.')
   }
   if (!flags.allEvents) return flags.event.length > 0 ? flags.event : undefined
-  const response = await ctx.callInOrg({ method: 'GET', path: '/partner/webhook-event-types' })
-  const types = (await parseAnswer('eventTypes', response.data)).map((entry) => entry.type)
-  if (types.length === 0) {
-    throw usageError(
-      'No event types exist for your organisation yet, so --all-events selects none.',
-      'Run `deepdock webhooks events` to see what exists.',
-    )
-  }
-  return types
+  const response = await webhookCall(ctx, { method: 'GET', path: EVENT_TYPES_PATH })
+  return (await parseAnswer('eventTypes', response.data)).map((entry) => entry.type)
 }
 
 /** Checked before anything is created or rotated, so a refused file leaves nothing behind. */
@@ -79,7 +140,7 @@ const deliverSecret = async (
   webhookId: string,
   path: string,
 ): Promise<{ data: Record<string, unknown>; written: Written }> => {
-  const response = await ctx.callInOrg({ method: 'GET', path: route(webhookId, '/secret') })
+  const response = await webhookCall(ctx, { method: 'GET', path: route(webhookId, '/secret') })
   const secret = await parseAnswer('webhookSecret', response.data)
   try {
     // Again right before the write: git's answer can change while the human or the API took their time.
@@ -121,13 +182,13 @@ const confirmed = async (ctx: Ctx, verb: 'delete' | 'rotate', question: string):
 }
 
 const listOf = async (ctx: Ctx, path: string, columns: Columns, empty: string): Promise<Result> => {
-  const response = await ctx.callInOrg({ method: 'GET', path })
+  const response = await webhookCall(ctx, { method: 'GET', path })
   const items = Array.isArray(response.data) ? response.data : []
   return answer(response, items.length === 0 ? empty : genericTable(items, ctx.out, columns))
 }
 
 const get = async (ctx: Ctx, id: string): Promise<Result> => {
-  const response = await ctx.callInOrg({ method: 'GET', path: route(webhookIdArg(id)) })
+  const response = await webhookCall(ctx, { method: 'GET', path: route(webhookIdArg(id)) })
   return answer(response, genericView(response.data, ctx.out, WEBHOOK_COLUMNS))
 }
 
@@ -142,9 +203,9 @@ const create = async (ctx: Ctx, url: string, options: CreateOptions): Promise<Re
     )
   }
   const path = options.writeEnv === undefined ? undefined : await secretFile(ctx, options.writeEnv)
-  const created = await ctx.callInOrg({
+  const created = await webhookCall(ctx, {
     method: 'POST',
-    path: '/partner/webhooks',
+    path: WEBHOOKS_PATH,
     body: { url, eventTypes, description: options.description },
   })
   const id = isRecord(created.data) ? field(created.data, 'id') : ''
@@ -170,7 +231,7 @@ const update = async (ctx: Ctx, id: string, options: UpdateOptions): Promise<Res
   if (Object.values(body).every((value) => value === undefined)) {
     throw usageError('Nothing to change.', 'Pass --url, --description, --event or --all-events.')
   }
-  const response = await ctx.callInOrg({ method: 'PATCH', path: route(webhookId), body })
+  const response = await webhookCall(ctx, { method: 'PATCH', path: route(webhookId), body })
   return answer(response, `${paint(ctx.out, 'success', 'Updated')} webhook ${webhookId}.`)
 }
 
@@ -181,13 +242,13 @@ const remove = async (ctx: Ctx, id: string): Promise<Result> => {
     'delete',
     `Delete webhook ${webhookId}?\nIts stored deliveries are deleted with it.`,
   )
-  const response = await ctx.callInOrg({ method: 'DELETE', path: route(webhookId) })
+  const response = await webhookCall(ctx, { method: 'DELETE', path: route(webhookId) })
   return answer(response, `${paint(ctx.out, 'success', 'Deleted')} webhook ${webhookId}.`)
 }
 
 const setActive = async (ctx: Ctx, id: string, change: 'disable' | 'enable'): Promise<Result> => {
   const webhookId = webhookIdArg(id)
-  const response = await ctx.callInOrg({ method: 'POST', path: route(webhookId, `/${change}`) })
+  const response = await webhookCall(ctx, { method: 'POST', path: route(webhookId, `/${change}`) })
   const done = change === 'enable' ? 'Enabled' : 'Disabled'
   return answer(response, `${paint(ctx.out, 'success', done)} webhook ${webhookId}.`)
 }
@@ -206,7 +267,7 @@ const writeSecret = async (
       'rotate',
       `Rotate the signing secret of webhook ${webhookId}?\nThe old secret keeps signing for 24 hours next to the new one; update your receiver within that time.`,
     )
-    await ctx.callInOrg({ method: 'POST', path: route(webhookId, '/secret/rotate') })
+    await webhookCall(ctx, { method: 'POST', path: route(webhookId, '/secret/rotate') })
   }
   const delivered = await deliverSecret(ctx, webhookId, path)
   const done = rotate ? 'Rotated the signing secret of' : 'Wrote the signing secret of'
@@ -219,14 +280,16 @@ const writeSecret = async (
 
 const sendTest = async (ctx: Ctx, id: string, type: string): Promise<Result> => {
   const webhookId = webhookIdArg(id)
-  const response = await ctx
-    .callInOrg({ method: 'POST', path: route(webhookId, '/test'), body: { type } })
-    .catch((error: unknown) => {
-      if (error instanceof CliError && error.code === 'webhook_disabled') {
-        error.hint = `Run \`deepdock webhooks enable ${webhookId}\`, then send the example again.`
-      }
-      throw error
-    })
+  const response = await webhookCall(ctx, {
+    method: 'POST',
+    path: route(webhookId, '/test'),
+    body: { type },
+  }).catch((error: unknown) => {
+    if (error instanceof CliError && error.code === 'webhook_disabled') {
+      error.hint = `Run \`deepdock webhooks enable ${webhookId}\`, then send the example again.`
+    }
+    throw error
+  })
   const attempt =
     isRecord(response.data) && isRecord(response.data.attempt) ? response.data.attempt : {}
   const outcome = field(attempt, 'outcome')
@@ -253,7 +316,7 @@ export const registerWebhooks = (program: Command, run: Run): void => {
       run(cmd, (ctx) =>
         listOf(
           ctx,
-          '/partner/webhooks',
+          WEBHOOKS_PATH,
           WEBHOOK_LIST_COLUMNS,
           'No webhooks. Create one with `deepdock webhooks create <url> --all-events`.',
         ),
@@ -331,7 +394,7 @@ export const registerWebhooks = (program: Command, run: Run): void => {
       run(cmd, (ctx) =>
         listOf(
           ctx,
-          '/partner/webhook-event-types',
+          EVENT_TYPES_PATH,
           EVENT_TYPE_COLUMNS,
           'No event types exist for your organisation yet.',
         ),

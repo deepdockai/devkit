@@ -2,7 +2,8 @@
 
 ## 1.12.0
 
-- `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
+- `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every assigned type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
+- Webhooks follow the assignment of triggers to your organisation: until Deepdock assigns the first one, every `webhooks` command fails with `not_found` (exit 2) and the message "Webhooks are not available for this organisation yet"; `webhooks events` lists only the types of the assigned triggers; an event type that is not one of them is refused with `invalid_input` (exit 2), naming the type, and a human reading the error no longer sees "The device refused the input" for a webhook refusal.
 - New error code `webhook_disabled` (exit 2): a test on a disabled endpoint; `webhooks enable` first.
 
 ## 1.11.0

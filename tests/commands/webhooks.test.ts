@@ -86,13 +86,6 @@ describe('webhooks create', () => {
     expect(webhookRequests()).toEqual([])
   })
 
-  it('refuses --all-events when no event type exists, without creating anything', async () => {
-    api.state.eventTypes = []
-    const outcome = await run(['webhooks', 'create', URL, '--all-events'])
-    expect(outcome.code).toBe(1)
-    expect(requestsTo('POST', '/partner/webhooks')).toEqual([])
-  })
-
   it('refuses an env file git does not ignore before the webhook exists', async () => {
     const outcome = await run([
       'webhooks',
@@ -115,7 +108,7 @@ describe('webhooks create', () => {
       'create',
       URL,
       '--event',
-      'a.b',
+      'customer.created',
       '--write-env',
       '.env.local',
     ])
@@ -154,9 +147,13 @@ describe('webhooks list, get and events', () => {
   })
 
   it('says so when there is nothing to list', async () => {
-    api.state.eventTypes = []
     expect((await run(['webhooks', 'list'], { tty: true })).stdout).toContain('No webhooks.')
-    expect((await run(['webhooks', 'events'], { tty: true })).stdout).toContain('No event types')
+  })
+
+  it('lists only the event types of the assigned triggers', async () => {
+    api.state.eventTypes = [{ type: 'customer.created', system: 'example-erp', object: 'customer' }]
+    const events = JSON.parse((await run(['webhooks', 'events'])).stdout)
+    expect(events.data.map((entry: { type: string }) => entry.type)).toEqual(['customer.created'])
   })
 
   it('refuses an id that is not a full uuid before any request is made', async () => {
@@ -281,5 +278,117 @@ describe('webhooks test', () => {
     const doc = errorDocOf(outcome.stderr)
     expect(doc.error.code).toBe('webhook_disabled')
     expect(doc.meta.hint).toContain(`deepdock webhooks enable ${WEBHOOK_ID}`)
+  })
+})
+
+describe('an organisation with no assigned trigger', () => {
+  beforeEach(() => {
+    api.state.eventTypes = []
+  })
+
+  const UNASSIGNED = 'Webhooks are not available for this organisation yet'
+
+  it.each([
+    [['webhooks', 'list']],
+    [['webhooks', 'events']],
+    [['webhooks', 'create', URL, '--event', 'customer.created']],
+    [['webhooks', 'create', URL, '--all-events']],
+    [['webhooks', 'get', WEBHOOK_ID]],
+    [['webhooks', 'update', WEBHOOK_ID, '--description', 'x']],
+    [['webhooks', 'disable', WEBHOOK_ID]],
+    [['webhooks', 'test', WEBHOOK_ID, '--event', 'customer.created']],
+  ])('%j says webhooks are not available and to ask Deepdock, exit 2', async (argv) => {
+    const outcome = await run(argv)
+    expect(outcome.code).toBe(2)
+    const doc = errorDocOf(outcome.stderr)
+    expect(doc.error.code).toBe('not_found')
+    expect(doc.error.message).toContain(UNASSIGNED)
+    expect(doc.meta.hint).toContain('Ask Deepdock')
+  })
+
+  it('asks the event types to tell it from a missing webhook, and only after a 404 on one webhook', async () => {
+    await run(['webhooks', 'get', WEBHOOK_ID])
+    expect(
+      api.requests.map((request) => request.path).filter((p) => p.includes('/webhook')),
+    ).toEqual([`/partner/webhooks/${WEBHOOK_ID}`, '/partner/webhook-event-types'])
+  })
+
+  it('writes the plain sentence for a person', async () => {
+    const outcome = await run(['webhooks', 'list'], { tty: true })
+    expect(outcome.stderr).toContain(`${UNASSIGNED}: Deepdock has not assigned it a trigger`)
+    expect(outcome.stderr).toContain('Ask Deepdock')
+    expect(outcome.stdout).toBe('')
+  })
+
+  it('still answers a member with forbidden on an admin route, as the API orders the checks', async () => {
+    const outcome = await run([
+      'webhooks',
+      'create',
+      URL,
+      '--event',
+      'a.b',
+      '--org',
+      'beispiel-handel',
+    ])
+    expect(errorDocOf(outcome.stderr).error.code).toBe('forbidden')
+  })
+})
+
+describe('a missing webhook once a trigger is assigned', () => {
+  it('stays an ordinary not_found and is not called unavailable', async () => {
+    const outcome = await run(['webhooks', 'get', WEBHOOK_ID])
+    expect(outcome.code).toBe(2)
+    const doc = errorDocOf(outcome.stderr)
+    expect(doc.error.code).toBe('not_found')
+    expect(doc.error.message).toBe('no such webhook')
+  })
+})
+
+describe('an event type of an unassigned trigger', () => {
+  beforeEach(() => {
+    api.state.eventTypes = [{ type: 'customer.created', system: 'example-erp', object: 'customer' }]
+  })
+
+  it('is refused on create, naming the type, creating nothing', async () => {
+    const outcome = await run([
+      'webhooks',
+      'create',
+      URL,
+      '--event',
+      'customer.created',
+      '--event',
+      'invoice.created',
+    ])
+    expect(outcome.code).toBe(2)
+    const doc = errorDocOf(outcome.stderr)
+    expect(doc.error.code).toBe('invalid_input')
+    expect(doc.error.message).toContain('invoice.created')
+    expect(doc.error.message).not.toContain('customer.created')
+    expect(doc.error.fields).toEqual([{ field: 'eventTypes[1]', message: 'is not an event type' }])
+    expect(doc.meta.hint).toContain('deepdock webhooks events')
+    expect(api.state.webhooks).toEqual([])
+  })
+
+  it('is refused on update the same way', async () => {
+    await createOne()
+    const outcome = await run(['webhooks', 'update', WEBHOOK_ID, '--event', 'invoice.created'])
+    expect(outcome.code).toBe(2)
+    expect(errorDocOf(outcome.stderr).error.message).toContain('invoice.created')
+  })
+
+  it('does not say a device refused it', async () => {
+    const outcome = await run(['webhooks', 'create', URL, '--event', 'invoice.created'], {
+      tty: true,
+    })
+    expect(outcome.stderr).toContain('Not an event type of this organisation: invoice.created')
+    expect(outcome.stderr).not.toContain('device')
+  })
+
+  it('--all-events sends only the assigned types', async () => {
+    expect((await run(['webhooks', 'create', URL, '--all-events'])).code).toBe(0)
+    expect(requestsTo('POST', '/partner/webhooks')[0]?.body).toEqual({
+      url: URL,
+      eventTypes: ['customer.created'],
+    })
   })
 })

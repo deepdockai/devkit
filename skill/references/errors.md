@@ -34,6 +34,14 @@ with the **same** `Idempotency-Key`); **Show** says what the end user should see
 `X-Deepdock-Cli` version), so your own `/v1` code never receives it. The dashboard tree's own codes
 (`organisation_required`, `forbidden`, `conflict`, `already_member`, `webhook_disabled`) are not in the `/v1` enum.
 
+The webhook routes (`/partner/webhooks*`, `/partner/webhook-event-types`) answer differently until Deepdock assigns a
+trigger to your organisation: `404 not_found` on every one of them, as for a route that does not exist. The CLI says
+"Webhooks are not available for this organisation yet" (exit 2, `error.code` stays `not_found`); do not retry, ask
+Deepdock to assign the triggers you need. A `404 not_found` on one webhook once a trigger is assigned means that webhook
+does not exist. After the first assignment, an endpoint that names an event type that is not one of yours (a trigger not
+assigned to you, or no such type) is refused with `422 invalid_input` and `fields` naming `eventTypes[<index>]`; the CLI
+names the types and points to `webhooks events`.
+
 ## Device, system and action resolution
 
 | Code | Status | Meaning | Retry | Show |
