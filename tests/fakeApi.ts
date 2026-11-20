@@ -43,9 +43,55 @@ export type FakeState = {
   /** A webhook's signing secret: the canary that no stream may carry. */
   webhookSecret: string
   /** The event types of the triggers assigned to the organisation; none: every webhook route answers 404. */
-  eventTypes: { type: string; system: string; object: string }[]
+  eventTypes: EventTypeRow[]
   webhooks: Record<string, unknown>[]
 }
+
+/**
+ * One row of `GET /partner/webhook-event-types`, in the shape the API answers (read from staging,
+ * keys and types only, 2026-11-20); the values are invented.
+ */
+type EventTypeRow = {
+  type: string
+  system: string
+  object: string
+  label: string
+  description: string
+  readAction: string
+  keys: Record<string, string>
+  example: {
+    id: string
+    type: string
+    system: string
+    deviceId: string
+    occurredAt: string
+    data: Record<string, number>
+  }
+  headers: Record<'webhook-id' | 'webhook-timestamp' | 'webhook-signature', string>
+}
+
+export const eventTypeRow = (type: string): EventTypeRow => ({
+  type,
+  system: 'example-erp',
+  object: 'customer',
+  label: `Customer ${type.split('.')[1] ?? ''}`.trim(),
+  description: 'A customer record changed in the example ERP.',
+  readAction: 'getCustomer',
+  keys: { customerId: 'The customer the change is about.' },
+  example: {
+    id: 'msg_2f6a1c9e0b7d4e3a8c5f1b2d',
+    type,
+    system: 'example-erp',
+    deviceId: '9a1c2e3f-4b5d-4e6f-8a7b-1c2d3e4f5a6b',
+    occurredAt: '2026-11-20T08:00:00.000Z',
+    data: { customerId: 4712 },
+  },
+  headers: {
+    'webhook-id': 'msg_2f6a1c9e0b7d4e3a8c5f1b2d',
+    'webhook-timestamp': '1795161600',
+    'webhook-signature': 'v1,<base64 HMAC-SHA256 of id.timestamp.body>',
+  },
+})
 
 export type FakeApi = {
   url: string
@@ -81,10 +127,7 @@ export const defaultState = (): FakeState => ({
   keyRequestExpiresInMs: 10 * 60 * 1000,
   keysHandedOut: 0,
   webhookSecret: ['whsec', 'CANARY+secret/0123456789abcdefghijkl'].join('_'),
-  eventTypes: [
-    { type: 'customer.created', system: 'example-erp', object: 'customer' },
-    { type: 'customer.updated', system: 'example-erp', object: 'customer' },
-  ],
+  eventTypes: [eventTypeRow('customer.created'), eventTypeRow('customer.updated')],
   webhooks: [],
 })
 

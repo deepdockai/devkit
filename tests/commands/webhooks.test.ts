@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { type FakeApi, startFakeApi, WEBHOOK_ID } from '../fakeApi.ts'
+import { eventTypeRow, type FakeApi, startFakeApi, WEBHOOK_ID } from '../fakeApi.ts'
 import { errorDocOf, execute, initRepo, makeSandbox, type Sandbox, signInWith } from '../harness.ts'
 
 let api: FakeApi
@@ -151,7 +151,7 @@ describe('webhooks list, get and events', () => {
   })
 
   it('lists only the event types of the assigned triggers', async () => {
-    api.state.eventTypes = [{ type: 'customer.created', system: 'example-erp', object: 'customer' }]
+    api.state.eventTypes = [eventTypeRow('customer.created')]
     const events = JSON.parse((await run(['webhooks', 'events'])).stdout)
     expect(events.data.map((entry: { type: string }) => entry.type)).toEqual(['customer.created'])
   })
@@ -346,7 +346,7 @@ describe('a missing webhook once a trigger is assigned', () => {
 
 describe('an event type of an unassigned trigger', () => {
   beforeEach(() => {
-    api.state.eventTypes = [{ type: 'customer.created', system: 'example-erp', object: 'customer' }]
+    api.state.eventTypes = [eventTypeRow('customer.created')]
   })
 
   it('is refused on create, naming the type, creating nothing', async () => {
