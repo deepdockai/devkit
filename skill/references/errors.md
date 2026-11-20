@@ -10,6 +10,11 @@ An `invalid_input` that refuses an action call's input also carries `fields`: ev
 failed, as `{ "field", "message" }`, sorted by name, at most 32. It is absent when the body is not
 an object at all. No message holds the value you sent.
 
+A write that refuses one element of a list input (with a refusal the action declares, or
+`not_found` or `too_many_rows`) names that element in `fields`: `list[index].field` when the
+refusing step names a field of the element, else `list[index]`, with a zero-based `index`. It is
+absent when the refusal cannot name an input or an element.
+
 Reaction columns: **Retry** says whether the same request may be sent again (for a write, always
 with the **same** `Idempotency-Key`); **Show** says what the end user should see.
 

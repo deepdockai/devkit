@@ -1,9 +1,16 @@
 # Changelog
 
-## 1.11.0
+## 1.12.0
 
 - `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
 - New error code `webhook_disabled` (exit 2): a test on a disabled endpoint; `webhooks enable` first.
+
+## 1.11.0
+
+- The current device API, three changes in the pinned device API, the bundled TypeScript client and the references:
+  - A paused action's `reason` can be `http_signin_changed` (the program's sign-in answered in a way the device's recorded sign-in does not describe; only Deepdock lifts it). The bundled client's `ActionState` type and the concepts reference gain it.
+  - The documented UUID pattern of the `id` fields (`PartnerDevice.id`, `ReleasedDevice.id`) accepts upper-case hex digits as well. The values the API accepts and answers are unchanged.
+  - `error.fields` of an `invalid_input` can name one element of a list input (`list[index].field`, or `list[index]` when no element field is named, with a zero-based index) when a write refuses that element with a refusal the action declares, or with `not_found` or `too_many_rows`. The errors reference describes it.
 
 ## 1.10.0
 

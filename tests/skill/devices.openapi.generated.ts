@@ -170,7 +170,7 @@ export interface components {
         uncertain?: boolean
         /** @description With system_not_on_device: the systems this device reported or was assigned */
         systems?: string[]
-        /** @description With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. Absent when the refusal cannot name an input. A message never holds the value */
+        /** @description With an invalid_input that refuses an action call's input and can name it: the inputs that failed, sorted by name, at most 32. With a refusal the action declares, or not_found or too_many_rows, that a write raises for one element of a list input: that element, as list[index].field when the refusing step names an element field, else list[index], with a zero-based index. Absent when the refusal cannot name an input or an element. A message never holds the value */
         fields?: {
           field: string
           message: string
@@ -271,6 +271,7 @@ export interface components {
             reason:
               | 'certificate_changed'
               | 'credentials_rejected'
+              | 'http_signin_changed'
               | 'readback_failed'
               | 'structure_changed'
             /** @constant */
