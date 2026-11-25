@@ -98,7 +98,7 @@ deepdock skill
 | `orgs list`, `orgs select [slug]`                                 | your organisations; set the default one                                                                                                                                                                                                                                                |
 | `systems list`                                                    | the systems and actions assigned to your organisation                                                                                                                                                                                                                                  |
 | `systems openapi <system>`                                        | a system's OpenAPI document on stdout, bare when redirected; save it to a file                                                                                                                                                                                                         |
-| `devices list`                                                    | paired devices with id, label, status, systems and last seen                                                                                                                                                                                                                           |
+| `devices list`                                                    | paired devices with id, label, status, systems, last seen and pairing time                                                                                                                                                                                                             |
 | `devices pair <code> [--label <text>]`                            | pair a device by the code on its screen                                                                                                                                                                                                                                                |
 | `devices rename <deviceId> <label>`, `devices release <deviceId>` | rename a device; unpair it from the organisation (admin)                                                                                                                                                                                                                               |
 | `devices systems <deviceId>`                                      | a device's live systems and action state, paused reasons included                                                                                                                                                                                                                      |
@@ -143,10 +143,6 @@ deepdock keys create --wait <request>
 Ctrl-C during a wait leaves the request pending; `--wait <request>` resumes it.
 
 ## JSON mode for agents and scripts
-
-JSON device records from `deepdock devices list`, `deepdock devices pair` and
-`deepdock devices rename` include `pairedAt`, an ISO timestamp or `null`.
-The device table shows the timestamp under **PAIRED AT** and displays “not paired” for `null`.
 
 On a terminal you get tables and plain sentences. When stdout is not a terminal, or with
 `--json`, every command prints one document on stdout:

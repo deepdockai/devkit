@@ -2,7 +2,8 @@
 
 ## 2.0.0
 
-- **Breaking:** The API renames the device field `claimedAt` to `pairedAt`. Update scripts that read the old field in JSON output from `deepdock devices list`, `deepdock devices pair` or `deepdock devices rename` to read `pairedAt`. The field is required and contains an ISO timestamp or `null`. The device table shows the timestamp or “not paired”, and the bundled TypeScript client uses the new name.
+- **Breaking API change.** Once the Deepdock API serves `pairedAt`, scripts reading `claimedAt` from JSON output for `deepdock devices list`, `deepdock devices pair` or `deepdock devices rename` must read `pairedAt`. This applies to every CLI version because JSON device records come directly from the API.
+- DevKit 2.0.0 updates the bundled TypeScript type, documentation and device table to follow the API. The table shows the pairing timestamp under **PAIRED AT**.
 
 ## 1.12.0
 

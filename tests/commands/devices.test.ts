@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { MAX_PAGES } from '../../src/commands/pages.ts'
 import {
   DEVICE_ID,
+  EXAMPLE_DEVICE_SYSTEM,
   type FakeApi,
   fakeDevice,
   OTHER_DEVICE_ID,
@@ -31,23 +32,20 @@ const run = (argv: string[], options: Parameters<typeof execute>[2] = {}) =>
 const seedDevices = (): void => {
   api.state.devices.push(
     {
-      id: DEVICE_ID,
-      label: 'Demo PC',
-      status: 'connected',
-      pairedAt: PAIRED_AT,
-      lastSeenAt: new Date().toISOString(),
-      systems: [{ system: 'example-erp', version: '25.3' }],
+      ...fakeDevice({
+        label: 'Demo PC',
+        lastSeenAt: new Date().toISOString(),
+        systems: [EXAMPLE_DEVICE_SYSTEM],
+      }),
       internalNote: '2026-10-01T10:00:00Z',
     },
-    {
+    fakeDevice({
       id: OTHER_DEVICE_ID,
       label: 'Reception PC',
       status: 'offline',
-      pairedAt: null,
       lastSeenAt: new Date(Date.now() - 3 * 86400000).toISOString(),
       updateAvailable: '1.8.2',
-      systems: [],
-    },
+    }),
   )
 }
 
@@ -55,7 +53,9 @@ describe('devices list', () => {
   it('prints a table with full ids and relative times, showing only the view columns', async () => {
     seedDevices()
     const outcome = await run(['devices', 'list'], { tty: true })
-    expect(outcome.stdout).toContain(DEVICE_ID)
+    const [header, ...rows] = outcome.stdout.split('\n')
+    expect(header).toContain('PAIRED AT')
+    expect(rows.find((row) => row.startsWith(DEVICE_ID))).toContain(PAIRED_AT)
     expect(outcome.stdout).toMatch(/Demo PC\s+connected\s+example-erp 25\.3\s+just now/)
     expect(outcome.stdout).toMatch(/Reception PC\s+offline\s+\(none reported\)\s+3 days ago/)
     expect(outcome.stdout).not.toContain('internalNote')
@@ -70,29 +70,6 @@ describe('devices list', () => {
     const doc = JSON.parse(outcome.stdout)
     expect(doc.data).toEqual(api.state.devices)
     expect(doc.data[0].internalNote).toBe('2026-10-01T10:00:00Z')
-  })
-
-  it('shows the pairing timestamp and an explicit not paired label for null', async () => {
-    api.state.devices.push(
-      fakeDevice({ label: 'Demo PC', pairedAt: PAIRED_AT }),
-      fakeDevice({ id: OTHER_DEVICE_ID, label: 'Spare PC', status: 'offline', pairedAt: null }),
-    )
-
-    const human = await run(['devices', 'list'], { tty: true })
-    expect(human.code).toBe(0)
-    expect(human.stdout).toContain('PAIRED AT')
-    expect(human.stdout).toMatch(/^.*Demo PC.*2026-10-01T09:00:00\.000Z$/m)
-    expect(human.stdout).toMatch(/^.*Spare PC.*not paired$/m)
-
-    const json = await run(['devices', 'list', '--json'], { tty: true })
-    expect(json.code).toBe(0)
-    const { data } = JSON.parse(json.stdout)
-    expect(data).toMatchObject([
-      { id: DEVICE_ID, pairedAt: PAIRED_AT },
-      { id: OTHER_DEVICE_ID, pairedAt: null },
-    ])
-    expect(data[0]).not.toHaveProperty('claimedAt')
-    expect(data[1]).not.toHaveProperty('claimedAt')
   })
 
   it('says so when nothing is paired', async () => {
@@ -172,14 +149,6 @@ describe('devices pair, rename, release', () => {
     })
   })
 
-  it('includes the pairing timestamp in the pair response under --json', async () => {
-    const outcome = await run(['devices', 'pair', 'K7Q-4MX', '--json'])
-    expect(outcome.code).toBe(0)
-    const { data } = JSON.parse(outcome.stdout)
-    expect(data).toMatchObject({ id: DEVICE_ID, pairedAt: PAIRED_AT })
-    expect(data).not.toHaveProperty('claimedAt')
-  })
-
   it('answers a wrong code with exit 2 and the API message', async () => {
     const outcome = await run(['devices', 'pair', 'WRONG'], { tty: true })
     expect(outcome.code).toBe(2)
@@ -194,11 +163,18 @@ describe('devices pair, rename, release', () => {
   })
 
   it('renames by full id and refuses a short one', async () => {
+    api.state.devices.push(fakeDevice())
     const renamed = await run(['devices', 'rename', DEVICE_ID, 'Front desk'], { tty: true })
     expect(renamed.stdout).toContain(`Renamed device ${DEVICE_ID} to Front desk.`)
     const short = await run(['devices', 'rename', '450c3f0e', 'x'])
     expect(short.code).toBe(1)
     expect(errorDocOf(short.stderr).error.message).toContain('not a full device id')
+  })
+
+  it('reports device_not_found when renaming a missing device', async () => {
+    const outcome = await run(['devices', 'rename', DEVICE_ID, 'Front desk'])
+    expect(outcome.code).toBe(2)
+    expect(errorDocOf(outcome.stderr).error.code).toBe('device_not_found')
   })
 
   it('release without a terminal and without --yes stops before any request', async () => {

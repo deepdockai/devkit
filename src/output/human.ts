@@ -150,7 +150,6 @@ const BAD = new Set(['revoked', 'failed', 'denied', 'expired'])
 
 /** Colour for a value whose word carries the meaning; the word stays, so colour is never alone. */
 const cellFor = (key: string, value: unknown): Cell => {
-  if (key === 'pairedAt' && value === null) return { text: 'not paired', style: 'dim' }
   const text = scalar(value)
   if (text === '') return text
   if (key === 'reason' || key.endsWith('Reason')) return words(text)

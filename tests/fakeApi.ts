@@ -110,6 +110,18 @@ type Device = components['schemas']['PartnerDevice'] & { syncedAt: string | null
 
 export const PAIRED_AT = '2026-10-01T09:00:00.000Z'
 
+export const EXAMPLE_DEVICE_SYSTEM: Device['systems'][number] = {
+  system: 'example-erp',
+  version: '25.3',
+  status: 'running',
+  versionIssue: null,
+  access: 'ok',
+  accessLastCheckedAt: null,
+  lockedActions: null,
+  actions: [],
+  reportedAt: PAIRED_AT,
+}
+
 export const fakeDevice = (overrides: Partial<Device> = {}): Device => ({
   id: DEVICE_ID,
   label: null,
@@ -324,19 +336,7 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
           )
         const device = fakeDevice({
           label: typeof record.label === 'string' ? record.label : null,
-          systems: [
-            {
-              system: 'example-erp',
-              version: '25.3',
-              status: 'running',
-              versionIssue: null,
-              access: 'ok',
-              accessLastCheckedAt: null,
-              lockedActions: null,
-              actions: [],
-              reportedAt: PAIRED_AT,
-            },
-          ],
+          systems: [EXAMPLE_DEVICE_SYSTEM],
         })
         state.devices.push(device)
         return send(201, { data: device })
@@ -345,15 +345,11 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         /^\/partner\/devices\/([^/]+)(?:\/(systems)(?:\/([^/]+)\/actions)?)?$/.exec(path)
       if (deviceMatch) {
         const [, id, systems, system] = deviceMatch
-        if (method === 'PATCH')
-          return send(200, {
-            data: {
-              ...fakeDevice(),
-              ...state.devices.find((device) => device.id === id),
-              id,
-              label: record.label,
-            },
-          })
+        if (method === 'PATCH') {
+          const device = state.devices.find((device) => device.id === id)
+          if (!device) return send(404, fail('device_not_found', 'no such device'))
+          return send(200, { data: { ...device, label: record.label } })
+        }
         if (method === 'DELETE') {
           if (!isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
           return send(200, { data: { id, released: true } })
