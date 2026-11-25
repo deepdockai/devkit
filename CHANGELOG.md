@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0
+
+- **Breaking:** The API renames the device field `claimedAt` to `pairedAt`. Update scripts that read the old field in JSON output from `deepdock devices list`, `deepdock devices pair` or `deepdock devices rename` to read `pairedAt`. The field is required and contains an ISO timestamp or `null`. The device table shows the timestamp or “not paired”, and the bundled TypeScript client uses the new name.
+
 ## 1.12.0
 
 - `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every assigned type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.

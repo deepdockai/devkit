@@ -1,5 +1,6 @@
 import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
+import type { components } from './skill/devices.openapi.generated.ts'
 
 export type RecordedRequest = {
   method: string
@@ -104,6 +105,26 @@ export const DEVICE_ID = '450c3f0e-7a1b-4c2d-9e8f-1a2b3c4d5e6f'
 export const OTHER_DEVICE_ID = '9d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6'
 export const WEBHOOK_ID = '5b0c8a2e-91d4-4f3a-a6c7-3e8d1f2b4a90'
 export const KEY_ID = 'k_6a2b9c1d-3e4f-4a5b-8c6d-7e8f9a0b1c2d'
+
+type Device = components['schemas']['PartnerDevice'] & { syncedAt: string | null }
+
+export const PAIRED_AT = '2026-10-01T09:00:00.000Z'
+
+export const fakeDevice = (overrides: Partial<Device> = {}): Device => ({
+  id: DEVICE_ID,
+  label: null,
+  hostname: 'demo-pc',
+  os: 'windows',
+  clientVersion: null,
+  status: 'connected',
+  lastSeenAt: null,
+  lastKnownAt: null,
+  pairedAt: PAIRED_AT,
+  syncedAt: null,
+  outdated: false,
+  systems: [],
+  ...overrides,
+})
 
 export const defaultState = (): FakeState => ({
   orgs: [
@@ -301,12 +322,22 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
               'The pairing code is unknown, expired, already used, or its device is offline.',
             ),
           )
-        const device = {
-          id: DEVICE_ID,
-          label: record.label ?? null,
-          status: 'connected',
-          systems: [{ system: 'example-erp', version: '25.3' }],
-        }
+        const device = fakeDevice({
+          label: typeof record.label === 'string' ? record.label : null,
+          systems: [
+            {
+              system: 'example-erp',
+              version: '25.3',
+              status: 'running',
+              versionIssue: null,
+              access: 'ok',
+              accessLastCheckedAt: null,
+              lockedActions: null,
+              actions: [],
+              reportedAt: PAIRED_AT,
+            },
+          ],
+        })
         state.devices.push(device)
         return send(201, { data: device })
       }
@@ -314,7 +345,15 @@ export const startFakeApi = async (overrides: Partial<FakeState> = {}): Promise<
         /^\/partner\/devices\/([^/]+)(?:\/(systems)(?:\/([^/]+)\/actions)?)?$/.exec(path)
       if (deviceMatch) {
         const [, id, systems, system] = deviceMatch
-        if (method === 'PATCH') return send(200, { data: { id, label: record.label } })
+        if (method === 'PATCH')
+          return send(200, {
+            data: {
+              ...fakeDevice(),
+              ...state.devices.find((device) => device.id === id),
+              id,
+              label: record.label,
+            },
+          })
         if (method === 'DELETE') {
           if (!isAdmin) return send(403, fail('forbidden', 'Only an admin can do this.'))
           return send(200, { data: { id, released: true } })

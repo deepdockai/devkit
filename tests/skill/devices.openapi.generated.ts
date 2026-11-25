@@ -182,7 +182,6 @@ export interface components {
       label?: string
     }
     PartnerDevice: {
-      claimedAt: string | null
       clientVersion: string | null
       hostname: string
       /**
@@ -195,6 +194,7 @@ export interface components {
       lastSeenAt: string | null
       os: string
       outdated: boolean
+      pairedAt: string | null
       /** @enum {unknown} */
       status: 'connected' | 'inactive' | 'offline'
       systems: {

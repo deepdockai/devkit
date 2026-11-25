@@ -67,6 +67,10 @@ approve for the human.
 
 ## Output
 
+JSON device records from `devices list`, `devices pair` and `devices rename` include
+`pairedAt`, an ISO timestamp or `null`. In the device table, **PAIRED AT** shows the timestamp
+or “not paired”.
+
 JSON is the default when stdout is not a terminal; pass `--json` to be sure. One document on
 stdout:
 

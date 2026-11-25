@@ -170,6 +170,7 @@ describe('update note', () => {
       id: DEVICE_ID,
       label: 'Demo PC',
       status: 'connected',
+      pairedAt: '2026-10-01T09:00:00.000Z',
       lastSeenAt: new Date().toISOString(),
       updateAvailable: '1.8.2',
       systems: [],

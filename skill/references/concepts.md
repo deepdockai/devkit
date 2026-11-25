@@ -24,8 +24,8 @@ Details: [auth-and-keys.md](auth-and-keys.md).
 The Deepdock client installed on the customer's Windows PC next to their system. It connects
 outwards to Deepdock; nothing in the customer's network is opened to the internet. A device is
 identified by a UUID (`id`), carries a `label`, `hostname`, `os`, `clientVersion`, `status`
-(`connected`, `offline` or `inactive`), `lastSeenAt`, `lastKnownAt`, `claimedAt` (may be `null`), `outdated` (an
-assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported (each with a `versionIssue` when `version` is missing, `blockedActions` when this device's client cannot run some actions yet: those answer `device_outdated` until the client updates, the others keep running, `execution` while the system is stopped, and `actions`: whether each of your actions on that system would be admitted now). An action whose system runs a program version Deepdock has not yet approved for it answers `version_not_covered`; nothing is sent to the system, and it works once Deepdock has approved that version.
+(`connected`, `offline` or `inactive`), `lastSeenAt`, `lastKnownAt`, `pairedAt` (an ISO timestamp or `null`),
+`outdated` (an assigned action needs a newer client: it answers `device_outdated`) and the `systems` it reported (each with a `versionIssue` when `version` is missing, `blockedActions` when this device's client cannot run some actions yet: those answer `device_outdated` until the client updates, the others keep running, `execution` while the system is stopped, and `actions`: whether each of your actions on that system would be admitted now). An action whose system runs a program version Deepdock has not yet approved for it answers `version_not_covered`; nothing is sent to the system, and it works once Deepdock has approved that version.
 
 - **Pair**: take a device into your organisation with the 6-character code it shows while unpaired.
 - **Release**: `DELETE /v1/devices/{deviceId}` gives the device back; it shows a new code.

@@ -85,9 +85,10 @@ curl -X POST "$BASE/v1/devices" \
 ```
 
 `label` is optional, 1 to 100 characters. The device must be online. Answer: `201` with the device
-(`id`, `label`, `hostname`, `os`, `clientVersion`, `status`, `lastSeenAt`, `lastKnownAt`, `claimedAt`, `outdated`, `systems`,
-and `updateAvailable` when it runs an older build); `clientVersion` is `null`
-until the device has reported it. Keep `id`: it is the `deviceId` of every later call.
+(`id`, `label`, `hostname`, `os`, `clientVersion`, `status`, `lastSeenAt`, `lastKnownAt`,
+`pairedAt`, `outdated`, `systems`, and `updateAvailable` when it runs an older build).
+`pairedAt` is an ISO timestamp or `null`. `clientVersion` is `null` until the device has
+reported it. Keep `id`: it is the `deviceId` of every later call.
 `GET /v1/devices` lists your devices a page at a time (`{ data: [...], nextCursor }`; pass `nextCursor` back as `cursor` until it is `null`, `limit` 1 to 500, default 100), and `GET /v1/devices/{deviceId}` reads one; each device has the same shape. `GET /v1/incidents` pages the same way.
 
 4. Release with `DELETE /v1/devices/{deviceId}`; the device then shows a new code.

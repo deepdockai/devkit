@@ -144,6 +144,10 @@ Ctrl-C during a wait leaves the request pending; `--wait <request>` resumes it.
 
 ## JSON mode for agents and scripts
 
+JSON device records from `deepdock devices list`, `deepdock devices pair` and
+`deepdock devices rename` include `pairedAt`, an ISO timestamp or `null`.
+The device table shows the timestamp under **PAIRED AT** and displays “not paired” for `null`.
+
 On a terminal you get tables and plain sentences. When stdout is not a terminal, or with
 `--json`, every command prints one document on stdout:
 
