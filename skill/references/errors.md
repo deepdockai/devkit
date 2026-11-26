@@ -8,7 +8,8 @@ failure, do not retry, log the code".
 
 An `invalid_input` that refuses an action call's input also carries `fields`: every input that
 failed, as `{ "field", "message" }`, sorted by name, at most 32. It is absent when the body is not
-an object at all. No message holds the value you sent.
+an object at all. A refusal the action itself declares may carry only a message, without
+`fields`. No message holds the value you sent.
 
 A write that refuses one element of a list input (with a refusal the action declares, or
 `not_found` or `too_many_rows`) names that element in `fields`: `list[index].field` when the

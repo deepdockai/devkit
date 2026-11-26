@@ -271,7 +271,6 @@ export interface components {
             reason:
               | 'certificate_changed'
               | 'credentials_rejected'
-              | 'http_signin_changed'
               | 'readback_failed'
               | 'structure_changed'
             /** @constant */
@@ -403,7 +402,7 @@ export interface operations {
       /**
        * @description Page window refused: limit is not a whole number from 1 to 500, or cursor is not valid (invalid_input)
        *
-       *     - invalid_input: an input is not its declared type or is outside its declared length, bounds or list, a required input is left out, a name is not an input of the action, or the page window is invalid; `error.fields` lists every input the cloud found, and the device names the inputs it refuses in `error.fields`. A refusal without `fields` carries only a message
+       *     - invalid_input: an input is not its declared type or is outside its declared length, bounds or list, a required input is left out, a name is not an input of the action, or the page window is invalid; `error.fields` lists every input the cloud found, and the device names the inputs it refuses in `error.fields`. A refusal without `fields` carries only a message. A refusal the action itself declares may carry only a message, without `fields`
        */
       422: {
         headers: {

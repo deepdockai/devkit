@@ -142,7 +142,6 @@ export type ActionState =
         | 'readback_failed'
         | 'credentials_rejected'
         | 'certificate_changed'
-        | 'http_signin_changed'
       pausedAt: string
     }
   | {

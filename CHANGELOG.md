@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.1
+
+- The current device API, two changes in the pinned device API, the bundled TypeScript client and the references:
+  - A paused action's `reason` is no longer `http_signin_changed`: the API now reports that pause as `structure_changed` (Deepdock reviews and resumes it). The bundled client's `ActionState` type and the concepts reference drop the value.
+  - An `invalid_input` whose refusal the action itself declares may carry only a message, without `fields`. The errors reference says so.
+
 ## 1.12.0
 
 - `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every assigned type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
