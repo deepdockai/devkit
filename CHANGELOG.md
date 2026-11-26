@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.2
+
+- The errors reference: an `invalid_input` whose refusal the action itself declares may carry only a message, without `fields`, as the pinned `invalid_input` description says.
+
 ## 1.12.1
 
 - The bundled TypeScript client's paused-action `reason` type and the concepts reference follow the current device systems API. The pin also includes `GET /v1/incidents` with its `PartnerIncident` schema, `GET /v1/systems/{system}/openapi.json`, and the updated `invalid_input` description.
