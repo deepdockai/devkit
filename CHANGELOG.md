@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.1
+
+- The bundled TypeScript client's paused-action `reason` type and the concepts reference follow the current device systems API. The pin also includes `GET /v1/incidents` with its `PartnerIncident` schema, `GET /v1/systems/{system}/openapi.json`, and the updated `invalid_input` description.
+
 ## 1.12.0
 
 - `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every assigned type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.
