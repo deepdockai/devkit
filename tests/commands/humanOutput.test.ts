@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { DEVICE_ID, type FakeApi, startFakeApi } from '../fakeApi.ts'
+import { DEVICE_ID, type FakeApi, fakeDevice, startFakeApi } from '../fakeApi.ts'
 import { summary } from '../../src/commands/actions.ts'
 import { DEFAULT_BASE_URL } from '../../src/runtime.ts'
 import { makeStyler } from '../../src/output/styles.ts'
@@ -166,14 +166,13 @@ describe('colour', () => {
 
 describe('update note', () => {
   it('is yellow on a terminal and plain without colour', async () => {
-    api.state.devices.push({
-      id: DEVICE_ID,
-      label: 'Demo PC',
-      status: 'connected',
-      lastSeenAt: new Date().toISOString(),
-      updateAvailable: '1.8.2',
-      systems: [],
-    })
+    api.state.devices.push(
+      fakeDevice({
+        label: 'Demo PC',
+        lastSeenAt: new Date().toISOString(),
+        updateAvailable: '1.8.2',
+      }),
+    )
     const coloured = await execute(box, ['devices', 'list'], {
       baseUrl: api.url,
       tty: true,

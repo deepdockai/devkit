@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0
+
+- **Breaking API change.** Once the Deepdock API serves `pairedAt`, scripts reading `claimedAt` from JSON output for `deepdock devices list`, `deepdock devices pair` or `deepdock devices rename` must read `pairedAt`. This applies to every CLI version because JSON device records come directly from the API.
+- DevKit 2.0.0 updates the bundled TypeScript type, documentation and device table to follow the API. The table shows the pairing timestamp under **PAIRED AT**.
+
 ## 1.12.0
 
 - `deepdock webhooks`: manage webhook endpoints (`list`, `get`, `create`, `update`, `delete`, `disable`, `enable`, `secret`, `rotate-secret`, `test`, `events`). An endpoint always lists its event types (`--event` or `--all-events`, every assigned type that exists now). The signing secret is never printed: it goes only to an env file, like an API key.

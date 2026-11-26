@@ -19,7 +19,7 @@ the API key the CLI wrote to the app's env file.
 | `orgs select [slug]` | sets the default organisation; without a slug, a pick-list on a terminal | member |
 | `systems list` | the systems and actions assigned to the organisation | member |
 | `systems openapi <system>` | the system's OpenAPI document on stdout; redirect it to a file | member |
-| `devices list` | paired devices with id, label, status, last seen, and each system with its access | member |
+| `devices list` | paired devices with id, label, status, last seen, pairing time, and each system with its access | member |
 | `devices pair <code> [--label <text>]` | pair a device by the code on its screen, or the code `--admin pairing-code` prints on it (see [auth-and-keys.md](auth-and-keys.md#pairing-from-a-shell)) | member |
 | `devices rename <deviceId> <label>` | rename a device | member |
 | `devices release <deviceId>` | release a device (asks on a terminal; `--yes` otherwise) | admin |

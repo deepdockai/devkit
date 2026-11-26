@@ -1829,16 +1829,6 @@
       "PartnerDevice": {
         "type": "object",
         "properties": {
-          "claimedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "clientVersion": {
             "anyOf": [
               {
@@ -1909,6 +1899,16 @@
           },
           "outdated": {
             "type": "boolean"
+          },
+          "pairedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status": {
             "enum": ["connected", "inactive", "offline"]
@@ -2107,7 +2107,6 @@
           }
         },
         "required": [
-          "claimedAt",
           "clientVersion",
           "hostname",
           "id",
@@ -2116,6 +2115,7 @@
           "lastSeenAt",
           "os",
           "outdated",
+          "pairedAt",
           "status",
           "systems"
         ]

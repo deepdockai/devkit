@@ -25,7 +25,7 @@ export const DEVICE_COLUMNS: Columns = [
   'clientVersion',
   'status',
   'lastSeenAt',
-  'claimedAt',
+  'pairedAt',
   'updateAvailable',
   'systems',
 ]
@@ -220,13 +220,14 @@ export const deviceTable = (devices: unknown[], now: Date, style: Styler): strin
   if (!records.some((device) => 'id' in device && 'status' in device))
     return genericTable(records, style, DEVICE_COLUMNS)
   return renderTable(
-    ['ID', 'LABEL', 'STATUS', 'SYSTEMS', 'LAST SEEN'],
+    ['ID', 'LABEL', 'STATUS', 'SYSTEMS', 'LAST SEEN', 'PAIRED AT'],
     records.map((device) => [
       field(device, 'id'),
       { text: field(device, 'label'), style: 'bold' },
       deviceStatusCell(field(device, 'status')),
       systemsLabel(device),
       { text: relativeTime(device.lastSeenAt, now), style: 'dim' },
+      cellFor('pairedAt', device.pairedAt),
     ]),
     style,
   )

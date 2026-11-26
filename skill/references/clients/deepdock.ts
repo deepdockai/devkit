@@ -108,7 +108,7 @@ export type Device = {
   lastSeenAt: string | null
   /** While the device is not connected: when it last reported. `null` while connected. */
   lastKnownAt: string | null
-  claimedAt: string | null
+  pairedAt: string | null
   /** True when an action assigned to you needs a newer client: that action answers device_outdated. */
   outdated: boolean
   updateAvailable?: string
