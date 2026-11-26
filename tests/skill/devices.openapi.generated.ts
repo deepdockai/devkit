@@ -38,6 +38,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/incidents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Incidents on the organisation's devices that are open or closed within 30 days, newest opening first, one page at a time */
+    get: operations['listIncidents']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/systems/{system}/openapi.json': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** A system's OpenAPI document: the actions assigned to the key, and the device paths */
+    get: operations['getSystemOpenApi']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v1/devices/{deviceId}/systems/{system}/actions': {
     parameters: {
       query?: never
@@ -250,6 +284,41 @@ export interface components {
         }
       }[]
       updateAvailable?: string
+    }
+    PartnerIncident: {
+      action: string | null
+      closedAt: string | null
+      devices: {
+        /**
+         * Format: uuid
+         * @description a UUID
+         */
+        deviceId:
+          | string
+          | '00000000-0000-0000-0000-000000000000'
+          | 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+        inactiveAt: string | null
+        pausedAt: string
+        resumeRequestedAt: string | null
+        resumedAt: string | null
+      }[]
+      /**
+       * Format: uuid
+       * @description a UUID
+       */
+      id: string | '00000000-0000-0000-0000-000000000000' | 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+      openedAt: string
+      programVersion: string | null
+      /** @enum {unknown} */
+      reason:
+        | 'access_missing'
+        | 'certificate_changed'
+        | 'credentials_rejected'
+        | 'duplicate_identity'
+        | 'readback_failed'
+        | 'structure_changed'
+        | 'system_stopped'
+      system: string
     }
     ReleasedDevice: {
       /**
@@ -909,6 +978,295 @@ export interface operations {
             error?: {
               /** @enum {unknown} */
               code?: 'device_not_found'
+            }
+          }
+        }
+      }
+      /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
+            }
+          }
+        }
+      }
+      /**
+       * @description Internal error (internal_error)
+       *
+       *     - internal_error: internal error; requestId names the request for support
+       */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'internal_error'
+            }
+          }
+        }
+      }
+      /**
+       * @description Cannot take the call now (temporarily_unavailable)
+       *
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'temporarily_unavailable'
+            }
+          }
+        }
+      }
+    }
+  }
+  listIncidents: {
+    parameters: {
+      query?: {
+        limit?: number
+        /** @description The previous page's nextCursor, passed back as is. Opaque: its format can change. */
+        cursor?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description One page of incidents */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            data: components['schemas']['PartnerIncident'][]
+            /** @description Pass as cursor for the next page; null on the last page */
+            nextCursor: string | null
+          }
+        }
+      }
+      /**
+       * @description Malformed request: a query parameter is given more than once (invalid_request)
+       *
+       *     - invalid_request: the path, the query or the body is malformed: the body is not a JSON object, or the body names a key more than once, or a value is in the URL (inputs go in the JSON body); also the code of a 405, an action called with another method than its own
+       */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'invalid_request'
+            }
+          }
+        }
+      }
+      /**
+       * @description API key missing or wrong (unauthenticated)
+       *
+       *     - unauthenticated: the API key is missing or wrong
+       */
+      401: {
+        headers: {
+          'WWW-Authenticate'?: 'Bearer'
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'unauthenticated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved' | 'partner_deactivated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Page window refused: limit is not a whole number from 1 to 500, or cursor is not valid (invalid_input)
+       *
+       *     - invalid_input: an input is not its declared type or is outside its declared length, bounds or list, a required input is left out, a name is not an input of the action, or the page window is invalid; `error.fields` lists every input the cloud found, and the device names the inputs it refuses in `error.fields`. A refusal without `fields` carries only a message. A refusal the action itself declares may carry only a message, without `fields`
+       */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'invalid_input'
+            }
+          }
+        }
+      }
+      /**
+       * @description Too many requests (rate_limited)
+       *
+       *     - rate_limited: too many calls with this key in the last minute, or too many failed pairing attempts; wait for Retry-After seconds (retryAfterSeconds in the body) when the answer carries them, otherwise a minute, and retry
+       */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'rate_limited'
+            }
+          }
+        }
+      }
+      /**
+       * @description Internal error (internal_error)
+       *
+       *     - internal_error: internal error; requestId names the request for support
+       */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'internal_error'
+            }
+          }
+        }
+      }
+      /**
+       * @description Cannot take the call now (temporarily_unavailable)
+       *
+       *     - temporarily_unavailable: the key, the device or our database could not be checked because of an outage on our side; retry after the Retry-After seconds
+       */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'temporarily_unavailable'
+            }
+          }
+        }
+      }
+    }
+  }
+  getSystemOpenApi: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        system: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The OpenAPI 3.1 document; sent with Cache-Control: private, no-store */
+      200: {
+        headers: {
+          'Cache-Control'?: string
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': Record<string, never>
+        }
+      }
+      /**
+       * @description API key missing or wrong (unauthenticated)
+       *
+       *     - unauthenticated: the API key is missing or wrong
+       */
+      401: {
+        headers: {
+          'WWW-Authenticate'?: 'Bearer'
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'unauthenticated'
+            }
+          }
+        }
+      }
+      /**
+       * @description Organisation not approved yet, or deactivated (partner_not_approved, partner_deactivated)
+       *
+       *     - partner_not_approved: the key belongs to an organisation that Deepdock has not approved yet
+       *     - partner_deactivated: the key belongs to an organisation that Deepdock has deactivated
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'partner_not_approved' | 'partner_deactivated'
+            }
+          }
+        }
+      }
+      /**
+       * @description No actions for this system (action_not_found)
+       *
+       *     - action_not_found: the device has no such action, or none of the system's actions is assigned to the key
+       */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Error'] & {
+            error?: {
+              /** @enum {unknown} */
+              code?: 'action_not_found'
             }
           }
         }

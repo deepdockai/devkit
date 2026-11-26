@@ -137,11 +137,7 @@ export type ActionState =
   | {
       action: string
       state: 'paused'
-      reason:
-        | 'structure_changed'
-        | 'readback_failed'
-        | 'credentials_rejected'
-        | 'certificate_changed'
+      reason: 'structure_changed' | 'readback_failed' | 'credentials_rejected' | 'certificate_changed'
       pausedAt: string
     }
   | {

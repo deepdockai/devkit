@@ -2,9 +2,7 @@
 
 ## 1.12.1
 
-- The current device API, two changes in the pinned device API, the bundled TypeScript client and the references:
-  - A paused action's `reason` is no longer `http_signin_changed`: the API now reports that pause as `structure_changed` (Deepdock reviews and resumes it). The bundled client's `ActionState` type and the concepts reference drop the value.
-  - An `invalid_input` whose refusal the action itself declares may carry only a message, without `fields`. The errors reference says so.
+- The bundled TypeScript client's paused-action `reason` type and the concepts reference follow the current device systems API. The pin also includes `GET /v1/incidents` with its `PartnerIncident` schema, `GET /v1/systems/{system}/openapi.json`, and the updated `invalid_input` description.
 
 ## 1.12.0
 
